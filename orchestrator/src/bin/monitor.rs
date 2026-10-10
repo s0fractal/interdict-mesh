@@ -1,0 +1,442 @@
+// Release builds abort on panic (panic = "abort"), so a panic reachable from input (a peer's
+// frame, an IPC line, a trap connection, a file) stops the node. Outside tests, code must not
+// be able to panic: no unwrap/expect, no unchecked indexing or slicing, no panic!-family macros.
+// A provably safe exception is allowed locally, with its reason.
+#![cfg_attr(
+    not(test),
+    deny(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::indexing_slicing,
+        clippy::string_slice,
+        clippy::panic,
+        clippy::unreachable,
+        clippy::todo,
+        clippy::unimplemented
+    )
+)]
+use std::collections::HashMap;
+use std::io::{self, Write};
+use std::net::Ipv4Addr;
+use std::path::Path;
+use std::process::Command;
+use std::thread;
+use std::time::Duration;
+
+use common::audit_log::{rotated_segments, verify_chain, AuditReader, ChainVerifyError};
+
+const DB_FILE: &str = "/var/lib/sokol/audit.log";
+
+#[derive(Debug, Clone)]
+struct AuditEvent {
+    seq: u64,
+    ip: String,
+    tier: String,
+    payload_len: String,
+    payload_snippet: String,
+    #[allow(dead_code)]
+    raw: String,
+}
+
+type Reader = AuditReader<io::BufReader<std::fs::File>>;
+
+fn read_new_events(reader: &mut Option<Reader>, events: &mut Vec<AuditEvent>) -> io::Result<()> {
+    let path = Path::new(DB_FILE);
+    if !path.exists() {
+        *reader = None;
+        events.clear();
+        return Ok(());
+    }
+
+    // A file smaller than what we already verified was replaced: start over.
+    if let Some(r) = reader.as_ref() {
+        if std::fs::metadata(path)?.len() < r.offset() {
+            *reader = None;
+            events.clear();
+        }
+    }
+    let r = match reader {
+        Some(r) => r,
+        None => reader.insert(AuditReader::open(path)?),
+    };
+
+    loop {
+        let record = match r.next_record() {
+            Ok(Some(record)) => record,
+            Ok(None) => break,
+            Err(e) => return Err(io::Error::other(e.to_string())),
+        };
+        let data_len = record.payload.len();
+        {
+            let log_str = String::from_utf8_lossy(&record.payload)
+                .chars()
+                .filter(|c| !c.is_control())
+                .collect::<String>()
+                .trim()
+                .to_string();
+
+            let mut ip = "Unknown".to_string();
+            let mut tier = "Event".to_string();
+            let mut payload_len = data_len.to_string();
+            let mut payload_snippet = String::new();
+
+            let parts: Vec<&str> = log_str.split('|').collect();
+            if let Some(first) = parts.first() {
+                tier = first.trim().to_string();
+            }
+
+            for part in &parts {
+                let part = part.trim();
+                if let Some(val) = part.strip_prefix("IP=") {
+                    ip = val.to_string();
+                } else if let Some(val) = part.strip_prefix("IP:") {
+                    ip = val.to_string();
+                } else if let Some(val) = part.strip_prefix("TIER=") {
+                    tier = val.to_string();
+                } else if let Some(val) = part.strip_prefix("LEN=") {
+                    payload_len = val.to_string();
+                } else if let Some(val) = part.strip_prefix("DATA=") {
+                    payload_snippet = val.to_string();
+                }
+            }
+
+            if ip == "Unknown" {
+                if let Some(found_ip) = log_str
+                    .split(|c: char| {
+                        c.is_whitespace()
+                            || c == '|'
+                            || c == '='
+                            || c == ','
+                            || c == '"'
+                            || c == '\''
+                    })
+                    .map(|token| token.trim_matches(|c: char| !c.is_ascii_digit() && c != '.'))
+                    .find_map(|candidate| candidate.parse::<Ipv4Addr>().ok())
+                {
+                    ip = found_ip.to_string();
+                }
+            }
+
+            if payload_snippet.is_empty() {
+                payload_snippet = log_str.chars().take(30).collect();
+            }
+
+            events.push(AuditEvent {
+                seq: record.seq,
+                ip,
+                tier,
+                payload_len,
+                payload_snippet,
+                raw: log_str,
+            });
+        }
+    }
+
+    Ok(())
+}
+
+fn get_ebpf_active_blocks() -> Vec<String> {
+    let output = Command::new("bpftool")
+        .args(["map", "dump", "name", "BLOCKLIST_V4"])
+        .output()
+        .or_else(|_| {
+            Command::new("sudo")
+                .args(["bpftool", "map", "dump", "name", "BLOCKLIST_V4"])
+                .output()
+        });
+
+    let mut banned_ips = Vec::new();
+    if let Ok(out) = output {
+        if out.status.success() {
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            for line in stdout.lines() {
+                if let Some((_, key_str)) = line.split_once("key:") {
+                    let hex_bytes: Vec<u8> = key_str
+                        .split_whitespace()
+                        .filter_map(|s| u8::from_str_radix(s, 16).ok())
+                        .collect();
+
+                    if let Some([a, b, c, d]) = hex_bytes.get(4..8) {
+                        let ip = format!("{}.{}.{}.{}", a, b, c, d);
+                        banned_ips.push(ip);
+                    }
+                }
+            }
+        }
+    }
+    banned_ips
+}
+
+fn to_hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{:02x}", b)).collect()
+}
+
+/// `monitor --verify [path]`: checks every retained segment and the active log as one chain.
+/// Exit code 0 = verified retained chain, 1 = observed corruption, 2 = unverified (I/O).
+/// Record the printed head somewhere the node cannot write
+/// to make later rewrites of the whole chain detectable.
+fn verify(path: &str) -> ! {
+    match verify_chain(Path::new(path)) {
+        Ok(s) => {
+            println!(
+                "OK {}: {} file(s), records {}..{}, head {}",
+                path,
+                s.segments,
+                s.first_seq,
+                s.next_seq,
+                to_hex(&s.head)
+            );
+            std::process::exit(0);
+        }
+        Err(e @ ChainVerifyError::Broken { .. }) => {
+            println!("BROKEN {}: {}", path, e);
+            std::process::exit(1);
+        }
+        Err(e) => {
+            println!("UNVERIFIED {}: {}", path, e);
+            std::process::exit(2);
+        }
+    }
+}
+
+/// `monitor --dump [path]`: every verified record of the active file as
+/// `<seq>\t<timestamp_ms>\t<payload>`, for scripts and investigations.
+fn dump(path: &str) -> ! {
+    let mut reader = match AuditReader::open(Path::new(path)) {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("cannot open {}: {}", path, e);
+            std::process::exit(1);
+        }
+    };
+    let stdout = io::stdout();
+    let mut out = stdout.lock();
+    loop {
+        match reader.next_record() {
+            Ok(Some(r)) => {
+                let text: String = String::from_utf8_lossy(&r.payload)
+                    .chars()
+                    .filter(|c| !c.is_control())
+                    .collect();
+                let _ = writeln!(out, "{}\t{}\t{}", r.seq, r.timestamp_ms, text);
+            }
+            Ok(None) => std::process::exit(0),
+            Err(e) => {
+                eprintln!("{}: {}", path, e);
+                std::process::exit(1);
+            }
+        }
+    }
+}
+
+/// One `BLOCK_OUTCOME` record: packets dropped (`None`: unknown), seconds in force, cause.
+fn parse_outcome(text: &str) -> Option<(Option<u64>, u64, String)> {
+    let rest = text.strip_prefix("BLOCK_OUTCOME|")?;
+    let (fields, cause) = match rest.split_once("|Cause:") {
+        Some((fields, cause)) => (fields, cause.to_string()),
+        None => (rest, "unknown".to_string()),
+    };
+    let field = |name: &str| {
+        fields
+            .split('|')
+            .find_map(|f| f.strip_prefix(name))
+            .map(str::to_string)
+    };
+    let dropped = field("Dropped:")?.parse().ok();
+    let seconds = field("Seconds:")?.parse().ok()?;
+    Some((dropped, seconds, cause))
+}
+
+/// Groups causes by what decided them, not by the details that vary between decisions: the
+/// text before a parenthesis (CrowdSec appends the remaining duration), at most 80 characters.
+fn cause_key(cause: &str) -> String {
+    let base = cause.split(" (").next().unwrap_or(cause).trim();
+    base.chars().take(80).collect()
+}
+
+#[derive(Default, Debug, PartialEq)]
+struct CauseStats {
+    blocks: u64,
+    dropped_nothing: u64,
+    unknown: u64,
+    packets: u64,
+    seconds: Vec<u64>,
+}
+
+fn summarize<'a>(records: impl Iterator<Item = &'a str>) -> Vec<(String, CauseStats)> {
+    let mut by: std::collections::BTreeMap<String, CauseStats> = Default::default();
+    for text in records {
+        let Some((dropped, seconds, cause)) = parse_outcome(text) else {
+            continue;
+        };
+        let s = by.entry(cause_key(&cause)).or_default();
+        s.blocks += 1;
+        match dropped {
+            Some(0) => s.dropped_nothing += 1,
+            Some(n) => s.packets += n,
+            None => s.unknown += 1,
+        }
+        s.seconds.push(seconds);
+    }
+    let mut out: Vec<(String, CauseStats)> = by.into_iter().collect();
+    out.sort_by(|a, b| b.1.blocks.cmp(&a.1.blocks).then(a.0.cmp(&b.0)));
+    out
+}
+
+/// `monitor --outcomes [path]`: what the node's blocks did, by the decision behind them, over
+/// the whole retained audit chain. Evidence for reviewing detectors and TTLs, not a verdict.
+fn outcomes(path: &str) -> ! {
+    let mut files: Vec<std::path::PathBuf> = rotated_segments(Path::new(path))
+        .map(|segs| segs.into_iter().map(|(_, p)| p).collect())
+        .unwrap_or_default();
+    files.push(Path::new(path).to_path_buf());
+    let mut texts = Vec::new();
+    for file in &files {
+        let Ok(mut reader) = AuditReader::open(file) else {
+            continue;
+        };
+        while let Ok(Some(r)) = reader.next_record() {
+            texts.push(String::from_utf8_lossy(&r.payload).into_owned());
+        }
+    }
+    let rows = summarize(texts.iter().map(String::as_str));
+    println!(
+        "{:>7} {:>9} {:>11} {:>9}  cause",
+        "blocks", "idle %", "packets", "median s"
+    );
+    for (cause, s) in rows {
+        let mut secs = s.seconds.clone();
+        secs.sort_unstable();
+        let median = secs.get(secs.len() / 2).copied().unwrap_or(0);
+        println!(
+            "{:>7} {:>8.0}% {:>11} {:>9}  {}",
+            s.blocks,
+            100.0 * s.dropped_nothing as f64 / s.blocks.max(1) as f64,
+            s.packets,
+            median,
+            cause
+        );
+    }
+    std::process::exit(0)
+}
+
+fn main() -> io::Result<()> {
+    let args: Vec<String> = std::env::args().collect();
+    match args.get(1).map(String::as_str) {
+        Some("--verify") => verify(args.get(2).map(String::as_str).unwrap_or(DB_FILE)),
+        Some("--dump") => dump(args.get(2).map(String::as_str).unwrap_or(DB_FILE)),
+        Some("--outcomes") => outcomes(args.get(2).map(String::as_str).unwrap_or(DB_FILE)),
+        _ => {}
+    }
+
+    let mut reader: Option<Reader> = None;
+    let mut events: Vec<AuditEvent> = Vec::new();
+    let mut read_error: Option<String> = None;
+
+    loop {
+        read_error = read_new_events(&mut reader, &mut events)
+            .err()
+            .map(|e| e.to_string())
+            .or(read_error);
+
+        let total_attacks = events.len();
+        let mut unique_ips = HashMap::new();
+        let mut tiers_counter = HashMap::new();
+
+        for ev in &events {
+            *unique_ips.entry(ev.ip.clone()).or_insert(0) += 1;
+            *tiers_counter.entry(ev.tier.clone()).or_insert(0) += 1;
+        }
+
+        let ebpf_blocks = get_ebpf_active_blocks();
+
+        print!("\x1B[H\x1B[2J");
+        io::stdout().flush()?;
+
+        println!("==================================================================");
+        println!("       SOKOL-CORE: RUST NATIVE SECURITY & EBPF TELEMETRY         ");
+        println!("==================================================================");
+
+        if let Some(err) = &read_error {
+            println!("[!] AUDIT LOG VERIFICATION FAILED: {}", err);
+        }
+        println!("[*] Total Intercepted Attacks (audit) : {}", total_attacks);
+        println!(
+            "[*] Unique Attacker IPs Logged         : {}",
+            unique_ips.len()
+        );
+        println!(
+            "[*] Active eBPF XDP Kernel Drops (IPs) : {}",
+            ebpf_blocks.len()
+        );
+
+        println!("\n--- Active eBPF Kernel Blocklist (BLOCKLIST_V4) ---");
+        if ebpf_blocks.is_empty() {
+            println!("    (No active IP blocks in kernel XDP map yet)");
+        } else {
+            for ip in &ebpf_blocks {
+                println!("    [XDP_DROP] Blocked IP -> {}", ip);
+            }
+        }
+
+        println!("\n--- Trident Tier Distribution ---");
+        for (tier, count) in &tiers_counter {
+            println!("    {:<25} : {}", tier, count);
+        }
+
+        println!("\n--- Live Captured Attack Payloads (audit log) ---");
+        println!(
+            "{:<6} | {:<15} | {:<18} | {:<6} | {:<20}",
+            "SEQ", "IP ADDRESS", "TIER", "LEN", "PAYLOAD SNIPPET"
+        );
+        println!("{}", "-".repeat(78));
+
+        let start = events.len().saturating_sub(8);
+
+        for ev in events.iter().skip(start) {
+            println!(
+                "{:<6} | {:<15} | {:<18.18} | {:<6} | {:<20.20}",
+                ev.seq, ev.ip, ev.tier, ev.payload_len, ev.payload_snippet
+            );
+        }
+
+        println!("\n[Press Ctrl+C to exit]");
+        thread::sleep(Duration::from_secs(2));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn outcomes_are_grouped_by_the_decision_behind_them() {
+        let records = [
+            "BLOCK_OUTCOME|IP:198.51.100.1|Dropped:0|Seconds:900|Cause:detector: crowdsec: ssh-bf (origin crowdsec, crowdsec duration 3h59m)",
+            "BLOCK_OUTCOME|IP:198.51.100.2|Dropped:40|Seconds:600|Cause:detector: crowdsec: ssh-bf (origin crowdsec, crowdsec duration 1h2m)",
+            "BLOCK_OUTCOME|IP:198.51.100.3|Dropped:unknown|Seconds:30|Cause:operator: ban",
+            "BLOCK_OUTCOME|IP:198.51.100.4|Dropped:5|Seconds:10",
+            "BLOCK_EXPIRED_V4|IP:198.51.100.9",
+        ];
+        let rows = summarize(records.iter().copied());
+        assert_eq!(
+            rows[0].0, "detector: crowdsec: ssh-bf",
+            "durations do not split a cause"
+        );
+        assert_eq!(
+            (
+                rows[0].1.blocks,
+                rows[0].1.dropped_nothing,
+                rows[0].1.packets
+            ),
+            (2, 1, 40)
+        );
+        let operator = rows.iter().find(|r| r.0 == "operator: ban").unwrap();
+        assert_eq!(operator.1.unknown, 1);
+        assert!(
+            rows.iter().any(|r| r.0 == "unknown"),
+            "a record without a cause still counts"
+        );
+        assert_eq!(rows.iter().map(|r| r.1.blocks).sum::<u64>(), 4);
+    }
+}
