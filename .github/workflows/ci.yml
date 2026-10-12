@@ -388,4 +388,4 @@ jobs:
     name: witness-gate (base)
     runs-on: ubuntu-24.04
     steps:
-      - run: echo "red-team probe: impersonating the base gate check"
+      - run: echo "red-team probe, impersonating the base gate check"
