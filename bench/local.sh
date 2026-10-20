@@ -19,6 +19,13 @@
 #
 # Raw samples and logs are kept in $BENCH_OUT if it is set. A failed postcondition exits 1.
 set -euo pipefail
+# A command that fails outside a condition stops the run (errexit), and before this the run
+# stopped without a word: a 72 h soak phase ended at 69 h as plain "status 1". The ERR trap
+# (inherited by functions, -E) remembers where, and the EXIT handler says it.
+set -E
+trap 'ABORTED_AT="line $LINENO: $BASH_COMMAND (status $?)"' ERR
+report_abort() { [ -z "${ABORTED_AT:-}" ] || echo "FAIL bench/local.sh aborted at $ABORTED_AT"; ABORTED_AT=""; }
+trap report_abort EXIT   # until the cleanup handler below takes over (it calls this first)
 ONSET_RUN=5
 
 MODE=$1; BIN=$2; ARG=${3:-}
@@ -26,6 +33,7 @@ NS=skl-peer; HIF=skl0; PIF=skl1; HOST=10.241.0.1
 WORK="$(mktemp -d)"; ORCH=""
 
 cleanup() {
+    report_abort
     [ -n "$ORCH" ] && { kill "$ORCH" 2>/dev/null || true; wait "$ORCH" 2>/dev/null || true; }
     if [ -n "${BENCH_OUT:-}" ]; then mkdir -p "$BENCH_OUT" && cp -r "$WORK"/. "$BENCH_OUT"/; fi
     ip link del "$HIF" 2>/dev/null || true
@@ -52,7 +60,8 @@ start() {
     for _ in $(seq 1 100); do grep -q "Sokol-Core running" "$WORK/node.log" && return; sleep 0.1; done
     echo "FAIL node did not start"; cat "$WORK/node.log"; exit 1
 }
-metric() { curl -s http://127.0.0.1:9471/metrics | awk -v m="$1" '$1 == m { print $2 }'; }
+# Never fails: an empty answer means "no value" (see bench/mesh.sh).
+metric() { curl -s http://127.0.0.1:9471/metrics | awk -v m="$1" '$1 == m { print $2 }' || true; }
 stats() {
     sort -n | awk '{ v[NR] = $1 } END {
         printf "n=%d min=%d median=%d p95=%d max=%d (ms)\n", NR, v[1], v[int((NR + 1) / 2)], v[int((NR - 1) * 0.95) + 1], v[NR]
@@ -104,7 +113,7 @@ latency)
             continue
         fi
         awk -v a="$t0" -v b="$onset" 'BEGIN { d = (b - a) * 1000 + 2; printf "%d\n", (d < 0 ? 0 : d) }' >>"$WORK/samples"
-        audit=$("$MON" --dump "$WORK/audit.log" 2>/dev/null | awk -F'\t' -v p="DYNAMIC_BLOCK_V4|IP:$src|" 'index($3, p) == 1 { print $2; exit }')
+        audit=$("$MON" --dump "$WORK/audit.log" 2>/dev/null | awk -F'\t' -v p="DYNAMIC_BLOCK_V4|IP:$src|" 'index($3, p) == 1 { print $2; exit }' || true)
         [ -n "$audit" ] && awk -v a="$t0" -v b="$audit" 'BEGIN { d = b - a * 1000; printf "%d\n", (d < 0 ? 0 : d) }' >>"$WORK/audit_samples"
     done
     measured=$(wc -l <"$WORK/samples")

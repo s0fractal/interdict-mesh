@@ -5,6 +5,13 @@
 # Needs root, Python 3, bpftool and iputils ping (netns, XDP attach/test-run). Linux only.
 #   sudo scripts/xdp-smoke.sh [path/to/orchestrator]
 set -euo pipefail
+# A command that fails outside a condition stops the run (errexit), and before this the run
+# stopped without a word: a bench soak phase ended at 69 h as plain "status 1". The ERR trap
+# (inherited by functions, -E) remembers where, and the EXIT handler says it.
+set -E
+trap 'ABORTED_AT="line $LINENO: $BASH_COMMAND (status $?)"' ERR
+report_abort() { [ -z "${ABORTED_AT:-}" ] || echo "FAIL scripts/xdp-smoke.sh aborted at $ABORTED_AT"; ABORTED_AT=""; }
+trap report_abort EXIT   # until the cleanup handler below takes over (it calls this first)
 source "$(dirname "${BASH_SOURCE[0]}")/flowspec-rib.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/audit-verdict.sh"
 
@@ -27,6 +34,7 @@ FAILED=0
 READY="Sokol-Core running"
 
 cleanup() {
+    report_abort
     [ -n "$ORCH_PID" ] && kill "$ORCH_PID" 2>/dev/null && wait "$ORCH_PID" 2>/dev/null || true
     [ -n "$OPERATOR_PID" ] && kill "$OPERATOR_PID" 2>/dev/null || true
     [ -n "${SURICATA_PID:-}" ] && kill "$SURICATA_PID" 2>/dev/null || true
