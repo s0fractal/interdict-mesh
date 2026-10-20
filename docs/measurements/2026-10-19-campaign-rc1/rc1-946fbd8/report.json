@@ -1,0 +1,42 @@
+{
+  "profile": "sokol.vm-campaign.v1",
+  "status": "FAILED",
+  "unit": "sokol-campaign-1792175464865459450",
+  "source_commit": "946fbd8d7fb23c54c2474fd64dbc2cace0cb73b2",
+  "bench_sha256": "fc71d226dfcbb2646a9bb6c3454825eab4cd190f61e9757e9dea17229c9028ca",
+  "binary_sha256": "f5334f4ce73a41061bdc5ad9751458074c4b67f889c021492e47b250c83ce109",
+  "monitor_sha256": "b99b7eb21fd0a439846ec4b4ee6a5a18e135807c618db2fd97a93310f5b40bec",
+  "vm": "apple",
+  "seed": 1729,
+  "hours": [
+    24,
+    72
+  ],
+  "limits": {
+    "memory_bytes": 4294967296,
+    "tasks": 256,
+    "cpu_percent": 200,
+    "tmp_bytes": 4294967296,
+    "file_bytes": 134217728,
+    "runtime_seconds": 347400
+  },
+  "admission": "NOT_ADMITTED",
+  "hardware": "NOT_QUALIFIED",
+  "scope": "existing mesh soak assertions; RSS growth is observed, not an accepted SLO",
+  "phases": [
+    {
+      "hours": 24,
+      "status": "LIMITED_PASS",
+      "started_unix": 1792175464.919426,
+      "returncode": 0,
+      "finished_unix": 1792261973.5871475
+    },
+    {
+      "hours": 72,
+      "status": "FAILED",
+      "started_unix": 1792261973.597376,
+      "returncode": 1,
+      "finished_unix": 1792511576.0838737
+    }
+  ]
+}
