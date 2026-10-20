@@ -435,7 +435,13 @@ jobs:
         if: success() && matrix.part == 'test'
         run: |
           mkdir -p candidates
-          python3 scripts/candidate.py build --binaries target/release --output "candidates/candidate-${{ matrix.arch }}.tar.gz" > "candidates/candidate-${{ matrix.arch }}.json"
+          # A refusal is a JSON line on stdout; without this it went only into the file and the
+          # step failed as a bare "exit code 2".
+          python3 scripts/candidate.py build --binaries target/release --output "candidates/candidate-${{ matrix.arch }}.tar.gz" > "candidates/candidate-${{ matrix.arch }}.json" || {
+            status=$?; echo "candidate.py build refused (status $status):"; cat "candidates/candidate-${{ matrix.arch }}.json"; echo
+            echo "tracked changes:"; git status --porcelain --untracked-files=no
+            echo "orchestrator: $(target/release/orchestrator --version 2>&1); HEAD $(git rev-parse HEAD)"
+            exit "$status"; }
           tar -xOf "candidates/candidate-${{ matrix.arch }}.tar.gz" SBOM.spdx.json > "candidates/SBOM-${{ matrix.arch }}.spdx.json"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
