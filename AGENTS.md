@@ -98,10 +98,25 @@ on a rule here that does neither, and on a cited test, path or flag that does no
 
 ## Review
 
-Each pull request is reviewed by an agent before merge, and the review's findings belong in
-the pull request (a comment), tied to the head it was about: a review that leaves no record
-cannot be checked or reused. Human read-through runs in parallel and may lag; it is not a
-merge gate. Required checks are the CI jobs of `protect-main`.
+Each pull request is reviewed by an agent before merge, and the review belongs in the pull
+request, tied to the head it was about: a review that leaves no record cannot be checked or
+reused. The record is a pull-request review (or an issue comment on the pull request) whose
+body carries these two lines, each on a line of its own, with the findings under them:
+
+```
+review-of: <the pull request's full head sha>
+verdict: ACCEPT
+```
+
+(`verdict: AMEND` with the findings when it is not ready;
+`gh pr review <number> --comment --body-file review.md` posts it.) A record counts when its
+author is a login in `.github/review-allowlist` (adding a login is the owner's act) and is not
+the pull request's author; a reviewer's last word on a head is what counts, and a new push
+makes every earlier record stale: the new head needs its own. Human read-through runs in
+parallel and may lag; it is not a merge gate. Required checks are the CI jobs of
+`protect-main`. *Checked by:* the `agent-review` job (`scripts/check-review.py`, from main,
+on every push and every review; `scripts/test_check_review.py`), ADR-0032; that the job is a
+required check is the owner's ruleset change.
 
 ## Removing things
 

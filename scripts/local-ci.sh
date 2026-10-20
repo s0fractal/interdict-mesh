@@ -201,6 +201,7 @@ python3 scripts/test_mutants_diff.py
 python3 scripts/test_mutants_scope.py
 python3 scripts/test_check_agents_rules.py
 python3 scripts/test_check_claims.py
+python3 scripts/test_check_review.py
 python3 scripts/test_witness_pin.py
 python3 scripts/test_gate_provenance.py
 python3 scripts/test_trust_root.py
