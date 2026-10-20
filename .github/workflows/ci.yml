@@ -435,6 +435,10 @@ jobs:
         if: success() && matrix.part == 'test'
         run: |
           mkdir -p candidates
+          # The SBOM reads `cargo metadata --offline`, which needs every locked package, for
+          # every platform; a build fetches only the host's. On aarch64 nothing else fetches
+          # them (cargo-deny runs on x86_64), so this passed only while the cache held them.
+          cargo fetch --locked
           # A refusal is a JSON line on stdout; without this it went only into the file and the
           # step failed as a bare "exit code 2".
           python3 scripts/candidate.py build --binaries target/release --output "candidates/candidate-${{ matrix.arch }}.tar.gz" > "candidates/candidate-${{ matrix.arch }}.json" || {
