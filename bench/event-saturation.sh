@@ -7,14 +7,21 @@
 # events only, so a mesh soak at a few events/s would need days to reach it.
 #   sudo bench/event-saturation.sh <orchestrator> [count]
 set -euo pipefail
+# A command that fails outside a condition stops the run (errexit), and before this the run
+# stopped without a word: a 72 h soak phase ended at 69 h as plain "status 1". The ERR trap
+# (inherited by functions, -E) remembers where, and the EXIT handler says it.
+set -E
+trap 'ABORTED_AT="line $LINENO: $BASH_COMMAND (status $?)"' ERR
+report_abort() { [ -z "${ABORTED_AT:-}" ] || echo "FAIL bench/event-saturation.sh aborted at $ABORTED_AT"; ABORTED_AT=""; }
+trap report_abort EXIT   # until the cleanup handler below takes over (it calls this first)
 BIN=$1; COUNT=${2:-200000}
-W=$(mktemp -d); trap 'kill $P 2>/dev/null; wait $P 2>/dev/null; ip link del evs0 2>/dev/null; rm -rf $W' EXIT
+W=$(mktemp -d); trap 'report_abort; kill $P 2>/dev/null; wait $P 2>/dev/null; ip link del evs0 2>/dev/null; rm -rf $W' EXIT
 ip link add evs0 type veth peer name evs1; ip link set evs0 up; ip link set evs1 up
 "$BIN" --interface evs0 --node-id 1 --xdp-mode generic --db-path $W/audit.log --key-file $W/node.key \
   --ipc-socket $W/ipc.sock --control-socket $W/ctl.sock --p2p-bind 127.0.0.1:0 \
   --metrics-bind 127.0.0.1:9479 --block-ttl 10 >$W/node.log 2>&1 & P=$!
 for _ in $(seq 1 50); do [ -S $W/ipc.sock ] && break; sleep 0.2; done
-m() { curl -s 127.0.0.1:9479/metrics | awk -v k="$1" '$1==k {print $2}'; }
+m() { curl -s 127.0.0.1:9479/metrics | awk -v k="$1" '$1==k {print $2}' || true; }
 echo "t_s,rss_kb,remembered,evicted,blocks_active,state_bytes"
 ( awk -v n=$COUNT 'BEGIN { for (i = 0; i < n; i++) printf "SIGNAL#sat-%d:sat|100.%d.%d.%d|-|sat\n", i, 64 + int(i/65536)%64, int(i/256)%256, i%256 }' | nc -U -q1 $W/ipc.sock >/dev/null ) & S=$!
 t0=$SECONDS

@@ -106,6 +106,13 @@
 #
 # netem args are applied to every node's link, e.g. `delay 100ms 20ms loss 10%`.
 set -euo pipefail
+# A command that fails outside a condition stops the run (errexit), and before this the run
+# stopped without a word: a 72 h soak phase ended at 69 h as plain "status 1". The ERR trap
+# (inherited by functions, -E) remembers where, and the EXIT handler says it.
+set -E
+trap 'ABORTED_AT="line $LINENO: $BASH_COMMAND (status $?)"' ERR
+report_abort() { [ -z "${ABORTED_AT:-}" ] || echo "FAIL bench/mesh.sh aborted at $ABORTED_AT"; ABORTED_AT=""; }
+trap report_abort EXIT   # until the cleanup handler below takes over (it calls this first)
 
 MODE=$1; BIN=$2; MON=$3; N=$4; shift 4
 BENCH_DIR=$(cd "$(dirname "$0")" && pwd)
@@ -132,7 +139,7 @@ RANDOM=$BENCH_SEED
 [ "$MODE" = clock ] && TTL=${TTL:-60}
 if [ "$MODE" = clock ]; then
     [ "$N" = 3 ] || { echo "clock mode runs on 3 nodes"; exit 2; }
-    FAKETIME_LIB=$(ls /usr/lib/*/faketime/libfaketime.so.1 2>/dev/null | head -1)
+    FAKETIME_LIB=$(ls /usr/lib/*/faketime/libfaketime.so.1 2>/dev/null | head -1 || true)
     [ -n "$FAKETIME_LIB" ] || { echo "clock mode needs libfaketime (apt install faketime)"; exit 2; }
 fi
 [ "$MODE" = soak ] && TTL=${TTL:-300}   # blocks expire during the soak, so the table churns
@@ -142,6 +149,7 @@ BR=skbr0
 PIDS=()
 
 cleanup() {
+    report_abort
     for p in "${PIDS[@]:-}"; do kill "$p" 2>/dev/null || true; done
     for p in "${PIDS[@]:-}"; do wait "$p" 2>/dev/null || true; done
     remove_topology
@@ -169,10 +177,14 @@ trap cleanup EXIT
 trap "exit 130" INT TERM   # a killed run still removes its namespaces and nodes
 
 in_ns() { local i=$1; shift; ip netns exec "sk-n$i" "$@"; }
-metric() { in_ns "$1" curl -s http://127.0.0.1:9470/metrics | awk -v m="$2" '$1 == m { print $2 }'; }
+# The helpers below never fail: an empty answer means "no value" (a node restarting, a record
+# not written yet), and the callers' fallbacks (`${v:-down}`) decide. Under errexit and
+# pipefail a failing curl, or the dump writer hit by SIGPIPE when awk stops at its first match,
+# used to end the whole run instead.
+metric() { in_ns "$1" curl -s http://127.0.0.1:9470/metrics | awk -v m="$2" '$1 == m { print $2 }' || true; }
 audit_ts() {
     # audit_ts <node> <record prefix> <ip>: timestamp_ms of the first matching record
-    "$MON" --dump "$WORK/n$1/audit.log" 2>/dev/null | awk -F'\t' -v p="$2|IP:$3|" 'index($3, p) == 1 { print $2; exit }'
+    "$MON" --dump "$WORK/n$1/audit.log" 2>/dev/null | awk -F'\t' -v p="$2|IP:$3|" 'index($3, p) == 1 { print $2; exit }' || true
 }
 
 # Preflight established that these names are free; cleanup owns only this run's topology.
@@ -317,7 +329,7 @@ PY
 }
 audit_after() {   # audit_after <node> <record prefix> <t_min>: first matching record at or after t_min
     "$MON" --dump "$WORK/n$1/audit.log" 2>/dev/null \
-        | awk -F'\t' -v p="$2" -v t="$3" 'index($3, p) == 1 && $2 >= t { print $2; exit }'
+        | awk -F'\t' -v p="$2" -v t="$3" 'index($3, p) == 1 && $2 >= t { print $2; exit }' || true
 }
 rib_has() {   # rib_has <api port> <prefix>: 0 present, 1 absent, 2 unreadable (never absent)
     local rib
@@ -404,7 +416,9 @@ soak)
             fi
             rss=$(awk '/VmRSS/ {print $2}' "/proc/$pid/status" 2>/dev/null || echo 0)
             fds=$(ls "/proc/$pid/fd" 2>/dev/null | wc -l || echo 0)
-            audit=$(du -cb "$WORK/n$i"/audit.log* 2>/dev/null | tail -1 | cut -f1)
+            # A node rotating its audit log can remove a segment between the glob and du
+            # (RC-1, 72 h phase: a restart at the sample's second ended the run at 69.3 h).
+            audit=$(du -cb "$WORK/n$i"/audit.log* 2>/dev/null | tail -1 | cut -f1 || true)
             state=$(stat -c %s "$WORK/n$i/audit.log.blocks.json" 2>/dev/null || echo 0)
             echo "$t,$i,${rss:-0},$fds,${audit:-0},$state,$(metric "$i" 'sokol_blocks_active{family="ipv4"}'),$(metric "$i" sokol_blocks_pending),$(metric "$i" sokol_tick_seconds_max),$(metric "$i" sokol_p2p_active_peers)" >>"$CSV"
         done
