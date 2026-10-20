@@ -1,0 +1,6 @@
+{
+  "admission": "NOT_ADMITTED",
+  "archive": "/home/runner/work/sokol-core/sokol-core/candidates/candidate-aarch64.tar.gz",
+  "sha256": "2d87ce33dd8fdf7af8a6662a9ab9fa224e38d86aeb8469d7eba8e7da06fa7d25",
+  "source_commit": "776861e3d0ce96658c96c82c75bcfcf8309f7c8c"
+}
