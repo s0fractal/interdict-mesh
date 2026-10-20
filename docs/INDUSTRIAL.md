@@ -10,8 +10,8 @@ it is not an acceptance, verification result or deployment permission.
 | 2 | One bounded model entry point over existing contract/proof/exchange tools | real IPC-A1 native report: offline UNKNOWN/MATCH; replay REPLAYED_PASS/MATCH | LOCAL_VALIDATION |
 | 3 | Complete installable candidate, identity, SBOM/provenance | package-only install; real `e222b10 -> 6585af6 -> e222b10` systemd/veth rehearsal, 0 failures/deviations; hosted provenance pending | LOCAL_VALIDATION |
 | 4 | Operational status, incident visibility, offline operator, support | native workspace + Clippy; persistent-partition promtool negative control, offline JS and bounded collector controls | LOCAL_VALIDATION |
-| 5 | Compatibility and long failure campaigns | actual different-source rollback; all 15 changed-line mutants accounted for; two calibrated native fuzz targets; full-crate sweep and 24h/72h campaigns pending | IN_PROGRESS |
-| 6 | Measured CI cost with preserved discrimination | one-run baseline and fail-closed mutation input selector; hosted after-change measurement pending | IN_PROGRESS |
+| 5 | Compatibility and long failure campaigns | actual different-source rollback; all 15 changed-line mutants accounted for; two calibrated native fuzz targets; three VM campaigns launched 2026-10-15…20 and every one stopped by the harness ([evidence](measurements/2026-10-19-campaign-rc1/README.md): 27 min unrecorded abort; 23.2 h node-log limit, PR #58; 24 h LIMITED_PASS then 72 h `du` abort at 69.3 h, PR #59 merged 2026-10-20); no campaign result on a candidate digest; full-crate sweep pending | FAILED_HARNESS |
+| 6 | Measured CI cost with preserved discrimination | one-run baseline (3,138 job-seconds) and fail-closed mutation input selector merged (PR #55); the hosted after-change measurement was never taken | NOT_MEASURED |
 
 Changes are developed in complete reviewable PR packages. The trusted checker and
 signer configuration are owner authority. The first trust bootstrap needs the

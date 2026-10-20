@@ -1,0 +1,12 @@
+[2026-10-15T14:37:42Z INFO  orchestrator] Sokol-Core 0.1.0 (build 6585af6cf75f)
+[2026-10-15T14:37:42Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.43PdBrYHPA/n1/node.key
+[2026-10-15T14:37:42Z INFO  orchestrator] Sokol-Core 0.1.0 (build 6585af6cf75f)
+[2026-10-15T14:37:42Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.43PdBrYHPA/n2/node.key
+[2026-10-15T14:37:42Z INFO  orchestrator] Sokol-Core 0.1.0 (build 6585af6cf75f)
+[2026-10-15T14:37:42Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.43PdBrYHPA/n3/node.key
+# nodes=3 netem='none' host=aarch64 cpus=10 kernel=6.8.0-142-generic
+# full mesh after 2s: 3/3 nodes see 2 peers
+# soak 1440 min, TTL 300 s, seed 1729 (OS scheduling remains uncontrolled)
+# t=600 s: node 3 restarted
+# t=900 s: node 3 cut off for 30 s
+# t=1200 s: node 3 restarted
