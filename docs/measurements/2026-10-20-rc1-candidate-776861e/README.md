@@ -1,4 +1,4 @@
-# RC-1 candidate `776861e`: benches on the attested archive, campaign launched (2026-10-20)
+# RC-1 candidate `776861e`: benches on the attested archive, campaign stopped by host maintenance (2026-10-20/21)
 
 The candidate is the aarch64 archive CI built on main at `776861e3d0ce96658c96c82c75bcfcf8309f7c8c`
 (the merge of PR #59), artifact `candidate-776861e…-aarch64` of CI run 39489196009:
@@ -59,7 +59,27 @@ Launched 2026-10-20 23:28 local (`campaign-report-at-launch.json`, copied at lau
 | binaries | the installed candidate above (`binary_sha256` b9f1f57c…, `monitor_sha256` 4d723bfe…) |
 | output | `/var/lib/sokol-campaigns/rc1-776861e/{24,72}` on the VM (outside `/tmp`, as INDUSTRIAL.md requires) |
 | phases | 24 h, then 72 h only if the first phase passes; `RuntimeMaxSec` 96.5 h |
-| status at this commit | **RUNNING** (24 h phase). This file is updated with `report.json` when the unit finishes; a `RUNNING` receipt after a hard kill is read back with `systemctl`, not declared a pass. |
+| status | **FAILED_HARNESS** (24 h phase ended at t=23 280 s, 6.47 h, by the host's maintenance; details below). The receipt still says `RUNNING`: read back with `systemctl` and the journal, not declared a pass. |
+
+**What stopped it (2026-10-21 06:16:38 local, `campaign/journal-0616.log`, `campaign/journal-unit.log`).**
+`apt-daily-upgrade.timer` ran `unattended-upgrade` at 06:16:30–06:16:56 (liblzma5, xz-utils,
+ca-certificates, python3-jwt, git, tzdata). Ubuntu 24.04's `needrestart` then restarted every
+service whose processes map an upgraded library, among them crowdsec, suricata, networkd and
+the campaign's transient unit (its `python3` worker maps liblzma5). The bench received SIGTERM
+(console: `Terminated`; the last `soak.csv` row is t=23 280). The relaunched worker found the
+`24/` directory, raised `FileExistsError` on `mkdir` and exited 1, so `report.json` keeps the
+24 h phase at `RUNNING` with no terminal status. Both defects are issue #65 (a preflight that
+refuses to launch while the apt timers are active; a restarted worker writing a terminal
+status). Nothing in this run is a node defect.
+
+**What the 6.47 h show (`campaign/24/soak.csv`, 1 167 rows, one per node per minute; the last
+200 console lines of 73 in `campaign/24/console-tail.log`).** 38 restarts and 25 cuts delivered
+on schedule; `blocks_pending` 0 in every row; `blocks_active` 1 328 median, 1 359 max;
+`peers` 2 in every row except the first minute of a restarted node; RSS p50 34.9 MB, p99 43.0 MB,
+max 48.5 MB; `tick_max_s` p99 0.137 s, max 0.137 s. These are observations from an incomplete
+phase, not a LIMITED_PASS: rule 5 of ADR-0031 is **not met** by this run. The next launch on
+this candidate must mask the apt timers first (issue #65); it is the owner's call whether and
+when to spend the VM time again. |
 
 ## What this does and does not establish
 
@@ -67,7 +87,7 @@ Launched 2026-10-20 23:28 local (`campaign-report-at-launch.json`, copied at lau
   check at `776861e`, the archive is CI-built with a verified SLSA attestation, the runbook
   rehearsal ran green in that CI run (`scripts/runbook-rehearsal.sh` in the `suite` matrix of
   run 39489196009, x86_64 and aarch64), and the S1–S7 and
-  `restart` benches lie inside the targets. Rule 5 waits for the 24 h phase; rule 6 (no open P1,
+  `restart` benches lie inside the targets. Rule 5 is not met: the 24 h phase was cut at 6.47 h by the host's maintenance (above); rule 6 (no open P1,
   boundaries named) is a statement for the admission record, not a measurement.
 - The package-based runbook rehearsal (install from the archive, upgrade, rollback) is the
   2026-10-15 `e222b10 → 6585af6 → e222b10` run in INDUSTRIAL.md package 3, not repeated here.
