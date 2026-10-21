@@ -1,0 +1,5 @@
+6ccb7d5 cidr_normalize: accept /0 (default-route block); record declined requests in PROPOSALS.md
+dc5f28e retry_delay_jittered: +-10% deterministic jitter, kept below IDLE_TIMEOUT_MS
+602c236 cidr_key: whitespace-tolerant block key, bare IPv4 as /32
+394453d replay_order_by_node: group by node, stable
+9c59096 ttl_renew: capped, non-wrapping TTL renewal
