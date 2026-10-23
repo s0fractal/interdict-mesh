@@ -1,0 +1,84 @@
+name: SonarQube Cloud
+
+# Static analysis by SonarQube Cloud (free for public repositories): its own Rust and Python
+# analyzers plus the imported Clippy report (`sonar.rust.clippyReport.reportPaths` in
+# sonar-project.properties). Rust is not covered by Sonar's "automatic analysis", so the scan
+# runs here, with the eBPF object built first (the orchestrator embeds it, as in ci.yml).
+#
+# The job needs the SONAR_TOKEN repository secret (the project token Sonar shows when the
+# repository is imported). Without it, for example on a pull request from a fork or before the
+# owner has created the Sonar project, the scan is skipped with a notice, not failed: this
+# workflow is not a required check and establishes nothing about the invariants; what it
+# establishes is in README.md next to the badge.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: sonar-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CARGO_TERM_COLOR: always
+  BPF_LINKER_VERSION: v0.11.1
+  BPF_LINKER_SHA256: 341ec1c595496877cae2b073544c2226d78a922739632b5732dbaa48507f1380
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+jobs:
+  sonar:
+    name: sonar
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: No SONAR_TOKEN, no scan
+        if: env.SONAR_TOKEN == ''
+        run: |
+          echo "::notice::SONAR_TOKEN is not set for this run (a fork, or the Sonar project does not exist yet); the scan is skipped."
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        if: env.SONAR_TOKEN != ''
+        with:
+          # Sonar needs the history for blame and "new code".
+          fetch-depth: 0
+
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        if: env.SONAR_TOKEN != ''
+        run: |
+          rustup show active-toolchain || rustup toolchain install
+          (cd ebpf && (rustup show active-toolchain || rustup toolchain install))
+
+      - name: Install bpf-linker
+        if: env.SONAR_TOKEN != ''
+        run: |
+          curl -sSfL -o /tmp/bpf-linker.tar.zst "https://github.com/aya-rs/bpf-linker/releases/download/${BPF_LINKER_VERSION}/bpf-linker-x86_64-unknown-linux-musl.tar.zst"
+          echo "${BPF_LINKER_SHA256}  /tmp/bpf-linker.tar.zst" | sha256sum -c -
+          tar --zstd -x -C /usr/local/bin -f /tmp/bpf-linker.tar.zst
+          bpf-linker --version
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        if: env.SONAR_TOKEN != ''
+        with:
+          shared-key: sonar-x86_64
+          workspaces: |
+            . -> target
+
+      - name: Build eBPF program
+        if: env.SONAR_TOKEN != ''
+        working-directory: ebpf
+        run: cargo build --release --locked
+
+      # The same lints ci.yml enforces with -D warnings, as a JSON report for Sonar. A warning
+      # here is a CI failure there, so the report is normally empty of warnings.
+      - name: Clippy report
+        if: env.SONAR_TOKEN != ''
+        run: cargo clippy --release --locked --all-targets --message-format=json > clippy-report.json
+
+      - name: SonarQube Cloud scan
+        if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0

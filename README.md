@@ -1,5 +1,12 @@
 # Sokol-Core 🛡️
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=s0fractal_sokol-core&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=s0fractal_sokol-core)
+
+The badge is SonarQube Cloud's quality gate on `main` (`.github/workflows/sonar.yml`,
+`sonar-project.properties`): its Rust and Python analyzers plus the imported Clippy report. It
+says what Sonar's rules find in the code, and nothing about the invariants, proofs and
+measurements this repository is actually judged by (below).
+
 > **Status:** lab-qualified, no release. Not yet measured on a target NIC in native mode and not
 > run in a field pilot ([ROADMAP](ROADMAP.md), P4).
 
