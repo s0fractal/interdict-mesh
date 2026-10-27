@@ -7,7 +7,8 @@ says what sokol enforces, what Warrant 3 has, what would be lost by switching, a
 carry the piece: warrant (a proposal W-n, not made in this task) or sokol (it keeps its own).
 
 Summary: the record layer has no gap (README: verify IDENTICAL). G1-G4 are the costly machinery and
-stay sokol's; G5-G6 are what phase 2 needs from warrant; G7-G10 are small and need no warrant change.
+stay sokol's; G5-G6 are what phase 2 needs from warrant; G7-G10 are small and need no warrant change;
+G11 answers the owner's question: which of the owner's acts a store could count by itself.
 
 | gap | sokol keeps | warrant proposal |
 | --- | --- | --- |
@@ -21,6 +22,7 @@ stay sokol's; G5-G6 are what phase 2 needs from warrant; G7-G10 are small and ne
 | G8 one shared agent key | sokol's decision | none |
 | G9 time and order from Git | as today | none |
 | G10 the document around the rows | yes | none |
+| G11 the owner's acts as a count from the store | partly | W-7 an act ledger view; W-8 forge acts as observations |
 
 ## G1. Witness-body pins vs Warrant's whole-tree identity
 
@@ -155,6 +157,52 @@ v2 migration. Sokol has no signed time either; nothing is lost against today.
 INVARIANTS.md's prose and row order (`scripts/contract.py propose` places a new row after an
 existing one) are the document's, not the contracts' (README R2). Warrant's views generate whole
 documents; sokol's renderer, which keeps hand-written prose between generated rows, stays.
+
+## G11. Would Warrant records make the owner's act count derivable from the store?
+
+**Today** (README, phase 0) the count needs three sources and a policy: the owner's SSH signatures
+in Git (KEY), Git itself (REPO), and GitHub's API (FORGE), where every pull request, comment and
+merge carries the owner's login because the agents use the owner's token. GitHub's actor field
+cannot tell the owner from an agent; only the owner's key and the stated policy do.
+
+**With every governance act a record** — the actor on every act, signed by that actor's own key
+(V3 §2, §7) — the store answers by itself, as a count of records by actor per week:
+
+- contract acceptances and promotes: an `attest` by the owner on each version it accepts;
+- reviews, verdicts and findings (phase 2): a `pr-head@1` version per head, an accept or a
+  challenge by the reviewer's own key (`codex`, `claude`, or the owner when the owner reviews);
+- agents' acts under their own keys: the "unattributed" problem goes away for every act that is a
+  record (not for code commits, which stay Git's);
+- order per actor from its chain, so a backdated act is visible (V3 §7).
+
+**The unit changes.** The mirror shows it: sokol's owner signs whole manifests, Warrant accepts
+versions. The 34 re-signs became 94 owner acceptances, from 23 of the 34 signing commits; the
+other 11 re-signs pinned no new contract version (witness bodies, closures, build inputs, the trust
+root: G1) and do not appear in the store at all. A store-derived count is in acceptances of
+versions; one owner session that signs a batch is several records (the chain orders them, nothing
+groups them). Counting sessions needs a batch marker, or one attest over a blob that lists ids (W-4).
+
+**What stays outside the store:**
+
+- the forge's acts: merges by a person, rulesets, repository settings, "Update branch", re-runs,
+  secrets. A merge can be *observed* by a record (warrant's gate does: a merge observation naming
+  the merge commit), but the observation does not say who clicked;
+- trust and profile changes: the keys and roles are a file (`.warrant/v3.json`) changed by a
+  merged pull request, a Git and forge act, not a record;
+- key creation and custody: a record signed by the owner's key proves the key, not the hand;
+- decisions in conversation, and the owner's reading;
+- completeness: a store is `UNATTESTED` complete (V3 §10). It counts the acts that were recorded;
+  it cannot prove no other act happened. The count becomes a full count only where the gate refuses
+  what has no record (a merge without an accepted head, a contract change without an acceptance).
+
+**Proposals.** **W-7**: an act ledger view in warrant — records per actor per week, split SIGNED /
+MIGRATED, with each record's kind and schema — so the README's trend table is a generated view of
+the store instead of a script over three sources. **W-8**: forge acts as observations — the gate
+(or an observer checker named by its code) files an `attest` for each merge, ruleset version and
+re-run it can read from the API, with the actor GitHub reports, labelled as observed, never signed by
+that actor. And outside Warrant, for sokol: agents get their own GitHub identity (an app or a bot
+account) instead of the owner's token; that alone splits the FORGE class into the owner's and the
+agents' acts, and it is the second login ADR-0032 is waiting for.
 
 ## What Warrant 3 carries that sokol's machinery does not
 

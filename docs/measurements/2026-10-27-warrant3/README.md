@@ -1,4 +1,4 @@
-# Warrant 3 for sokol-core's governance: phase 0 baseline and phase 1 shadow mirror
+# Warrant 3 for sokol-core's governance: the owner's acts, and a shadow mirror
 
 Date: 2026-10-27. Source: `main` at `dad26967ae1497c73ca8a11cf7a5c8987c0dc213` (2026-10-21, the
 merge of #62). Status: a measurement. Nothing here is read by the gate, CI, `scripts/contract.py`
@@ -6,12 +6,92 @@ or the agent-review check; the contracts, the manifests and their signatures sta
 authority (ADR-0023, ADR-0024, ADR-0028, ADR-0030). No gate, workflow, manifest or signature was
 changed, and nothing was signed as the owner or the agent.
 
-The question: can Warrant 3 (`warrant-graph` 3.0.0a1, its spec docs/V3.md in s0fractal/warrant)
-carry the governance this repository runs with its own machinery? The plan is in phases with stop
-criteria: phase 0 measures, phase 1 builds a read-only mirror and lists what it cannot carry
-([GAPS.md](GAPS.md)), and this report ends with the recommendation for phase 2.
+The question has two parts. The owner's: how far did this repository reach its current state
+without a human, and can that be shown from evidence rather than said? And the study's: can
+Warrant 3 (`warrant-graph` 3.0.0a1, its spec docs/V3.md in s0fractal/warrant) carry the governance
+this repository runs with its own machinery, and would its records make the first answer
+derivable? Phase 0 measures (the central result), phase 1 builds a read-only mirror and lists what
+it cannot carry ([GAPS.md](GAPS.md)), and the report ends with the recommendation for phase 2.
 
-## Phase 0: how much of the history is governance
+## Phase 0: the owner's acts per merged pull request
+
+`scripts/owner-acts.py` counts every act of the owner from three sources and keeps them apart by
+what can attest them. `fetch` snapshots what only GitHub knows into
+`docs/measurements/2026-10-27-warrant3/github-snapshot.json` (taken 2026-10-27T20:53:52Z);
+`count` reads Git objects at the source commit, the SSH signatures in them and that snapshot, and
+writes `docs/measurements/2026-10-27-warrant3/owner-acts.json`; the per pull request table is
+[OWNER-ACTS.md](OWNER-ACTS.md). The predicates, as the script states them:
+
+| class | what attests it | acts |
+| --- | --- | --- |
+| KEY | a signature that verifies under `.github/witness-signers` at the source | re-sign: a commit changing the owner manifest's signature to one the `owner` principal made over that commit's manifest (the agent principal's signatures are counted apart, as the agent's) |
+| REPO | Git alone, unsigned | promote (a contract gains "promoted by the owner"); key binding (a key line added to the signers file); direct push (a non-merge commit on main's first-parent chain) |
+| FORGE | GitHub alone, by the owner's login; the owner's by this repository's policy | merge (merged_by); ruleset (a version in the ruleset's history by the owner's user id); repository creation |
+| AMBIGUOUS | GitHub alone, by the owner's login; no policy keeps agents from it | re-run or dispatched workflow; pull request closed unmerged; "Update branch" merge commits (GitHub-committed merges off main's first-parent chain). Counted apart, never in the owner's total |
+
+An act belongs to the pull request whose merge brought its commit to main (the commits of M^2 not
+reachable from M^1), or to none. Weeks are ISO weeks (UTC) of the act's own time.
+
+**GitHub cannot tell the owner from an agent here.** All 65 pull requests were opened by the
+owner's login, all 60 merges and every timeline event carry it (one comment by a review bot aside),
+because the agents work through the owner's token. Only the owner's SSH key (KEY) and the stated
+policy (FORGE) attribute an act to the human; that is why the classes are kept apart.
+
+### Totals (2026-10-10 to 2026-10-21, 60 merged pull requests)
+
+| act | class | count |
+| --- | --- | ---: |
+| merge | FORGE | 60 |
+| re-sign of the owner manifest | KEY | 34 (all verified) |
+| ruleset version (protect-main: created 10-10, edited 10-11 and 10-12) | FORGE | 3 |
+| key binding (owner key 10-10, agent key 10-14) | REPO | 2 |
+| promote | REPO | 1 |
+| repository creation | FORGE | 1 |
+| direct push to main | REPO | 0 |
+| **owner acts** | | **101** |
+| "Update branch" merges / re-run / closed unmerged | AMBIGUOUS | 11 / 1 / 1 |
+| agent-key signatures of the provisional manifest (the agent's, not the owner's) | KEY | 6 |
+
+No secrets, variables or deploy keys exist; the only collaborator is the owner (so the second
+login ADR-0032 needs was never added). 32 of the 60 pull requests needed the merge and nothing
+else from the owner; 21 needed one re-sign besides and one the agent key's binding; the most was PR #1 (merge, three re-signs, the
+owner key's binding).
+
+### Trend per week
+
+| ISO week | merged PRs | owner acts | per merged PR | PRs needing only the merge | KEY | REPO | FORGE | ambiguous | commits agent / unattributed |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 2026-W41 (from Sat 10-10) | 13 | 32 | 2.46 | 6 | 15 | 1 | 16 | 4 | 41 / 6 |
+| 2026-W42 | 44 | 66 | 1.50 | 23 | 19 | 2 | 45 | 8 | 83 / 18 |
+| 2026-W43 (last merge 10-21) | 3 | 3 | 1.00 | 3 | 0 | 0 | 3 | 1 | 5 / 0 |
+
+The owner's acts per merged pull request fell from 2.46 to 1.00, and the share of pull requests
+that needed only the merge rose from 6 of 13 to 3 of 3: the setup cost (repository, ruleset, keys,
+first pins) was paid in W41, and by W43 the merge was the owner's only act. Three weeks and 60
+pull requests are a short series; W43 has only three. The merge itself never left the owner: it is
+the floor of this method, one act per pull request.
+
+Commits: 129 of the 153 non-merge commits (the root commit aside) carry an agent as author or Co-Authored-By trailer; 24
+carry the owner's Git identity with no trailer. Those 24 are unattributed, not the owner's: the
+agents commit in the owner's identity, and at least one of them leaves no trailer.
+
+### What cannot be counted
+
+- **Seed and key creation.** A key is made on a machine; the earliest trace is its binding in the
+  signers file (counted). Custody is not countable either: a signature proves the key, not the hand.
+- **Decisions in conversation.** Instructions, approvals and "merge it" given to an agent in chat
+  leave no record in Git or GitHub; the act that follows is counted, the decision is not.
+- **Settings without history.** Repository settings, Actions permissions and enabling a workflow
+  have no history API for a personal repository (the audit log is for organizations). Rulesets
+  have one (counted); secrets show only their last write (there are none).
+- **Which unattributed commit the owner typed** (above), and whether a merge or an "Update branch"
+  was a click or an agent's API call through the owner's token: GitHub records the same login.
+- **Reading and reviewing.** The owner's read-through has no record unless it ends in an act.
+
+Seen from the other side, the 101 acts are an upper bound on the owner's recorded acts and a lower
+bound on the owner's involvement, which also lives in the uncounted list.
+
+## Phase 0, continued: how much of the history is governance
 
 `scripts/governance-baseline.py` counts from Git objects only; its output for the source commit
 is `docs/measurements/2026-10-27-warrant3/baseline.json` (same commit, same bytes). The predicates,
@@ -28,12 +108,10 @@ exactly as the script states them:
   evidence_text, witnesses, status, retirement} differs from the parent's (or the file is added or
   removed); otherwise MACHINERY when it touches a G path outside `docs/adr/`; otherwise ADR_ONLY.
   A tier-only change (a promote) is MACHINERY: who stands behind the row changed, not the row.
-- **(b) Owner acts per ISO week** (UTC): re-signs = non-merge commits changing the owner
-  manifest's signature; agent signs = the same for the provisional one; promotes = contracts
-  gaining the decision "promoted by the owner"; merges = merge commits on main's first-parent
-  chain (GitHub reports all 60 as merged by the owner's login, s0fractal); owner-path merges = those merges whose
-  diff names a path the owner's signature covers (signers file, `scripts/witness-pin.py`, the gate
-  workflow, the owner manifest and its signature).
+- **(b) Owner acts from Git alone**: the same 34 re-signs, 60 merges and 1 promote as
+  `scripts/owner-acts.py` above, plus one figure that count does not give: 36 of the 60 merges
+  named a path the owner's signature covers (signers file, `scripts/witness-pin.py`, the gate
+  workflow, the owner manifest and its signature); 24 touched none.
 - **(c) Lines**: newline count of the governance code, tests and workflows listed in the script.
 
 ### (a) Commits touching governance
@@ -53,19 +131,6 @@ Two INVARIANT commits also changed governance code. Read the 27 "proposal" commi
 half of an invariant change (an agent records an intent; the owner accepts it later in an
 INVARIANT commit), not as machinery work: counted that way, invariant work is 54 commits and the
 machinery proper (code, workflows, re-pins alone) is 42.
-
-### (b) Owner acts per week
-
-| ISO week | re-signs | agent signs | promotes | merges | owner-path merges |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 2026-W41 (history starts Sat 10-10) | 15 | 0 | 0 | 13 | 9 |
-| 2026-W42 | 19 | 6 | 1 | 44 | 27 |
-| 2026-W43 | 0 | 0 | 0 | 3 | 0 |
-| total | 34 | 6 | 1 | 60 | 36 |
-
-Every merge is an owner act today: 60 merges and 34 manifest signatures between 2026-10-10 and
-2026-10-21, the last merge on main. 24 of the 60 merges touched no path the owner's signature covers; those are the ones a
-merge rule without the owner could take over (phase 2's question).
 
 ### (c) Governance code
 
@@ -174,13 +239,19 @@ to a head by record id, and findings become challenges. Proceed, as a shadow fir
   (or vendored at an exact commit with their code identity).
 - **Shape**: review records in each pull request's `.warrant/` beside the agent-review check;
   no required check changes until the shadow has run; no change to the witness gate, manifests or
-  signatures; nothing during RC-1 that needs a workflow change.
+  signatures. RC-1 runs after the migration (the owner's decision of 2026-10-27), so phase 2 does
+  not wait for it.
 - **Stop criteria**, measured on the first ten pull requests reviewed in shadow: stop if the
   Warrant verdict on a head and the agent-review check's verdict differ for any reason other than
   who may review; stop if any pull request needs an owner act it does not need today (baseline
-  above: one merge per pull request, one re-sign per pinned change); stop at signed verdicts only
+  above: 1.00 owner acts per merged pull request in W43, the merge; one re-sign per pinned change); stop at signed verdicts only
   if no finding could be replayed (G2: Rust findings stay unreplayed theses until W-2); stop if
   the waker cannot serve this repository without warrant changes beyond W-5 and W-6.
+- **What phase 2 gives the owner's question**: every review becomes a record signed by its
+  reviewer's own key, so the reviews in the count stop being "the owner's login" and become
+  `codex` or `claude` (or the owner, when the owner reviews), and the count of who reviewed what
+  is read from the store, not inferred (GAPS G11). Merges, rulesets and the signers file stay
+  outside the store until a later phase.
 - **What phase 2 can save**: the 24 of 60 merges that touched no owner-signed path are the
   candidates for merge on acceptance (warrant's gate) in a later phase; re-signs and owner-path
   merges stay the owner's.
@@ -189,11 +260,14 @@ to a head by record id, and findings become challenges. Proceed, as a shadow fir
 
 ```shell
 uv venv --python 3.12 VENV && uv pip install --python VENV/bin/python -r scripts/warrant3-mirror.requirements.txt
+python3 scripts/owner-acts.py count --source dad26967ae1497c73ca8a11cf7a5c8987c0dc213   # reads the committed snapshot
+python3 scripts/owner-acts.py table                                                       # OWNER-ACTS.md
 python3 scripts/governance-baseline.py --source dad26967ae1497c73ca8a11cf7a5c8987c0dc213
 VENV/bin/python scripts/warrant3-mirror.py verify     # needs no key; replays from Git
 VENV/bin/python scripts/warrant3-mirror.py selftest
 ```
 
-`warrant3-mirror.py run` rewrites `.warrant/` and needs the mirror checker's seed (outside the
+`owner-acts.py fetch` takes a new GitHub snapshot (it needs `gh` signed in; a later snapshot also
+holds later pull requests, so its count differs by them). `warrant3-mirror.py run` rewrites `.warrant/` and needs the mirror checker's seed (outside the
 repository). Any edit of the mirror script or of `scripts/witness-pin.py` changes the mirror's
 code identity: the store must then be rebuilt, and verify refuses a genesis naming other code.

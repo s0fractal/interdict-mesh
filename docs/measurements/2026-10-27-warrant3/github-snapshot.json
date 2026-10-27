@@ -1,0 +1,2717 @@
+{
+ "collaborators": [
+  [
+   "s0fractal",
+   "admin"
+  ]
+ ],
+ "created_at": "2026-10-10T15:50:41Z",
+ "deploy_keys": [],
+ "fetched_at": "2026-10-27T20:53:52Z",
+ "manual_runs": [
+  [
+   "2026-10-12T13:01:51Z",
+   "pull_request",
+   2,
+   "s0fractal",
+   "CI",
+   "claude/charming-einstein-6wm81y"
+  ]
+ ],
+ "owner": {
+  "id": 194916542,
+  "login": "s0fractal"
+ },
+ "pull_requests": [
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-10T16:49:48Z",
+   "created_at": "2026-10-10T15:53:09Z",
+   "draft": false,
+   "events": [
+    [
+     "commented",
+     "qodo-code-review[bot]",
+     "2026-10-10T15:53:16Z",
+     "qodo-code-review"
+    ],
+    [
+     "reviewed",
+     "s0fractal",
+     "2026-10-10T16:49:41Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-10T16:49:48Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-10T16:49:48Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-10T17:42:11Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-12T05:56:12Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-12T15:36:26Z",
+     null
+    ]
+   ],
+   "head_ref": "gate/owner-pinned-witnesses",
+   "merge_commit": "b16d5c5118c8c8f526b2b60e8445d378bc78432c",
+   "merged_at": "2026-10-10T16:49:48Z",
+   "merged_by": "s0fractal",
+   "number": 1,
+   "state": "closed",
+   "title": "Owner-pinned witnesses: a cited test cannot be weakened under its old name (ADR-0023)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-10T17:41:57Z",
+   "created_at": "2026-10-10T17:28:12Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-10T17:41:57Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-10T17:41:57Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-10T17:42:00Z",
+     null
+    ]
+   ],
+   "head_ref": "contracts/generated-projection",
+   "merge_commit": "56c2038a7c8bedc38aaa869ae3034b160f16d870",
+   "merged_at": "2026-10-10T17:41:57Z",
+   "merged_by": "s0fractal",
+   "number": 2,
+   "state": "closed",
+   "title": "Generate source-backed invariant projections with verified owner pins"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-10T18:26:42Z",
+   "created_at": "2026-10-10T18:11:24Z",
+   "draft": false,
+   "events": [
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-10T18:15:27Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-10T18:26:42Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-10T18:26:42Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-10T18:26:45Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-12T15:36:26Z",
+     null
+    ]
+   ],
+   "head_ref": "contracts/generate-all-rows-gate",
+   "merge_commit": "3dd73ff2577041044d273578e365aa56865f799f",
+   "merged_at": "2026-10-10T18:26:42Z",
+   "merged_by": "s0fractal",
+   "number": 3,
+   "state": "closed",
+   "title": "Invariant rows change only through their contracts: propose, accept, regenerate (ADR-0024)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-10T18:34:15Z",
+   "created_at": "2026-10-10T18:15:26Z",
+   "draft": false,
+   "events": [
+    [
+     "automatic_base_change_succeeded",
+     "s0fractal",
+     "2026-10-10T18:26:44Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-10T18:34:15Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-10T18:34:15Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-10T18:34:17Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-12T15:36:26Z",
+     null
+    ]
+   ],
+   "head_ref": "contracts/all-rows-generated",
+   "merge_commit": "d51596cc41a26cfeb5d617ec28f8c81d0a70cbdf",
+   "merged_at": "2026-10-10T18:34:15Z",
+   "merged_by": "s0fractal",
+   "number": 4,
+   "state": "closed",
+   "title": "Every invariant row is generated from its contract (ADR-0024, step 2)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-10T19:57:21Z",
+   "created_at": "2026-10-10T18:41:04Z",
+   "draft": false,
+   "events": [
+    [
+     "reviewed",
+     "s0fractal",
+     "2026-10-10T19:54:27Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-10T19:57:21Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-10T19:57:21Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-10T19:57:23Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/counterexamples-2026-10-10",
+   "merge_commit": "ce58d1f754aae14e334537723315d40f5f6a4359",
+   "merged_at": "2026-10-10T19:57:21Z",
+   "merged_by": "s0fractal",
+   "number": 5,
+   "state": "closed",
+   "title": "Fix four counterexamples to pinned invariants found by an agent hunt"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-10T20:28:05Z",
+   "created_at": "2026-10-10T20:07:21Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-10T20:28:05Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-10T20:28:05Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-10T20:28:07Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/counterexamples-round-2",
+   "merge_commit": "c764ed594278f9f07089811a15771cedefb34119",
+   "merged_at": "2026-10-10T20:28:05Z",
+   "merged_by": "s0fractal",
+   "number": 6,
+   "state": "closed",
+   "title": "Fix two counterexamples from hunt round 2; new boundary NODE-R4"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-10T23:16:36Z",
+   "created_at": "2026-10-10T20:47:44Z",
+   "draft": false,
+   "events": [
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-10T20:55:12Z",
+     null
+    ],
+    [
+     "reviewed",
+     "s0fractal",
+     "2026-10-10T23:16:33Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-10T23:16:36Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-10T23:16:36Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-10T23:16:39Z",
+     null
+    ],
+    [
+     "referenced",
+     "s0fractal",
+     "2026-10-11T22:18:03Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-11T22:19:08Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-11T22:20:31Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/counterexamples-round-3",
+   "merge_commit": "463902384b87a133109a053b6c80d858db13813c",
+   "merged_at": "2026-10-10T23:16:36Z",
+   "merged_by": "s0fractal",
+   "number": 7,
+   "state": "closed",
+   "title": "Fix hunt round 3 counterexamples; seven new invariants"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-11T00:02:49Z",
+   "created_at": "2026-10-10T20:55:11Z",
+   "draft": false,
+   "events": [
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-10T23:16:34Z",
+     null
+    ],
+    [
+     "automatic_base_change_succeeded",
+     "s0fractal",
+     "2026-10-10T23:16:38Z",
+     null
+    ],
+    [
+     "reviewed",
+     "s0fractal",
+     "2026-10-10T23:22:10Z",
+     null
+    ],
+    [
+     "renamed",
+     "s0fractal",
+     "2026-10-10T23:51:37Z",
+     null
+    ],
+    [
+     "reviewed",
+     "s0fractal",
+     "2026-10-11T00:02:46Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-11T00:02:49Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-11T00:02:49Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-11T00:02:52Z",
+     null
+    ],
+    [
+     "referenced",
+     "s0fractal",
+     "2026-10-11T22:18:03Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-11T22:19:08Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-11T22:20:31Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-12T15:36:26Z",
+     null
+    ]
+   ],
+   "head_ref": "mesh/per-peer-known-claims",
+   "merge_commit": "4c6cc75631dd4d9341627172578d4d19410d8eb8",
+   "merged_at": "2026-10-11T00:02:49Z",
+   "merged_by": "s0fractal",
+   "number": 8,
+   "state": "closed",
+   "title": "Bound peer known claims and apply trust/quota reloads atomically"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-11T03:00:46Z",
+   "created_at": "2026-10-11T02:36:50Z",
+   "draft": false,
+   "events": [
+    [
+     "commented",
+     "s0fractal",
+     "2026-10-11T02:37:55Z",
+     null
+    ],
+    [
+     "commented",
+     "s0fractal",
+     "2026-10-11T03:00:38Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-11T03:00:46Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-11T03:00:46Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-11T03:00:48Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-11T22:19:08Z",
+     null
+    ],
+    [
+     "referenced",
+     "s0fractal",
+     "2026-10-11T22:37:08Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-12T15:36:26Z",
+     null
+    ]
+   ],
+   "head_ref": "hardening/bounded-inputs-required-gates",
+   "merge_commit": "a06be0c7e41f95bcd30da034b3d663f8df96d4cb",
+   "merged_at": "2026-10-11T03:00:46Z",
+   "merged_by": "s0fractal",
+   "number": 9,
+   "state": "closed",
+   "title": "Bound external inputs and add replayable contract tasks"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-11T06:58:02Z",
+   "created_at": "2026-10-11T06:33:08Z",
+   "draft": false,
+   "events": [
+    [
+     "commented",
+     "s0fractal",
+     "2026-10-11T06:33:16Z",
+     null
+    ],
+    [
+     "commented",
+     "s0fractal",
+     "2026-10-11T06:58:00Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-11T06:58:02Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-11T06:58:02Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-11T06:58:05Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-11T22:19:08Z",
+     null
+    ]
+   ],
+   "head_ref": "hardening/verified-streaming-replay",
+   "merge_commit": "5aec480a98e4552e78b59037394e516f251b381d",
+   "merged_at": "2026-10-11T06:58:02Z",
+   "merged_by": "s0fractal",
+   "number": 10,
+   "state": "closed",
+   "title": "Verify audit replay in one pass with bounded diagnostics"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-11T21:58:42Z",
+   "created_at": "2026-10-11T21:42:32Z",
+   "draft": false,
+   "events": [
+    [
+     "commented",
+     "s0fractal",
+     "2026-10-11T21:43:35Z",
+     null
+    ],
+    [
+     "commented",
+     "s0fractal",
+     "2026-10-11T21:58:39Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-11T21:58:42Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-11T21:58:42Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-11T21:58:44Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-11T22:19:08Z",
+     null
+    ],
+    [
+     "referenced",
+     "s0fractal",
+     "2026-10-11T22:37:08Z",
+     null
+    ]
+   ],
+   "head_ref": "evidence/proof-calibration",
+   "merge_commit": "b204265c53836454ef472a25b3001eade712b082",
+   "merged_at": "2026-10-11T21:58:42Z",
+   "merged_by": "s0fractal",
+   "number": 11,
+   "state": "closed",
+   "title": "Calibrate Kani proof methods with executable counterexamples"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-11T22:37:06Z",
+   "created_at": "2026-10-11T22:19:07Z",
+   "draft": false,
+   "events": [
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-11T22:20:31Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-11T22:37:06Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-11T22:37:07Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-11T22:37:09Z",
+     null
+    ]
+   ],
+   "head_ref": "pins/2026-10-12",
+   "merge_commit": "f9ec24917afb0565843a9119fec5e2348c76e1b1",
+   "merged_at": "2026-10-11T22:37:06Z",
+   "merged_by": "s0fractal",
+   "number": 12,
+   "state": "closed",
+   "title": "Re-pin main: MESH-K1 and four new boundaries from #9–#11 (owner-signed)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-11T23:17:22Z",
+   "created_at": "2026-10-11T22:20:30Z",
+   "draft": false,
+   "events": [
+    [
+     "automatic_base_change_succeeded",
+     "s0fractal",
+     "2026-10-11T22:37:09Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-11T23:17:22Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-11T23:17:22Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-11T23:17:24Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T14:45:29Z",
+     null
+    ]
+   ],
+   "head_ref": "gate/main-requires-every-pin",
+   "merge_commit": "9e32f4eea02f99ec90b5343ed6ca18f99bc1e84d",
+   "merged_at": "2026-10-11T23:17:22Z",
+   "merged_by": "s0fractal",
+   "number": 13,
+   "state": "closed",
+   "title": "On a push to main, the gate refuses anything unpinned"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T00:07:42Z",
+   "created_at": "2026-10-11T23:34:13Z",
+   "draft": false,
+   "events": [
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-11T23:51:45Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T00:07:42Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T00:07:42Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T00:07:45Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/counterexamples-round-4a",
+   "merge_commit": "a5a2cbd426467ca939be895427b27fae0dfa3c68",
+   "merged_at": "2026-10-12T00:07:42Z",
+   "merged_by": "s0fractal",
+   "number": 14,
+   "state": "closed",
+   "title": "Fix three counterexamples of hunt round 4 (ring-buffer bytes, FastNetMon delivery, storm threshold)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T00:39:55Z",
+   "created_at": "2026-10-11T23:51:43Z",
+   "draft": false,
+   "events": [
+    [
+     "automatic_base_change_succeeded",
+     "s0fractal",
+     "2026-10-12T00:07:44Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T00:39:55Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T00:39:55Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T00:39:58Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/counterexamples-round-4b",
+   "merge_commit": "b75821fe8bc45c524c9765f607d47f7f7197366b",
+   "merged_at": "2026-10-12T00:39:55Z",
+   "merged_by": "s0fractal",
+   "number": 15,
+   "state": "closed",
+   "title": "Storm mode no longer feeds its own attack signal; a wall step back cannot renew a used lease"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T03:13:56Z",
+   "created_at": "2026-10-12T02:04:23Z",
+   "draft": false,
+   "events": [
+    [
+     "reviewed",
+     "s0fractal",
+     "2026-10-12T02:05:19Z",
+     null
+    ],
+    [
+     "ready_for_review",
+     "s0fractal",
+     "2026-10-12T03:13:54Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T03:13:56Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T03:13:56Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T03:13:58Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-12T03:22:40Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/operator-telemetry-facts",
+   "merge_commit": "261cdd7942fae039f45bcd7d48d6149668bc7863",
+   "merged_at": "2026-10-12T03:13:56Z",
+   "merged_by": "s0fractal",
+   "number": 16,
+   "state": "closed",
+   "title": "Keep diagnostic text out of operator telemetry facts"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T03:21:14Z",
+   "created_at": "2026-10-12T02:52:37Z",
+   "draft": false,
+   "events": [
+    [
+     "reviewed",
+     "s0fractal",
+     "2026-10-12T02:53:21Z",
+     null
+    ],
+    [
+     "ready_for_review",
+     "s0fractal",
+     "2026-10-12T03:13:59Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T03:21:14Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T03:21:14Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T03:21:17Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-12T03:22:40Z",
+     null
+    ]
+   ],
+   "head_ref": "refactor/typed-protection-reasons",
+   "merge_commit": "09dad0594efd9b2bb96a19dd8b0d3c149f5b5146",
+   "merged_at": "2026-10-12T03:21:14Z",
+   "merged_by": "s0fractal",
+   "number": 17,
+   "state": "closed",
+   "title": "Choose protected-source roles by type instead of diagnostic text"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T03:29:20Z",
+   "created_at": "2026-10-12T03:22:39Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T03:29:20Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T03:29:20Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T03:29:22Z",
+     null
+    ]
+   ],
+   "head_ref": "accept/operator-policy-t1",
+   "merge_commit": "c51cdc9e46520691196fcc5ce6bf21f09a769dc9",
+   "merged_at": "2026-10-12T03:29:20Z",
+   "merged_by": "s0fractal",
+   "number": 18,
+   "state": "closed",
+   "title": "Accept OPERATOR-T1 and POLICY-T1"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T04:24:04Z",
+   "created_at": "2026-10-12T03:47:48Z",
+   "draft": false,
+   "events": [
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T04:24:03Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T04:24:04Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T04:24:06Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/counterexamples-round-5",
+   "merge_commit": "c9f7efa82e0392573345d6628a3ae9c6f8a56c40",
+   "merged_at": "2026-10-12T04:24:03Z",
+   "merged_by": "s0fractal",
+   "number": 19,
+   "state": "closed",
+   "title": "Close round-5 counterexamples"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T04:47:36Z",
+   "created_at": "2026-10-12T04:26:19Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T04:47:36Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T04:47:36Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T04:47:38Z",
+     null
+    ]
+   ],
+   "head_ref": "mesh/peer-address-binding",
+   "merge_commit": "3e7ac69731e0707c82a74530c2a00a456206f2bd",
+   "merged_at": "2026-10-12T04:47:36Z",
+   "merged_by": "s0fractal",
+   "number": 20,
+   "state": "closed",
+   "title": "Bind pinned peers to their tunnel address (ADR-0027)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T05:39:57Z",
+   "created_at": "2026-10-12T05:06:25Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T05:39:57Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T05:39:57Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T05:39:59Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-12T05:56:12Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T14:45:29Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T15:02:13Z",
+     null
+    ]
+   ],
+   "head_ref": "gate/witness-closure",
+   "merge_commit": "78abb4995dc1be3c0c8a5e7837a456b84155ed52",
+   "merged_at": "2026-10-12T05:39:57Z",
+   "merged_by": "s0fractal",
+   "number": 21,
+   "state": "closed",
+   "title": "Pin each witness's closure and require it to run"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T06:27:51Z",
+   "created_at": "2026-10-12T05:56:11Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T06:27:51Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T06:27:51Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T06:27:53Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T15:00:11Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T15:02:13Z",
+     null
+    ]
+   ],
+   "head_ref": "gate/alias-and-harness",
+   "merge_commit": "8ad8aeee77c5be8c7931e815110917e2b4801458",
+   "merged_at": "2026-10-12T06:27:51Z",
+   "merged_by": "s0fractal",
+   "number": 22,
+   "state": "closed",
+   "title": "Close round-6 gate findings"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T06:35:16Z",
+   "created_at": "2026-10-12T06:28:31Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T06:35:16Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T06:35:16Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T06:35:18Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T14:55:19Z",
+     null
+    ]
+   ],
+   "head_ref": "gate/base-workflow",
+   "merge_commit": "3c51594d2222e030f6aa2e1f99f41d7ee713b9c2",
+   "merged_at": "2026-10-12T06:35:16Z",
+   "merged_by": "s0fractal",
+   "number": 23,
+   "state": "closed",
+   "title": "Witness gate a pull request cannot change (F4)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T07:18:49Z",
+   "created_at": "2026-10-12T06:41:00Z",
+   "draft": false,
+   "events": [
+    [
+     "ready_for_review",
+     "s0fractal",
+     "2026-10-12T07:05:21Z",
+     null
+    ],
+    [
+     "commented",
+     "s0fractal",
+     "2026-10-12T07:18:48Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T07:18:49Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T07:18:51Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-12T15:19:22Z",
+     null
+    ]
+   ],
+   "head_ref": "redteam/f4-spoof-probe",
+   "merge_commit": null,
+   "merged_at": null,
+   "merged_by": null,
+   "number": 24,
+   "state": "closed",
+   "title": "RED-TEAM PROBE (do not merge): spoof the base witness gate"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T09:56:12Z",
+   "created_at": "2026-10-12T09:33:32Z",
+   "draft": false,
+   "events": [
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T09:56:12Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T09:56:13Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T09:56:15Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-12T11:17:35Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-12T15:05:41Z",
+     null
+    ]
+   ],
+   "head_ref": "claude/charming-einstein-6wm81y",
+   "merge_commit": "bfdae34d656b475d3d8bf55308e2144ed3424b9a",
+   "merged_at": "2026-10-12T09:56:12Z",
+   "merged_by": "s0fractal",
+   "number": 25,
+   "state": "closed",
+   "title": "Round-5 mesh and observability candidates; Kani proofs of the storm latch; local-ci fixes"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T12:20:57Z",
+   "created_at": "2026-10-12T11:17:33Z",
+   "draft": false,
+   "events": [
+    [
+     "reviewed",
+     "s0fractal",
+     "2026-10-12T11:39:02Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T12:20:57Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T12:20:57Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T12:21:00Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-12T13:01:48Z",
+     null
+    ]
+   ],
+   "head_ref": "claude/charming-einstein-6wm81y",
+   "merge_commit": "6838e04aab082aab44a60cafb5439c177a0cb5e7",
+   "merged_at": "2026-10-12T12:20:57Z",
+   "merged_by": "s0fractal",
+   "number": 26,
+   "state": "closed",
+   "title": "Kani for the lease arithmetic, the mesh envelope framing and the replay window; peer claim surge visibility"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T14:51:57Z",
+   "created_at": "2026-10-12T13:01:47Z",
+   "draft": false,
+   "events": [
+    [
+     "commented",
+     "s0fractal",
+     "2026-10-12T13:19:06Z",
+     "claude"
+    ],
+    [
+     "reviewed",
+     "s0fractal",
+     "2026-10-12T14:11:04Z",
+     null
+    ],
+    [
+     "reviewed",
+     "s0fractal",
+     "2026-10-12T14:51:54Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T14:51:57Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T14:51:57Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T14:52:00Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-12T15:05:41Z",
+     null
+    ]
+   ],
+   "head_ref": "claude/charming-einstein-6wm81y",
+   "merge_commit": "76d8d1d640d6fef6dfe38b0ae1096b0d1896166d",
+   "merged_at": "2026-10-12T14:51:57Z",
+   "merged_by": "s0fractal",
+   "number": 27,
+   "state": "closed",
+   "title": "Refuse mesh replays whatever the clock did: per-sender floor and restart fence (MESH-N1)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T15:12:25Z",
+   "created_at": "2026-10-12T15:05:40Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T15:12:25Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T15:12:25Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T15:12:27Z",
+     null
+    ]
+   ],
+   "head_ref": "accept/mesh-n1",
+   "merge_commit": "bfdbb8bab43ff36426fcd45d1d4dca9d3c84c374",
+   "merged_at": "2026-10-12T15:12:25Z",
+   "merged_by": "s0fractal",
+   "number": 28,
+   "state": "closed",
+   "title": "Accept the round-5 candidate contracts (MESH-N1 and nine more)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T15:26:17Z",
+   "created_at": "2026-10-12T15:19:21Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T15:26:17Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T15:26:17Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T15:26:19Z",
+     null
+    ]
+   ],
+   "head_ref": "paper/signed-witnesses",
+   "merge_commit": "47996ce4866a3076b11fd1514fac41f0824f5153",
+   "merged_at": "2026-10-12T15:26:17Z",
+   "merged_by": "s0fractal",
+   "number": 29,
+   "state": "closed",
+   "title": "Working paper: signed witnesses"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-12T15:56:28Z",
+   "created_at": "2026-10-12T15:36:25Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-12T15:56:28Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-12T15:56:28Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-12T15:56:29Z",
+     null
+    ]
+   ],
+   "head_ref": "contracts/retire",
+   "merge_commit": "d7e65e4f47a5ee9ce55547e6932384b6b36bbf15",
+   "merged_at": "2026-10-12T15:56:28Z",
+   "merged_by": "s0fractal",
+   "number": 30,
+   "state": "closed",
+   "title": "Retire rows through their contracts; retire three stale documents"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-13T15:39:21Z",
+   "created_at": "2026-10-13T14:31:20Z",
+   "draft": false,
+   "events": [
+    [
+     "reviewed",
+     "s0fractal",
+     "2026-10-13T14:33:08Z",
+     null
+    ],
+    [
+     "commented",
+     "s0fractal",
+     "2026-10-13T15:39:17Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-13T15:39:21Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-13T15:39:21Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-13T15:39:24Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-13T16:57:13Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T11:56:35Z",
+     null
+    ],
+    [
+     "referenced",
+     "s0fractal",
+     "2026-10-14T12:19:51Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T15:00:11Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/operator-readback-state",
+   "merge_commit": "39187188ffbc2f83b84cc90ef851ace3f35528a4",
+   "merged_at": "2026-10-13T15:39:21Z",
+   "merged_by": "s0fractal",
+   "number": 31,
+   "state": "closed",
+   "title": "Expose operator ban freshness and ambiguous control outcomes"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-13T17:04:59Z",
+   "created_at": "2026-10-13T16:57:12Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-13T17:04:59Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-13T17:04:59Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-13T17:05:02Z",
+     null
+    ]
+   ],
+   "head_ref": "accept/operator-r1",
+   "merge_commit": "13d02021fbe7e5da3cc929a9a2702620c727ad18",
+   "merged_at": "2026-10-13T17:04:59Z",
+   "merged_by": "s0fractal",
+   "number": 32,
+   "state": "closed",
+   "title": "Accept OPERATOR-R1"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T10:33:43Z",
+   "created_at": "2026-10-14T10:02:13Z",
+   "draft": false,
+   "events": [
+    [
+     "commented",
+     "s0fractal",
+     "2026-10-14T10:03:53Z",
+     null
+    ],
+    [
+     "commented",
+     "s0fractal",
+     "2026-10-14T10:33:40Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T10:33:43Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T10:33:43Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T10:33:45Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T10:45:01Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T11:56:35Z",
+     null
+    ],
+    [
+     "referenced",
+     "s0fractal",
+     "2026-10-14T12:19:51Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T14:45:29Z",
+     null
+    ]
+   ],
+   "head_ref": "feat/portable-counterexample",
+   "merge_commit": "4bae311d0ed289deaf39c1f068799595d87aacac",
+   "merged_at": "2026-10-14T10:33:43Z",
+   "merged_by": "s0fractal",
+   "number": 33,
+   "state": "closed",
+   "title": "Add portable counterexample exchange with Warrant"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T10:58:58Z",
+   "created_at": "2026-10-14T10:44:59Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T10:58:58Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T10:58:58Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T10:59:00Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T11:04:11Z",
+     null
+    ]
+   ],
+   "head_ref": "exchange/p1-witness-env",
+   "merge_commit": "5231d71cbcf90eed7ec4d02ba3cdafeb119a0466",
+   "merged_at": "2026-10-14T10:58:58Z",
+   "merged_by": "s0fractal",
+   "number": 34,
+   "state": "closed",
+   "title": "EXCHANGE-P1: Warrant CLI for the gate's runs; statement scoped to its witnesses"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T11:12:57Z",
+   "created_at": "2026-10-14T11:04:10Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T11:12:57Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T11:12:57Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T11:12:59Z",
+     null
+    ]
+   ],
+   "head_ref": "accept/exchange-p1",
+   "merge_commit": "def0d657c1b8901cf5b6f3ea72e0c25fb765bec1",
+   "merged_at": "2026-10-14T11:12:57Z",
+   "merged_by": "s0fractal",
+   "number": 35,
+   "state": "closed",
+   "title": "Accept EXCHANGE-P1"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T12:19:49Z",
+   "created_at": "2026-10-14T11:56:34Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T12:19:49Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T12:19:49Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T12:19:52Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T14:45:29Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T19:08:40Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/review-nits-31-33",
+   "merge_commit": "27d0ea0f27293dc9e367d5b320749c3643661f6b",
+   "merged_at": "2026-10-14T12:19:49Z",
+   "merged_by": "s0fractal",
+   "number": 36,
+   "state": "closed",
+   "title": "Close the review nits of #31 and #33"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T14:52:20Z",
+   "created_at": "2026-10-14T14:45:28Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T14:52:20Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T14:52:20Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T14:52:23Z",
+     null
+    ]
+   ],
+   "head_ref": "tools/pre-push",
+   "merge_commit": "986d7fa3785192360aab9e86df28f6ebe98036ef",
+   "merged_at": "2026-10-14T14:52:20Z",
+   "merged_by": "s0fractal",
+   "number": 37,
+   "state": "closed",
+   "title": "Pre-push checks that run anywhere"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T15:11:11Z",
+   "created_at": "2026-10-14T14:55:18Z",
+   "draft": false,
+   "events": [
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T15:00:11Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T15:11:11Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T15:11:11Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T15:11:14Z",
+     null
+    ]
+   ],
+   "head_ref": "gate/isolated-python",
+   "merge_commit": "f9e25e8fd3fb5db183d5d14a1ebaa08b5a857310",
+   "merged_at": "2026-10-14T15:11:11Z",
+   "merged_by": "s0fractal",
+   "number": 38,
+   "state": "closed",
+   "title": "Run the gate checker isolated: a change's scripts/ could shadow its imports"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T15:31:01Z",
+   "created_at": "2026-10-14T15:00:10Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T15:31:01Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T15:31:01Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T15:31:04Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/counterexamples-round-7",
+   "merge_commit": "3764989f15d44e15336110b0eaeab04dd982a983",
+   "merged_at": "2026-10-14T15:31:01Z",
+   "merged_by": "s0fractal",
+   "number": 39,
+   "state": "closed",
+   "title": "Close round-7 counterexamples"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T16:00:41Z",
+   "created_at": "2026-10-14T15:02:12Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T16:00:41Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T16:00:41Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T16:00:44Z",
+     null
+    ]
+   ],
+   "head_ref": "gate/impl-closure-names",
+   "merge_commit": "2f970ce778974d7834ae38e2cab8ed8dde6770d3",
+   "merged_at": "2026-10-14T16:00:41Z",
+   "merged_by": "s0fractal",
+   "number": 40,
+   "state": "closed",
+   "title": "Gate: name an impl by its self type again (closures_v3)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T17:20:46Z",
+   "created_at": "2026-10-14T16:28:29Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T17:20:46Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T17:20:46Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T17:20:48Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T17:28:06Z",
+     null
+    ]
+   ],
+   "head_ref": "gate/toolchain-and-imports",
+   "merge_commit": "402bca257b56671c1d99597adf3d1b93da338ae4",
+   "merged_at": "2026-10-14T17:20:46Z",
+   "merged_by": "s0fractal",
+   "number": 41,
+   "state": "closed",
+   "title": "Gate: follow Python imports of local modules; pin the Rust toolchain"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T17:08:36Z",
+   "created_at": "2026-10-14T16:34:56Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T17:08:36Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T17:08:36Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T17:08:38Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/trap-alerts-monitor",
+   "merge_commit": "5595d3fcc3f72512488491883efd519158dc1b8c",
+   "merged_at": "2026-10-14T17:08:36Z",
+   "merged_by": "s0fractal",
+   "number": 42,
+   "state": "closed",
+   "title": "Trap session deadline, monotonic alert ids, monitor tier/IP from the header only"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T17:44:31Z",
+   "created_at": "2026-10-14T17:28:05Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T17:44:31Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T17:44:31Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T17:44:33Z",
+     null
+    ]
+   ],
+   "head_ref": "gate/pin-workflows-trap-link",
+   "merge_commit": "75e1a522dad1c6f89211e59c387f497c0abb3cc5",
+   "merged_at": "2026-10-14T17:44:31Z",
+   "merged_by": "s0fractal",
+   "number": 43,
+   "state": "closed",
+   "title": "Pin the base gate workflow; per-thread node link for trap tests"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T18:26:08Z",
+   "created_at": "2026-10-14T18:16:55Z",
+   "draft": false,
+   "events": [
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T18:26:07Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T18:26:08Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T18:26:10Z",
+     null
+    ]
+   ],
+   "head_ref": "gate/provisional-tier",
+   "merge_commit": "68fa5dcb3d88aec81a972a114df93f58d5170b8f",
+   "merged_at": "2026-10-14T18:26:07Z",
+   "merged_by": "s0fractal",
+   "number": 44,
+   "state": "closed",
+   "title": "Provisional agent tier: agents merge new guarantees, the owner promotes in batches (ADR-0028)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T19:07:08Z",
+   "created_at": "2026-10-14T18:57:22Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T19:07:08Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T19:07:08Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T19:07:10Z",
+     null
+    ]
+   ],
+   "head_ref": "gate/enable-agent-key",
+   "merge_commit": "b7c739fc3f13eb61e835142e0c31a14b5be96ef0",
+   "merged_at": "2026-10-14T19:07:08Z",
+   "merged_by": "s0fractal",
+   "number": 45,
+   "state": "closed",
+   "title": "Enable the agent tier: add the agent key to the witness signers"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T19:37:26Z",
+   "created_at": "2026-10-14T19:08:39Z",
+   "draft": false,
+   "events": [
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-14T19:17:22Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T19:37:26Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T19:37:26Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T19:37:29Z",
+     null
+    ]
+   ],
+   "head_ref": "provisional/exchange-registry",
+   "merge_commit": "4e4f542c9ccb2ebbd145bbdf3ce1cc411b030fd4",
+   "merged_at": "2026-10-14T19:37:26Z",
+   "merged_by": "s0fractal",
+   "number": 46,
+   "state": "closed",
+   "title": "Provisional EXCHANGE-R1 (first agent-tier row)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T19:27:35Z",
+   "created_at": "2026-10-14T19:17:20Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T19:27:35Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T19:27:35Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T19:27:38Z",
+     null
+    ]
+   ],
+   "head_ref": "gate/run-provisional-witnesses",
+   "merge_commit": "8412e997f312e4f5866fdd92aa4919f224a80201",
+   "merged_at": "2026-10-14T19:27:35Z",
+   "merged_by": "s0fractal",
+   "number": 47,
+   "state": "closed",
+   "title": "run-python runs the agent tier's witnesses too"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T21:36:57Z",
+   "created_at": "2026-10-14T21:25:40Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T21:36:57Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T21:36:57Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T21:36:59Z",
+     null
+    ]
+   ],
+   "head_ref": "accept/promote-exchange-r1",
+   "merge_commit": "9387b107382454c6cdbf035c78e2205d0bfcf5a4",
+   "merged_at": "2026-10-14T21:36:57Z",
+   "merged_by": "s0fractal",
+   "number": 48,
+   "state": "closed",
+   "title": "Promote EXCHANGE-R1 to the owner tier"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-14T23:27:54Z",
+   "created_at": "2026-10-14T23:11:34Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-14T23:27:54Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-14T23:27:54Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-14T23:27:57Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/round-8-unblock",
+   "merge_commit": "8642c90d14def7ac19662a26b2f6cd022c638ed8",
+   "merged_at": "2026-10-14T23:27:54Z",
+   "merged_by": "s0fractal",
+   "number": 49,
+   "state": "closed",
+   "title": "Round 8: unblock timing across XDP, FlowSpec and the mesh"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-15T00:14:55Z",
+   "created_at": "2026-10-14T23:39:11Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-15T00:14:55Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-15T00:14:55Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-15T00:14:57Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-20T20:28:24Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/restore-clock-behind",
+   "merge_commit": "3f8a5e864fe24f48ddca71f76d1b1dc0c254e07c",
+   "merged_at": "2026-10-15T00:14:55Z",
+   "merged_by": "s0fractal",
+   "number": 50,
+   "state": "closed",
+   "title": "Restore: no end outlasts what it had left when saved (clock behind at restart)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-15T00:56:06Z",
+   "created_at": "2026-10-15T00:26:30Z",
+   "draft": false,
+   "events": [
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-15T00:56:05Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-15T00:56:06Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-15T00:56:08Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/replay-floors-survive",
+   "merge_commit": "c596b10f788b839477e7071c8f646006d4d4a94f",
+   "merged_at": "2026-10-15T00:56:05Z",
+   "merged_by": "s0fractal",
+   "number": 51,
+   "state": "closed",
+   "title": "Mesh replay floors survive the process (ADR-0029, MESH-N2)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-15T01:21:25Z",
+   "created_at": "2026-10-15T01:06:58Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-15T01:21:25Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-15T01:21:25Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-15T01:21:28Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/control-reload-race",
+   "merge_commit": "df2a84439d74b246870526949e0bbf8e2984f474",
+   "merged_at": "2026-10-15T01:21:25Z",
+   "merged_by": "s0fractal",
+   "number": 52,
+   "state": "closed",
+   "title": "control: policy checked under the table lock; reloads atomic (POLICY-L1, CONTROL-R1)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-15T01:36:08Z",
+   "created_at": "2026-10-15T01:23:56Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-15T01:36:08Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-15T01:36:08Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-15T01:36:11Z",
+     null
+    ]
+   ],
+   "head_ref": "docs/flowspec-feasibility",
+   "merge_commit": "86bbcf2fcea9b2a4abf4e5ff98e5fe44a86867a7",
+   "merged_at": "2026-10-15T01:36:08Z",
+   "merged_by": "s0fractal",
+   "number": 53,
+   "state": "closed",
+   "title": "docs: source-only FlowSpec rules vs RFC 8955 default validation"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-15T05:08:34Z",
+   "created_at": "2026-10-15T04:54:51Z",
+   "draft": false,
+   "events": [
+    [
+     "commented",
+     "s0fractal",
+     "2026-10-15T04:55:34Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-15T05:08:34Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-15T05:08:34Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-15T05:08:37Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-15T15:11:11Z",
+     null
+    ]
+   ],
+   "head_ref": "feat/industrial-trust-and-delivery",
+   "merge_commit": "d502c3f3d9284729a19c2572f53f2cde89643c29",
+   "merged_at": "2026-10-15T05:08:34Z",
+   "merged_by": "s0fractal",
+   "number": 54,
+   "state": "closed",
+   "title": "gate: authorize future trust roots before complete merges"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-15T16:09:40Z",
+   "created_at": "2026-10-15T15:08:45Z",
+   "draft": false,
+   "events": [
+    [
+     "renamed",
+     "s0fractal",
+     "2026-10-15T15:11:10Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-15T16:09:40Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-15T16:09:40Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-15T16:09:42Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-20T20:11:18Z",
+     null
+    ]
+   ],
+   "head_ref": "feat/industrial-campaigns",
+   "merge_commit": "511014a2e3ae8e0e08481911b2fd7d8de5a42317",
+   "merged_at": "2026-10-15T16:09:40Z",
+   "merged_by": "s0fractal",
+   "number": 55,
+   "state": "closed",
+   "title": "Industrial packages 2-6: model entry, complete candidate, operations, campaigns, CI cost"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-15T15:50:33Z",
+   "created_at": "2026-10-15T15:10:40Z",
+   "draft": false,
+   "events": [
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-15T15:11:11Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-15T15:50:33Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-15T15:50:33Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-15T15:50:36Z",
+     null
+    ],
+    [
+     "referenced",
+     "s0fractal",
+     "2026-10-15T15:51:46Z",
+     null
+    ]
+   ],
+   "head_ref": "fix/hook-git-env",
+   "merge_commit": "560b355a6bb93608b5fee58e5934d0260adc5a30",
+   "merged_at": "2026-10-15T15:50:33Z",
+   "merged_by": "s0fractal",
+   "number": 56,
+   "state": "closed",
+   "title": "pre-push: clear inherited git repository variables before running checks"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-15T16:42:16Z",
+   "created_at": "2026-10-15T16:26:43Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-15T16:42:16Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-15T16:42:16Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-15T16:42:19Z",
+     null
+    ]
+   ],
+   "head_ref": "ops/rc1-targets",
+   "merge_commit": "8399e3f12f3add8a03fe38321b575dec6f4e86b7",
+   "merged_at": "2026-10-15T16:42:16Z",
+   "merged_by": "s0fractal",
+   "number": 57,
+   "state": "closed",
+   "title": "ADR-0031: RC-1 responsibility, SLO/RPO/RTO from measurements, RC admission rule"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-16T18:30:16Z",
+   "created_at": "2026-10-16T18:07:20Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-16T18:30:16Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-16T18:30:16Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-16T18:30:18Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-20T20:11:18Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-20T20:28:24Z",
+     null
+    ]
+   ],
+   "head_ref": "bench/bounded-node-log",
+   "merge_commit": "946fbd8d7fb23c54c2474fd64dbc2cace0cb73b2",
+   "merged_at": "2026-10-16T18:30:16Z",
+   "merged_by": "s0fractal",
+   "number": 58,
+   "state": "closed",
+   "title": "Campaign rerun prerequisites: bounded node logs; interpreter-stable gate closures"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-20T20:06:44Z",
+   "created_at": "2026-10-20T18:49:58Z",
+   "draft": false,
+   "events": [
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-20T20:06:44Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-20T20:06:44Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-20T20:06:47Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-20T20:11:18Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-20T20:28:24Z",
+     null
+    ]
+   ],
+   "head_ref": "bench/soak-no-silent-exit",
+   "merge_commit": "776861e3d0ce96658c96c82c75bcfcf8309f7c8c",
+   "merged_at": "2026-10-20T20:06:44Z",
+   "merged_by": "s0fractal",
+   "number": 59,
+   "state": "closed",
+   "title": "bench: never stop a run without saying where"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-20T21:14:29Z",
+   "created_at": "2026-10-20T20:11:17Z",
+   "draft": false,
+   "events": [
+    [
+     "commented",
+     "s0fractal",
+     "2026-10-20T20:20:57Z",
+     null
+    ],
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-20T20:52:24Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-20T21:14:29Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-20T21:14:29Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-20T21:14:33Z",
+     null
+    ]
+   ],
+   "head_ref": "evidence/rc1-campaign",
+   "merge_commit": "a38918c614966a7ccedcd6f79090336e53ab5b36",
+   "merged_at": "2026-10-20T21:14:29Z",
+   "merged_by": "s0fractal",
+   "number": 60,
+   "state": "closed",
+   "title": "Evidence: RC-1 campaign runs (harness failures) and workspace hygiene"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": "2026-10-20T21:32:25Z",
+   "created_at": "2026-10-20T20:28:22Z",
+   "draft": false,
+   "events": [
+    [
+     "mentioned",
+     "s0fractal",
+     "2026-10-20T20:28:24Z",
+     null
+    ],
+    [
+     "subscribed",
+     "s0fractal",
+     "2026-10-20T20:28:24Z",
+     null
+    ],
+    [
+     "commented",
+     "s0fractal",
+     "2026-10-20T20:40:42Z",
+     null
+    ],
+    [
+     "closed",
+     "s0fractal",
+     "2026-10-20T21:32:25Z",
+     null
+    ],
+    [
+     "merged",
+     "s0fractal",
+     "2026-10-20T21:32:25Z",
+     null
+    ],
+    [
+     "head_ref_deleted",
+     "s0fractal",
+     "2026-10-20T21:32:28Z",
+     null
+    ]
+   ],
+   "head_ref": "ci/agent-review-check",
+   "merge_commit": "dad26967ae1497c73ca8a11cf7a5c8987c0dc213",
+   "merged_at": "2026-10-20T21:32:25Z",
+   "merged_by": "s0fractal",
+   "number": 62,
+   "state": "closed",
+   "title": "agent-review: the review record as a required check; CODEOWNERS; ADR-0032 (proposed)"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": null,
+   "created_at": "2026-10-20T20:52:23Z",
+   "draft": false,
+   "events": [
+    [
+     "cross-referenced",
+     "s0fractal",
+     "2026-10-21T20:44:39Z",
+     null
+    ],
+    [
+     "renamed",
+     "s0fractal",
+     "2026-10-21T20:46:18Z",
+     null
+    ],
+    [
+     "ready_for_review",
+     "s0fractal",
+     "2026-10-21T20:46:19Z",
+     null
+    ]
+   ],
+   "head_ref": "evidence/rc1-candidate-776861e",
+   "merge_commit": null,
+   "merged_at": null,
+   "merged_by": null,
+   "number": 63,
+   "state": "open",
+   "title": "Evidence: RC-1 candidate 776861e, benches inside targets; 24 h campaign cut at 6.47 h by host maintenance"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": null,
+   "created_at": "2026-10-21T01:50:18Z",
+   "draft": false,
+   "events": [],
+   "head_ref": "docs/latches-without-owner",
+   "merge_commit": null,
+   "merged_at": null,
+   "merged_by": null,
+   "number": 64,
+   "state": "open",
+   "title": "docs: the third arm of the agent-pressure experiment, latches without an owner"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": null,
+   "created_at": "2026-10-23T17:52:44Z",
+   "draft": false,
+   "events": [],
+   "head_ref": "ci/sonarcloud",
+   "merge_commit": null,
+   "merged_at": null,
+   "merged_by": null,
+   "number": 66,
+   "state": "open",
+   "title": "SonarQube Cloud: CI-based scan with the Clippy report, badge in README"
+  },
+  {
+   "author": "s0fractal",
+   "closed_at": null,
+   "created_at": "2026-10-27T20:46:29Z",
+   "draft": true,
+   "events": [],
+   "head_ref": "study/warrant3-mirror",
+   "merge_commit": null,
+   "merged_at": null,
+   "merged_by": null,
+   "number": 67,
+   "state": "open",
+   "title": "Warrant 3 study: governance baseline, shadow mirror, GAPS (phases 0-1)"
+  }
+ ],
+ "repository": "s0fractal/sokol-core",
+ "rulesets": [
+  {
+   "history": [
+    [
+     52693651,
+     194916542,
+     "2026-10-10T21:05:58.417+03:00"
+    ],
+    [
+     52713387,
+     194916542,
+     "2026-10-11T03:41:11.575+03:00"
+    ],
+    [
+     52804494,
+     194916542,
+     "2026-10-12T09:40:27.822+03:00"
+    ]
+   ],
+   "id": 24848666,
+   "name": "protect-main"
+  }
+ ],
+ "secrets": [],
+ "variables": []
+}

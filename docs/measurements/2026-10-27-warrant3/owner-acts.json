@@ -1,0 +1,2048 @@
+{
+ "acts": [
+  [
+   "repository",
+   "FORGE",
+   "2026-10-10T15:50:41Z",
+   null
+  ],
+  [
+   "key_binding",
+   "REPO",
+   "2026-10-10T15:50:59Z",
+   1
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-10T15:50:59Z",
+   1
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-10T15:52:57Z",
+   1
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-10T16:32:32Z",
+   1
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-10T16:49:48Z",
+   1
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-10T17:41:57Z",
+   2
+  ],
+  [
+   "ruleset",
+   "FORGE",
+   "2026-10-10T18:05:58Z",
+   null
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-10T18:15:23Z",
+   4
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-10T18:26:42Z",
+   3
+  ],
+  [
+   "branch_update",
+   "AMBIGUOUS",
+   "2026-10-10T18:26:56Z",
+   4
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-10T18:34:15Z",
+   4
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-10T19:01:49Z",
+   5
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-10T19:57:21Z",
+   5
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-10T20:10:24Z",
+   6
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-10T20:28:05Z",
+   6
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-10T20:50:50Z",
+   7
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-10T20:56:16Z",
+   8
+  ],
+  [
+   "branch_update",
+   "AMBIGUOUS",
+   "2026-10-10T21:04:23Z",
+   8
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-10T21:16:32Z",
+   8
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-10T21:38:11Z",
+   7
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-10T22:05:49Z",
+   7
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-10T23:16:36Z",
+   7
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-11T00:02:49Z",
+   8
+  ],
+  [
+   "ruleset",
+   "FORGE",
+   "2026-10-11T00:41:11Z",
+   null
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-11T03:00:46Z",
+   9
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-11T06:58:02Z",
+   10
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-11T21:58:42Z",
+   11
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-11T22:17:36Z",
+   12
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-11T22:18:56Z",
+   12
+  ],
+  [
+   "branch_update",
+   "AMBIGUOUS",
+   "2026-10-11T22:28:12Z",
+   13
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-11T22:37:06Z",
+   12
+  ],
+  [
+   "branch_update",
+   "AMBIGUOUS",
+   "2026-10-11T22:37:26Z",
+   13
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-11T23:17:22Z",
+   13
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-11T23:36:13Z",
+   14
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-11T23:52:59Z",
+   14
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T00:07:42Z",
+   14
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-12T00:14:42Z",
+   15
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T00:39:55Z",
+   15
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T03:13:56Z",
+   16
+  ],
+  [
+   "branch_update",
+   "AMBIGUOUS",
+   "2026-10-12T03:14:08Z",
+   17
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T03:21:14Z",
+   17
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-12T03:22:36Z",
+   18
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T03:29:20Z",
+   18
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-12T04:10:41Z",
+   19
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T04:24:03Z",
+   19
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-12T04:29:09Z",
+   20
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T04:47:36Z",
+   20
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-12T05:28:42Z",
+   21
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T05:39:57Z",
+   21
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-12T06:13:33Z",
+   22
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T06:27:51Z",
+   22
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T06:35:16Z",
+   23
+  ],
+  [
+   "ruleset",
+   "FORGE",
+   "2026-10-12T06:40:27Z",
+   null
+  ],
+  [
+   "close_unmerged",
+   "AMBIGUOUS",
+   "2026-10-12T07:18:49Z",
+   24
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T09:56:12Z",
+   25
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T12:20:57Z",
+   26
+  ],
+  [
+   "rerun",
+   "AMBIGUOUS",
+   "2026-10-12T13:01:51Z",
+   null
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T14:51:57Z",
+   27
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-12T15:05:35Z",
+   28
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T15:12:25Z",
+   28
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T15:26:17Z",
+   29
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-12T15:56:28Z",
+   30
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-13T15:39:21Z",
+   31
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-13T16:57:09Z",
+   32
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-13T17:04:59Z",
+   32
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T10:33:43Z",
+   33
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T10:58:58Z",
+   34
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-14T11:04:07Z",
+   35
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T11:12:57Z",
+   35
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T12:19:49Z",
+   36
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T14:52:20Z",
+   37
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T15:11:11Z",
+   38
+  ],
+  [
+   "branch_update",
+   "AMBIGUOUS",
+   "2026-10-14T15:11:27Z",
+   39
+  ],
+  [
+   "branch_update",
+   "AMBIGUOUS",
+   "2026-10-14T15:11:30Z",
+   40
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T15:31:01Z",
+   39
+  ],
+  [
+   "branch_update",
+   "AMBIGUOUS",
+   "2026-10-14T15:31:14Z",
+   40
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-14T15:51:48Z",
+   40
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T16:00:41Z",
+   40
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T17:08:36Z",
+   42
+  ],
+  [
+   "branch_update",
+   "AMBIGUOUS",
+   "2026-10-14T17:08:51Z",
+   41
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-14T17:09:42Z",
+   41
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T17:20:46Z",
+   41
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-14T17:29:26Z",
+   43
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T17:44:31Z",
+   43
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T18:26:07Z",
+   44
+  ],
+  [
+   "key_binding",
+   "REPO",
+   "2026-10-14T18:56:30Z",
+   45
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T19:07:08Z",
+   45
+  ],
+  [
+   "agent_sign",
+   "KEY",
+   "2026-10-14T19:07:49Z",
+   46
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T19:27:35Z",
+   47
+  ],
+  [
+   "branch_update",
+   "AMBIGUOUS",
+   "2026-10-14T19:27:40Z",
+   46
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T19:37:26Z",
+   46
+  ],
+  [
+   "promote",
+   "REPO",
+   "2026-10-14T21:24:47Z",
+   48
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-14T21:24:47Z",
+   48
+  ],
+  [
+   "agent_sign",
+   "KEY",
+   "2026-10-14T21:25:55Z",
+   48
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T21:36:57Z",
+   48
+  ],
+  [
+   "agent_sign",
+   "KEY",
+   "2026-10-14T23:11:30Z",
+   49
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-14T23:15:40Z",
+   49
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-14T23:27:54Z",
+   49
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-15T00:14:55Z",
+   50
+  ],
+  [
+   "agent_sign",
+   "KEY",
+   "2026-10-15T00:26:17Z",
+   51
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-15T00:29:11Z",
+   51
+  ],
+  [
+   "agent_sign",
+   "KEY",
+   "2026-10-15T00:43:18Z",
+   51
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-15T00:56:05Z",
+   51
+  ],
+  [
+   "agent_sign",
+   "KEY",
+   "2026-10-15T01:06:55Z",
+   52
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-15T01:07:42Z",
+   52
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-15T01:21:25Z",
+   52
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-15T01:36:08Z",
+   53
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-15T04:35:12Z",
+   54
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-15T05:08:34Z",
+   54
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-15T14:57:36Z",
+   55
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-15T15:50:33Z",
+   56
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-15T16:09:40Z",
+   55
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-15T16:42:16Z",
+   57
+  ],
+  [
+   "resign",
+   "KEY",
+   "2026-10-16T18:10:55Z",
+   58
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-16T18:30:16Z",
+   58
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-20T20:06:44Z",
+   59
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-20T21:14:29Z",
+   60
+  ],
+  [
+   "branch_update",
+   "AMBIGUOUS",
+   "2026-10-20T21:15:46Z",
+   62
+  ],
+  [
+   "merge",
+   "FORGE",
+   "2026-10-20T21:32:25Z",
+   62
+  ]
+ ],
+ "github_identity": {
+  "authors": [
+   "s0fractal"
+  ],
+  "collaborators": [
+   [
+    "s0fractal",
+    "admin"
+   ]
+  ],
+  "deploy_keys": [],
+  "event_actors": [
+   "qodo-code-review[bot]",
+   "s0fractal"
+  ],
+  "events_via_an_app": 2,
+  "mergers": [
+   "s0fractal"
+  ],
+  "pull_requests": 65,
+  "secrets": [],
+  "variables": []
+ },
+ "github_snapshot": {
+  "fetched_at": "2026-10-27T20:53:52Z",
+  "repository_created_at": "2026-10-10T15:50:41Z"
+ },
+ "per_pr": {
+  "1": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 7,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 1,
+   "merge": 1,
+   "owner_acts": 5,
+   "pr": 1,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 3,
+   "ruleset": 0,
+   "week": "2026-W41"
+  },
+  "10": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 0,
+    "unattributed": 1
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 10,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W41"
+  },
+  "11": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 0,
+    "unattributed": 1
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 11,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W41"
+  },
+  "12": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 5,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 3,
+   "pr": 12,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 2,
+   "ruleset": 0,
+   "week": "2026-W41"
+  },
+  "13": {
+   "agent_sign": 0,
+   "branch_update": 2,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 2,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 13,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W41"
+  },
+  "14": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 6,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 3,
+   "pr": 14,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 2,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "15": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 5,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 15,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "16": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 0,
+    "unattributed": 1
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 16,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "17": {
+   "agent_sign": 0,
+   "branch_update": 1,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 0,
+    "unattributed": 1
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 17,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "18": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 18,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "19": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 4,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 19,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "2": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 0,
+    "unattributed": 1
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 2,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W41"
+  },
+  "20": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 3,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 20,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "21": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 3,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 21,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "22": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 2,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 22,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "23": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 23,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "25": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 5,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 25,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "26": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 4,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 26,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "27": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 2,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 27,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "28": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 28,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "29": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 29,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "3": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 3,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W41"
+  },
+  "30": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 2,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 30,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "31": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 0,
+    "unattributed": 1
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 31,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "32": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 32,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "33": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 0,
+    "unattributed": 2
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 33,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "34": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 34,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "35": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 35,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "36": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 3,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 36,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "37": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 37,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "38": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 38,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "39": {
+   "agent_sign": 0,
+   "branch_update": 1,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 39,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "4": {
+   "agent_sign": 0,
+   "branch_update": 1,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 2,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 4,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W41"
+  },
+  "40": {
+   "agent_sign": 0,
+   "branch_update": 2,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 2,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 40,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "41": {
+   "agent_sign": 0,
+   "branch_update": 1,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 2,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 41,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "42": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 2,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 42,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "43": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 2,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 43,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "44": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 2,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 44,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "45": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 1,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 45,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "46": {
+   "agent_sign": 1,
+   "branch_update": 1,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 46,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "47": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 47,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "48": {
+   "agent_sign": 1,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 2,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 3,
+   "pr": 48,
+   "promote": 1,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "49": {
+   "agent_sign": 1,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 3,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 49,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "5": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 4,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 5,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W41"
+  },
+  "50": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 3,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 50,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "51": {
+   "agent_sign": 2,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 4,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 51,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "52": {
+   "agent_sign": 1,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 2,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 52,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "53": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 53,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "54": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 0,
+    "unattributed": 3
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 54,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "55": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 10
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 55,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "56": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 56,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "57": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 57,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "58": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 3,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 58,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W42"
+  },
+  "59": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 3,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 59,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W43"
+  },
+  "6": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 2,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 2,
+   "pr": 6,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 1,
+   "ruleset": 0,
+   "week": "2026-W41"
+  },
+  "60": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 60,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W43"
+  },
+  "62": {
+   "agent_sign": 0,
+   "branch_update": 1,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 1,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 62,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W43"
+  },
+  "7": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 12,
+    "unattributed": 0
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 4,
+   "pr": 7,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 3,
+   "ruleset": 0,
+   "week": "2026-W41"
+  },
+  "8": {
+   "agent_sign": 0,
+   "branch_update": 1,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 6,
+    "unattributed": 2
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 3,
+   "pr": 8,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 2,
+   "ruleset": 0,
+   "week": "2026-W41"
+  },
+  "9": {
+   "agent_sign": 0,
+   "branch_update": 0,
+   "close_unmerged": 0,
+   "commits": {
+    "agent": 0,
+    "unattributed": 1
+   },
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 1,
+   "owner_acts": 1,
+   "pr": 9,
+   "promote": 0,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0,
+   "week": "2026-W41"
+  }
+ },
+ "per_week": {
+  "2026-W41": {
+   "AMBIGUOUS": 4,
+   "FORGE": 16,
+   "KEY": 15,
+   "REPO": 1,
+   "branch_update": 4,
+   "close_unmerged": 0,
+   "commits_agent": 41,
+   "commits_unattributed": 6,
+   "direct_push": 0,
+   "key_binding": 1,
+   "merge": 13,
+   "merged_prs": 13,
+   "owner_acts": 32,
+   "owner_acts_per_merged_pr": 2.46,
+   "promote": 0,
+   "prs_with_only_the_merge": 6,
+   "repository": 1,
+   "rerun": 0,
+   "resign": 15,
+   "ruleset": 2
+  },
+  "2026-W42": {
+   "AMBIGUOUS": 8,
+   "FORGE": 45,
+   "KEY": 19,
+   "REPO": 2,
+   "branch_update": 6,
+   "close_unmerged": 1,
+   "commits_agent": 83,
+   "commits_unattributed": 18,
+   "direct_push": 0,
+   "key_binding": 1,
+   "merge": 44,
+   "merged_prs": 44,
+   "owner_acts": 66,
+   "owner_acts_per_merged_pr": 1.5,
+   "promote": 1,
+   "prs_with_only_the_merge": 23,
+   "repository": 0,
+   "rerun": 1,
+   "resign": 19,
+   "ruleset": 1
+  },
+  "2026-W43": {
+   "AMBIGUOUS": 1,
+   "FORGE": 3,
+   "KEY": 0,
+   "REPO": 0,
+   "branch_update": 1,
+   "close_unmerged": 0,
+   "commits_agent": 5,
+   "commits_unattributed": 0,
+   "direct_push": 0,
+   "key_binding": 0,
+   "merge": 3,
+   "merged_prs": 3,
+   "owner_acts": 3,
+   "owner_acts_per_merged_pr": 1.0,
+   "promote": 0,
+   "prs_with_only_the_merge": 3,
+   "repository": 0,
+   "rerun": 0,
+   "resign": 0,
+   "ruleset": 0
+  }
+ },
+ "predicates": ", by what can attest it (docs/measurements/2026-10-27-warrant3/README.md):\n\n- KEY: a signature that verifies under a key of .github/witness-signers at SOURCE. `resign` = a\n  commit that changes docs/witness-manifest.json.sig to a signature the `owner` principal made\n  over that commit's manifest; `agent_sign` = the same for the provisional manifest and the\n  `agent` principal (an agent's act, listed for contrast). The key proves the key was used, not\n  whose hand held it: custody is policy.\n- REPO: Git alone, unsigned. `promote` = a contract gaining the decision \"promoted by the owner\";\n  `key_binding` = a commit that adds a key line to .github/witness-signers; `direct_push` = a\n  non-merge commit on SOURCE's first-parent chain (it reached main without a pull request).\n- FORGE: GitHub alone, by the owner's login, and the owner's by this repository's policy (agents\n  do not merge, create repositories or edit rulesets here): `merge` = a pull request's merged_by;\n  `ruleset` = a version in a ruleset's history by the owner's user id; `repository` = the\n  repository's creation.\n- AMBIGUOUS: GitHub alone, by the owner's login, and no policy keeps agents from it: `rerun` = a\n  workflow run with run_attempt > 1 or a workflow_dispatch run, by its triggering actor;\n  `close_unmerged` = a pull request closed without merge by the actor of its last `closed` event;\n  `branch_update` = a merge commit committed by GitHub that is not on main's first-parent chain\n  (the pull request's \"Update branch\", in the UI or through the API). Counted apart, never in the\n  owner's total.\nIn this repository every pull request, comment and merge carries the owner's login, because agents\nuse the owner's token: GitHub's actor field does not tell the owner from an agent.\n\nAn act belongs to the pull request whose merge brought its commit to main (the commits of\nM^2 not reachable from M^1, M a first-parent merge), or to no pull request. Weeks are ISO weeks\nof the act's own time in UTC (committer time for Git acts, the event time for FORGE acts).\nCommits are also split by authorship as Git records it (unsigned): `agent` when the author is an\nagent or a Co-Authored-By trailer names one, `unattributed` otherwise (the owner's Git identity\nwith no trailer: the owner, or an agent that left no trailer).",
+ "source": "dad26967ae1497c73ca8a11cf7a5c8987c0dc213",
+ "totals": {
+  "AMBIGUOUS": 13,
+  "FORGE": 64,
+  "KEY": 34,
+  "REPO": 3,
+  "agent_sign": 6,
+  "branch_update": 11,
+  "close_unmerged": 1,
+  "commits": {
+   "agent": 129,
+   "unattributed": 24
+  },
+  "direct_push": 0,
+  "key_binding": 2,
+  "merge": 60,
+  "merged_prs": 60,
+  "owner_acts": 101,
+  "promote": 1,
+  "prs_with_only_the_merge": 32,
+  "repository": 1,
+  "rerun": 1,
+  "resign": 34,
+  "ruleset": 3,
+  "unverified": 0
+ }
+}
