@@ -1,0 +1,29 @@
+{
+ "profile": {
+  "roles": {
+   "contract/agent": [
+    "agent"
+   ],
+   "contract/owner": [
+    "owner"
+   ],
+   "migrator": [
+    "sokol-warrant3-mirror"
+   ],
+   "schema/author": [
+    "sokol-warrant3-mirror"
+   ]
+  },
+  "warrant": "profile/3"
+ },
+ "repository": "s0fractal/sokol-core",
+ "trust": {
+  "keys": {
+   "sokol-warrant3-mirror": [
+    "0d1089bb7f0ed700c7f86bec670189d27ef086f17808684d717e7ceb67ea7a87"
+   ]
+  },
+  "warrant": "trust/3"
+ },
+ "warrant": "repository/3"
+}

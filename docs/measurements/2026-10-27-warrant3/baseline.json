@@ -1,0 +1,205 @@
+{
+ "a_governance_commits": {
+  "ADR_ONLY": 10,
+  "INVARIANT": 27,
+  "INVARIANT_also_touching_machinery_code": 2,
+  "MACHINERY": 69,
+  "MACHINERY_by_paths": {
+   "code": 28,
+   "contract_files": 1,
+   "other": 0,
+   "pins_only": 13,
+   "proposals": 27
+  },
+  "ids": {
+   "ADR_ONLY": [
+    "083d3f439e854a38b4251fefd8850be85bba2cf9",
+    "1f365d53d073871ac1a56a751caf360bd1a44c44",
+    "2a5bdb1495cfdf47eff0947d2dfe520b8e578db7",
+    "41040b839766210aee98a47eb2a1e0537ea355ac",
+    "56e63890f02960b065200504cc6e30acd9aa4340",
+    "7d17c2d995d168cc1df7a5f8ab78c648b7a7c170",
+    "a4e7d4a200fe0d9e794f3311eac20a59284f3634",
+    "c9a171af0396425581ec00641a396b54a6c7fa57",
+    "e7d7b2e0fc9dfd285acb37add76c69032fe301fc",
+    "e8a29d50f2d4ca348f9faa072aec4cc7f00d68be"
+   ],
+   "INVARIANT": [
+    "0574031f326f75d81df87fc75968daf5e4399d92",
+    "12c3deddd3d35126d36cb6b1e4b6da7a710d0028",
+    "1ce1da924c0da94e0f0a81991fe9c66fbe73c0a6",
+    "2fd0f88945639c9f22fc6434abb98bffc911165a",
+    "378fe5588e24e16f64e0073a661f9f8fb4828f54",
+    "4ee499d786a250f850e459f558b2a44f9bdd1cb7",
+    "4f6068eea316b4beece5302b20740e3d5b2c290c",
+    "5c10970e2162d121e320e7c277330cfcca5ae17c",
+    "65afa4c32264bf009eb331e1207dd3bd4658915f",
+    "7615d247f04934af7570caef14f37d66dd25e09b",
+    "798e74d77896aca36b87768a9393e5a2f5ff8558",
+    "84c2b46ce761d9a0f4982d9a2846b731b4c1c857",
+    "8ff8638f9fb077192f58dd8432180c6b2acef4c9",
+    "9954d3e6d03da391d4697f97efcbd65a268edd81",
+    "a1f4bc58c16e4302337abcca255653ca04729615",
+    "a3ceddc85ec7c91185301f6a7e74e8dac4dfe8c5",
+    "a78d8d96bac155f2bada10181368fd89fb899c40",
+    "ae37cb0593ed0b0f8aee0063a1269c228ac12c81",
+    "aee869ffb1a4e9f8229c40ef1f06a36612ae31c1",
+    "b0c73664c9c39d0a4c458fa35638964576431072",
+    "b40c6b496ee74bf8bbac348f82a1d42f46170857",
+    "b5ba69b3089cd4ed5b04a311f96204fe39622924",
+    "bedc357854a2b06f604376bd213ed24a3609f1ef",
+    "c5fc00f616ebc24b40c18a7fdf5dd9ddb7b3711d",
+    "cb0904d8c3a0d6f7987dea3707a5ee324ed4903d",
+    "e008c52cbe076618b65c3eba019275e22db78fbf",
+    "fdfca69a6682cb97d1aec0a035552eb376f993f8"
+   ],
+   "MACHINERY": [
+    "04dc36793b36fe1436402babbec8c6f015264b07",
+    "0abc34a830978389ae0b4fcac7bed82a094444f7",
+    "0cee4d6f10164f3c87fbb72ec7e109e2548d8db1",
+    "0ea364e8c0ab92693d30c47c14a46d82508d12f3",
+    "10a6db3acec49ae04e913225341ca9d89e1b7dd0",
+    "148fa9ec3fc192bbbb80440d02f3b80b59ae9b9b",
+    "16b956d0d99a4e2572207600c93f848c4808b97a",
+    "1dda7badec9a66ccfd7e7f74900f12ee10feb085",
+    "1e13083c9e685e569878dcb43e1da9043cd5e4fe",
+    "20ca845fafeb90d358aae0b14dd4029e50b74302",
+    "217abcd267f44a7e8bfd0139b7e3dae64031d0d7",
+    "241d63484d363424e59df5d389d817679c60b6c1",
+    "287b67f0a667641cf180c09a870bd636fb387a13",
+    "2a2932b06eb344a23241c5e76379a82fa1b8ad9d",
+    "2c52a0683a46f0e8737d64434cd7b8d01e57fccd",
+    "3c62e3a45d069672f754d32b81bc6950562006a9",
+    "43d09ec502719aeb7cb97a3dda440dbd5ffe1234",
+    "440af3884caac7b2f43c61c0f3daa053e684abce",
+    "4c9bad1458ccbf12b8699a38e768489c6e86210e",
+    "4ed139cf940095af180f873eaecdbe39cac876bf",
+    "4f15fd96f1af6fea6a6dd674e910ab31fb7768b0",
+    "51212f8354cb11db68fc0a8a9add0234a0a475fc",
+    "55135ac6657d6245901f1bc13484a4b44bf1bc8c",
+    "582ce2a39ce84be03e3007b57d1d4a94604bc655",
+    "591b3ae697f8216b2c111d9162b33f26d90b88a7",
+    "5e0f0c2263b4a26b69605a60e940d387a4bfa4ac",
+    "64371c75ec1edadb702e48fdb88b82a32dc933a7",
+    "6585af6cf75f2aad6f4c73ee1321e0763c5ee4ae",
+    "689d37ea498413e1b93bf9bf6b361892dab3b28a",
+    "6a4be4f1f3977bf65cf1911983d9f58c5e1c0f2a",
+    "6d1bfe9c770c346f06d3aa4691851563888f4c82",
+    "6d1c16bf1e984c91cb5e5b69c4871a790a925d20",
+    "7803cd7814b5609cfd3aa7d9e94f07378626c17e",
+    "7a208e4812d9ee751a4294ecc09e6303636adf44",
+    "8070d75f3cb675576a572ab484df3de14f98b6e8",
+    "839c7e9107063a080913501d0069c036a98cf1ca",
+    "87327fb86312f7c9a850cca590aa6f47bf315d39",
+    "88e444e8e07cbe1b18bac397b77526b573b8f2af",
+    "8df46f6758373f565253486b12cd1ab318bc8159",
+    "9056557df0ddc1f05cea9ccb930791449f17dcf3",
+    "944609e954efc7d1e5fda17dde3a089414a98abe",
+    "953eb7963eb41416fc80574f4a22ecec9b3c6682",
+    "9a82b961ea633e81f4438c1c9ac0891e66bf83a2",
+    "9ae1720a5b5f255cb78ea65cf7dc3ea910080407",
+    "a5110845c20a1844f6c3e5fa589a693dc90282dc",
+    "adafaad3fccebd0fd0a70d0cc1d332e0ec1c3387",
+    "aef9a406691c8b626ef8ec01b3e7a60c5c9e3f17",
+    "afca84e0b920b3edf202bd77400f501255c26d3b",
+    "b03583c65934779e188e93ad4f4d94d98f9d640b",
+    "c0c2c77996a4e5c564491db577c74fb454e380a9",
+    "c6223cd7715ebb37dbce1a6fccf828e95da1a18f",
+    "c71565ad8cbe8ad99b44f033aa6b9edad89aeac5",
+    "c8afad1ac7ba4733fe337453f6d3cb7a630e7bd7",
+    "d5c53eeb4b7d2067276a44e38b33c3d1e31f3701",
+    "d967fe21730c10b11ce4f7593c5269e6d275ef73",
+    "d98683255a0b25619d14e1d20822b5afa93f6725",
+    "dc11e9a673b0acaebb6b014fde8237f64319db2c",
+    "dc80e3b28a711f83671ad99d2cb30cea66068457",
+    "ddf12137aad7399dddf0d827388b4f093e75d336",
+    "dfcf97bc5e3784fd33e5d498d6406fab0c68b7e9",
+    "e3a0354f53034336bf72a6d8e6c28406abaaa354",
+    "ea09bd6b51ee19f8f5c0bc1e24126572bf201161",
+    "ec4d1c7daa8705c1d38ea60fc7448c45030ea72c",
+    "ee3b038ed7683da974602d9c4128a2bfcb88a147",
+    "efcf335fb38394e0a18e4601fec98437fa8984b3",
+    "f2ba15f921fbb33fd73639e96836851676f00b4c",
+    "f4b6b60282454c7ad340d36a5512b64bd5b91d7d",
+    "f70d98c2f1ef4077a83dfaac1e2a7c210571a281",
+    "fbc73e78bf947e455f94d1d2b7edc17896ed1b28"
+   ]
+  },
+  "touching_G": 106
+ },
+ "b_owner_acts": {
+  "per_week": {
+   "2026-W41": {
+    "agent_sign": 0,
+    "merge": 13,
+    "owner_path_merge": 9,
+    "promote": 0,
+    "resign": 15
+   },
+   "2026-W42": {
+    "agent_sign": 6,
+    "merge": 44,
+    "owner_path_merge": 27,
+    "promote": 1,
+    "resign": 19
+   },
+   "2026-W43": {
+    "agent_sign": 0,
+    "merge": 3,
+    "owner_path_merge": 0,
+    "promote": 0,
+    "resign": 0
+   }
+  },
+  "totals": {
+   "agent_sign": 6,
+   "merge": 60,
+   "owner_path_merge": 36,
+   "promote": 1,
+   "resign": 34
+  }
+ },
+ "c_lines": {
+  "code": {
+   "files": {
+    "scripts/check-review.py": 171,
+    "scripts/contract-shadow.py": 138,
+    "scripts/contract-task.py": 425,
+    "scripts/contract.py": 324,
+    "scripts/witness-pin.py": 1192
+   },
+   "total": 2250,
+   "total_at_window_start": 0
+  },
+  "tests": {
+   "files": {
+    "scripts/test_check_review.py": 198,
+    "scripts/test_contract_shadow.py": 166,
+    "scripts/test_contract_task.py": 395,
+    "scripts/test_contract_tool.py": 448,
+    "scripts/test_gate_provenance.py": 145,
+    "scripts/test_trust_root.py": 142,
+    "scripts/test_witness_pin.py": 554
+   },
+   "total": 2048,
+   "total_at_window_start": 0
+  },
+  "workflows": {
+   "files": {
+    ".github/workflows/agent-review.yml": 64,
+    ".github/workflows/witness-gate.yml": 135
+   },
+   "total": 199,
+   "total_at_window_start": 0
+  }
+ },
+ "commits": {
+  "all": 230,
+  "merge": 76,
+  "non_merge": 154
+ },
+ "predicates": "(docs/measurements/2026-10-27-warrant3/README.md quotes them):\n\n- Window: the commits reachable from SOURCE whose committer date is at or after SINCE\n  (`git rev-list --since`).\n- Governance paths G: docs/contracts/**, docs/adr/**, scripts/contract*.py,\n  scripts/witness-pin.py, docs/witness-manifest.json[.sig], docs/witness-provisional.json[.sig],\n  .github/workflows/witness-gate.yml.\n- (a) A non-merge commit of the window touches G when its diff against its parent names a path\n  of G. It is an INVARIANT change when, for at least one contract file it changes, the\n  projection {statement, evidence_text, witnesses, status, retirement} differs from the\n  parent's or the file is added or removed. Otherwise it is MACHINERY when it touches a G path\n  outside docs/adr/, else ADR_ONLY. A tier-only change (promote) is MACHINERY: who stands\n  behind the row changed, not the row. MACHINERY is split by its non-ADR paths, first match:\n  `code` (scripts/ or .github/), `pins_only` (docs/witness-* only), `proposals` (contract and pin\n  files, at least one under docs/contracts/proposals/: an unsigned intent filed), `contract_files`\n  (contract and pin files: decision, tier or annotation only), `other`.\n- (b) Owner acts per ISO week (UTC committer date): `resign` = non-merge commits changing\n  docs/witness-manifest.json.sig (each is a signature by the owner key); `agent_sign` = the same\n  for docs/witness-provisional.json.sig (the agent key, ADR-0028); `promote` = contracts gaining a\n  decision whose reason is \"promoted by the owner\"; `merge` = merge commits on SOURCE's\n  first-parent chain (every merge into main); `owner_path_merge` = those merges whose diff\n  against their first parent names a path the owner's signature covers (OWNER_PATHS).\n- (c) Lines: newline count of each file of GOVERNANCE_CODE, GOVERNANCE_TESTS and\n  GOVERNANCE_WORKFLOWS at SOURCE and at the last commit before SINCE (the first commit of the\n  history when it starts inside the window).",
+ "since": "2026-10-01T00:00:00Z",
+ "source": "dad26967ae1497c73ca8a11cf7a5c8987c0dc213",
+ "window_start_commit": "083d3f439e854a38b4251fefd8850be85bba2cf9"
+}

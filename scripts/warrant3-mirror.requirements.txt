@@ -1,0 +1,7 @@
+# scripts/warrant3-mirror.py runs under exactly this release (it refuses any other installed bytes:
+# WARRANT_CODE is engine.code_identity() of this wheel). Not used by CI or by any check of this repository.
+#   uv venv --python 3.12 VENV && uv pip install --python VENV/bin/python -r scripts/warrant3-mirror.requirements.txt
+# PyPI sha256: wheel 4591803143d12415fbf54120dea2c8c64900b5332f4a00cfb776c95a357391e8,
+#              sdist 7c5dfa4297ba6358d69a6f69382c8fcf55c70c78b90ef7430e4fc3d51aca6533
+warrant-graph==3.0.0a1
+cryptography==50.0.2
