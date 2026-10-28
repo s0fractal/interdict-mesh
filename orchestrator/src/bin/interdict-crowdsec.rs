@@ -750,4 +750,52 @@ mod tests {
         );
         assert!(stream_url("http://x", false).ends_with("startup=false"));
     }
+
+    #[test]
+    fn a_poll_returns_the_lapi_body_and_names_the_key_and_the_adapter() {
+        use std::io::{Read, Write};
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!("http://{}", listener.local_addr().unwrap());
+        let lapi = std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let (mut request, mut buf) = (Vec::new(), [0u8; 1024]);
+            while !request.windows(4).any(|w| w == b"\r\n\r\n") {
+                let n = stream.read(&mut buf).unwrap();
+                if n == 0 {
+                    break;
+                }
+                request.extend_from_slice(&buf[..n]);
+            }
+            let reply = format!(
+                "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                STARTUP.len(),
+                STARTUP
+            );
+            stream.write_all(reply.as_bytes()).unwrap();
+            String::from_utf8(request).unwrap().to_ascii_lowercase()
+        });
+        let args = Args::try_parse_from([
+            "interdict-crowdsec",
+            "--api-key",
+            "regression-key",
+            "--lapi-url",
+            &url,
+        ])
+        .unwrap();
+        let body = poll(&args, true);
+        let request = lapi.join().unwrap();
+        assert_eq!(body.as_deref(), Ok(STARTUP));
+        assert!(
+            request.starts_with("get /v1/decisions/stream?startup=true "),
+            "{request}"
+        );
+        assert!(
+            request.contains("\r\nx-api-key: regression-key\r\n"),
+            "{request}"
+        );
+        assert!(
+            request.contains("\r\nuser-agent: interdict-crowdsec\r\n"),
+            "{request}"
+        );
+    }
 }

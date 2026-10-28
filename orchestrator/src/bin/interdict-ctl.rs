@@ -2313,4 +2313,31 @@ mod tests {
         );
         std::fs::remove_dir_all(dir).unwrap();
     }
+
+    #[test]
+    fn node_uids_come_from_the_environment_or_default_to_root_and_this_uid() {
+        std::env::set_var("INTERDICT_NODE_UIDS", "7, 1000,x,0");
+        let listed = node_uids_from_env();
+        std::env::remove_var("INTERDICT_NODE_UIDS");
+        let default = node_uids_from_env();
+        assert_eq!(listed, HashSet::from([0, 7, 1000]));
+        assert_eq!(default, HashSet::from([0, unsafe { libc::getuid() }]));
+    }
+
+    #[test]
+    fn the_telemetry_socket_is_left_to_owner_and_group_only() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir =
+            std::env::temp_dir().join(format!("interdict-telemetry-{}", rand::random::<u64>()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("telemetry.sock");
+        let _listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o777)).unwrap();
+        std::env::remove_var("INTERDICT_TELEMETRY_GROUP");
+        let restricted = restrict_telemetry_socket(path.to_str().unwrap());
+        let mode = std::fs::metadata(&path).unwrap().permissions().mode() & 0o777;
+        std::fs::remove_dir_all(dir).unwrap();
+        assert_eq!(restricted, Ok(()));
+        assert_eq!(mode, 0o660, "the socket mode is {mode:o}");
+    }
 }

@@ -90,7 +90,7 @@ def collect(output):
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
     output = output.resolve(strict=True)
     archive = output / ('interdict-support-' + stamp + '-' + os.urandom(3).hex() + '.tar.gz')
-    with tempfile.TemporaryDirectory(prefix='sokol-support-') as directory:
+    with tempfile.TemporaryDirectory(prefix='interdict-support-') as directory:
         root = Path(directory)
         records, total = {}, 0
         for name, argv in commands().items():

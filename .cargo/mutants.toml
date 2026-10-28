@@ -79,4 +79,19 @@ exclude_re = [
     # The trap's accept loop binds its listening ports; what it does per connection is
     # serve_trap_connection, which is tested.
     "bin/trident_trap.rs:\\d+:\\d+: replace UltimateTridentOrchestrator::run -> Result<\\(\\), Box<dyn std::error::Error>> with Ok\\(\\(\\)\\)$",
+    # The trap's process entry: the XDP smoke starts trident_trap and checks that a hit on its
+    # port blocks the source (ADR-0034 touched only its banner line).
+    "bin/trident_trap.rs:\\d+:\\d+: replace main -> Result<\\(\\), Box<dyn std::error::Error>> with Ok\\(\\(\\)\\)$",
+    # push_telemetry writes to the operator's telemetry socket, which no unit test opens; the
+    # XDP smoke checks that the operator sees the node by its heartbeat, sent through it.
+    "main.rs:\\d+:\\d+: replace push_telemetry with \\(\\)$",
+    # The CrowdSec adapter's process loop: scripts/test_crowdsec_stream.py (a CI step) runs the
+    # binary between a local LAPI and a local node socket and asserts every command the node
+    # reads, so a main or a deliver that sends nothing fails it. Its LAPI request is unit-tested
+    # (a_poll_returns_the_lapi_body_and_names_the_key_and_the_adapter).
+    "bin/interdict-crowdsec.rs:\\d+:\\d+: replace main with \\(\\)$",
+    "bin/interdict-crowdsec.rs:\\d+:\\d+: replace deliver with \\(\\)$",
+    # Every `>` in the adapter's main guards only a log line (skipped, deleted, expired and
+    # dropped counts); what is queued and sent does not depend on it.
+    "bin/interdict-crowdsec.rs:\\d+:\\d+: replace > with (==|<|>=) in main$",
 ]

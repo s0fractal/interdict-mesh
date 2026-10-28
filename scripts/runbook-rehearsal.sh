@@ -210,7 +210,7 @@ wait_until 20 up && ! reachable "$SUSPECT" && pass "§8 the operator ban is back
 step "support bundle"
 cd /tmp
 bundle_out=$(sudo CONTROL=/run/interdict/control.sock PEERS=/etc/interdict/peers.json "$REPO/scripts/support-bundle.sh" 2>&1)
-bundle=$(ls -t /tmp/sokol-support-*.tar.gz 2>/dev/null | head -1)
+bundle=$(ls -t /tmp/interdict-support-*.tar.gz 2>/dev/null | head -1)
 if [ -n "$bundle" ]; then
     [ "$(stat -c %a "$bundle")" = 600 ] && pass "support bundle $bundle (0600)" || fail "support bundle mode $(stat -c %a "$bundle")"
     key_hex=$(sudo od -An -tx1 /var/lib/interdict/node.key | tr -d " \n" | cut -c1-32)
