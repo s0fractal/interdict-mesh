@@ -1,4 +1,4 @@
-# Trust-root paths: what the owner reads on every change (ADR-0023, ADR-0030, ADR-0032).
+# Trust-root paths: what the owner reads on every change (ADR-0023, ADR-0030, ADR-0033).
 # Listing them here does nothing by itself. "Require review from Code Owners" in the
 # protect-main ruleset is the owner's change, made by hand; once it is on, a pull request that
 # touches a path below needs @s0fractal's approval, which GitHub never takes from the pull
@@ -9,9 +9,7 @@ scripts/witness-pin.py              @s0fractal
 docs/witness-manifest.json          @s0fractal
 docs/witness-manifest.json.sig      @s0fractal
 docs/adr/                           @s0fractal
-.github/review-allowlist            @s0fractal
 .github/CODEOWNERS                  @s0fractal
-# The agent-review check itself: on a review event the pull request's copy of the workflow
-# runs, so these two are owner-read as well.
-.github/workflows/agent-review.yml  @s0fractal
-scripts/check-review.py             @s0fractal
+# Who may accept contracts and pull requests (roles) and whose keys count (trust), ADR-0033.
+.warrant/v3.json                    @s0fractal
+.warrant/merge.json                 @s0fractal

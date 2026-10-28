@@ -1,4 +1,4 @@
-"""scripts/check-retired.sh, the retired-files table (docs/RETIRED.md, 2026-10-12 on).
+"""scripts/check-retired.sh, the retired-files (2026-10-12 on) and retired-objects (2026-10-28 on) tables.
 
 Each case builds a small repository whose archive tags hold a file that was then retired, and
 breaks one rule of its table row: the file is back, the digest is not the tag's bytes, the loss
@@ -25,6 +25,9 @@ LEDGER = """# Retired
 <!-- retired-files: path | mode | sha256 at the tag | replacement | loss -->
 {row}
 
+<!-- retired-objects archive/2026-10-28: path | mode | git object at the tag | replacement | loss -->
+{objects}
+
 ## After
 """
 ROW = f"| `docs/OLD.md` | SUPERSEDED | {DIGEST} | ADR-0001 | the pilot's narrative |"
@@ -43,14 +46,21 @@ class RetiredFiles(unittest.TestCase):
         (self.dir / "docs/adr/0001-a.md").write_text("# ADR-0001\n")
         (self.dir / "x.rs").write_text("// F01\n")
         (self.dir / "docs/OLD.md").write_text(OLD)
-        (self.dir / "docs/RETIRED.md").write_text(LEDGER.format(row=ROW))
+        (self.dir / "docs/old-dir").mkdir()
+        (self.dir / "docs/old-dir/a.json").write_text("{}\n")
+        self.objects = ""
+        (self.dir / "docs/RETIRED.md").write_text(LEDGER.format(row=ROW, objects=""))
         git = lambda *a: run(self.dir, "git", "-c", "user.name=t", "-c", "user.email=t@t", *a)
         git("init", "-q")
         git("add", "-A")
         git("commit", "-qm", "before")
-        for tag in ("archive/2026-09-29", "archive/2026-10-05", "archive/2026-10-12"):
+        for tag in ("archive/2026-09-29", "archive/2026-10-05", "archive/2026-10-12", "archive/2026-10-28"):
             git("tag", tag)
-        git("rm", "-q", "docs/OLD.md")
+        tree = git("rev-parse", "HEAD:docs/old-dir").stdout.strip()
+        self.objects = f"| `docs/old-dir` | SUPERSEDED | {tree} | ADR-0001 | the old files |"
+        (self.dir / "docs/RETIRED.md").write_text(LEDGER.format(row=ROW, objects=self.objects))
+        git("rm", "-q", "-r", "docs/OLD.md", "docs/old-dir")
+        git("add", "-A")
         git("commit", "-qm", "retire")
 
     def tearDown(self):
@@ -59,8 +69,8 @@ class RetiredFiles(unittest.TestCase):
     def check(self):
         return run(self.dir, "bash", "scripts/check-retired.sh")
 
-    def with_row(self, row):
-        (self.dir / "docs/RETIRED.md").write_text(LEDGER.format(row=row))
+    def with_row(self, row, objects=None):
+        (self.dir / "docs/RETIRED.md").write_text(LEDGER.format(row=row, objects=self.objects if objects is None else objects))
 
     def assert_refused(self, needle):
         r = self.check()
@@ -117,6 +127,19 @@ class RetiredFiles(unittest.TestCase):
     def test_an_empty_table_is_refused(self):
         self.with_row("")
         self.assert_refused("has no retired-files rows")
+
+
+    def test_a_retired_object_is_named_by_its_id_at_the_tag(self):
+        self.assertEqual(self.check().returncode, 0, self.check().stdout)
+        self.with_row(ROW, self.objects.replace(self.objects.split(" | ")[2], "0" * 40))
+        self.assert_refused("docs/old-dir: the object at archive/2026-10-28 is not")
+
+    def test_a_retired_object_back_in_the_tree_or_without_loss_is_refused(self):
+        (self.dir / "docs/old-dir").mkdir()
+        self.assert_refused("docs/old-dir is retired but still in the tree")
+        (self.dir / "docs/old-dir").rmdir()
+        self.with_row(ROW, self.objects.replace("the old files", "—"))
+        self.assert_refused("docs/old-dir: a retirement names what is lost")
 
 
 if __name__ == "__main__":

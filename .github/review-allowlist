@@ -1,5 +1,0 @@
-# Logins whose review record counts for the agent-review check (AGENTS.md "Review", ADR-0032).
-# One login per line; `#` starts a comment. Adding a login is the owner's act: this file is a
-# trust-root path (.github/CODEOWNERS). A reviewer's record never counts on their own pull
-# request, so a second login is what lets agent-authored pull requests pass the check.
-s0fractal

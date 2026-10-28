@@ -24,7 +24,7 @@ INPUTS=(
     scripts/kani-scope.sh
     scripts/proof-task.py
     scripts/proof-challenges.json
-    scripts/contract-task.py
+    scripts/task_inputs.py
     scripts/test_proof_task.py
 )
 # A new file that is not tracked yet (a fresh .cargo/config.toml) is not in `git diff`.

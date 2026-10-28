@@ -23,7 +23,7 @@ scripts/check-retired.sh
 step "owner pins"
 python3 -I scripts/witness-pin.py check --every-pin
 step "gate and contract regressions"
-for t in test_witness_pin test_contract_tool test_check_retired test_gate_provenance test_counterexample_registry; do
+for t in test_witness_pin test_task_inputs test_check_retired test_gate_provenance test_counterexample_registry; do
     python3 "scripts/$t.py" 2>&1 | tail -1 | grep -qx OK || { echo "FAIL scripts/$t.py"; exit 1; }
 done
 echo "ok   pre-push checks passed"
