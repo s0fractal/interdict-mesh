@@ -95,7 +95,7 @@ def check(signers: pathlib.Path, every_pin: bool = False) -> int:
         if lin['schema'] == pin.SCHEMA and lin['leaf'] is not None and lin['effective'] != lin['leaf']:
             rid = snap.lines[lin['leaf']][0]['record']['body']['id']
             (problems if every_pin else notes).append(f"{rid}: its leaf version is not accepted in the store yet "
-                                                      "(scripts/witness-pin.py carry, after the tier's signature)")
+                                                      "(scripts/contract-store.py carry, after the tier's signature)")
     if sum(1 for lin in rep['lineages'].values() if lin['schema'] == pin.SCHEMA) != len(contracts):
         problems.append('store: a contract lineage the engine excludes or forks')
     problems += carried_problems(signers)
