@@ -70,3 +70,45 @@ ADR-0007 обмежує, що пір може **застосувати** на ц
   і не перешкоджає відкликанню довіри до піра з багатьма збереженими заявками.
 
 Відновлення поведінки до виправлень провалює відповідні assertions (свідчення в PR).
+
+## Amendment 2026-10-29: a claim its issuer took back is not held
+
+**Found by measurement.** The RC-1 plateau rehearsal of 2026-10-28 (build 4c5cf66, 3 nodes,
+signals cycling over 256 addresses, TTL 180 s) grew from 29.3 to 37.3 MB in 45 min with the
+active blocks fixed at 256, wrote a state file of about 940 KB, and failed the plateau check on
+2 of 3 nodes. A model of that run on three tables (`measure_memory_at_bounds`, 45 simulated
+minutes) reproduced the state file (891 KB) and named the cause: 3 843 of node 1's 4 611 held
+claims were claims their issuer had already superseded. A repeat that extends a block issues a
+new claim and retracts the old one (R26-05); the old claim stayed held until its own end, up to
+`--block-ttl-max` (24 h), on every node. Each cost 737 bytes of heap and its lease record 162
+bytes next to the retraction record (218 bytes); on its issuer it was also saved in the state
+file (119 bytes).
+
+Memory was not the only cost. Such a claim counted against `MAX_KNOWN_CLAIMS` and against its
+issuer's share here: a peer that escalates on 6 554 addresses ten times within a day fills its
+65 536 share with claims that can never count again, and its new claims are refused with
+`peer known-claims share full` until the old ones end.
+
+**Decision.** When a retraction by a claim's own issuer is recorded (a live retraction, a
+snapshot's retraction list, a superseding claim, an operator lift of this node's own claim),
+the held claim is forgotten at once: it leaves `claims`, its target's index, its issuer's count
+and its lease record. Its retraction record stays, until `FORGET_GRACE` past the claim's end as
+before (R26-03), and answers for every later copy: `adopt` answers `Held("retracted")` without
+holding it, before any capacity or share check. A restore skips an own claim that a restored
+record retracts (state files written before this change). A peer's claim lifted only by this
+node's operator stays held: its issuer still asserts it, and dropping it would make the
+digests differ and the snapshots repeat.
+
+ADR-0001 (only the issuer retracts mesh-wide), ADR-0014 (an outcome names the earliest claim in
+force, which a retracted claim never is) and ADR-0019 (a shortened block is reissued before the
+old claims are retracted) are unchanged. Accounting: a held claim leaves `claims` in one
+function, `forget_held` (its end, an operator claim lifted, a retraction by its issuer).
+
+**Effect** (the same model, node 1 at 45 min): claims 4 611 → 768, heap 4.58 → 2.36 MB, state
+file 891 → 491 KB.
+
+**Checked by:** `a_claim_its_issuer_took_back_holds_no_share_and_no_lease_here`,
+`a_superseded_or_lifted_own_claim_leaves_the_table_and_the_state_file`,
+`a_retracted_own_claim_in_an_older_state_file_is_not_held_again`; each failed on its
+assertion before the change. `a_plain_lift_needs_no_free_claim_slot` (NODE-R2) now asserts the
+slot the lifted claim frees.

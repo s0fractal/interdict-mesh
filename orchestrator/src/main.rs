@@ -15,6 +15,9 @@
         clippy::unimplemented
     )
 )]
+#[cfg(test)]
+#[global_allocator]
+static HEAP: heap_count::Counting = heap_count::Counting;
 pub use mesh_sync::{AlertLevel, MeshCommand, MeshOrchestrator};
 mod attack_reports;
 mod audit_anchor;
@@ -28,6 +31,8 @@ mod control_exec;
 mod defense;
 mod detections;
 mod flowspec;
+#[cfg(test)]
+mod heap_count;
 mod ipc;
 mod kernel_events;
 mod mesh_dispatch;
