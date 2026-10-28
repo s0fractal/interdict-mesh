@@ -11,7 +11,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 DOCS=(README.md ARCHITECTURE.md ROADMAP.md AGENTS.md docs/*.md docs/adr/*.md docs/measurements/*/README.md)
-EXTERNAL_FLAGS='--locked --bin --bins --in-diff --shard --list --release --quick --proposal --signers --every-pin --executed --executed-python --retire --loss --because --replacement --counterexample --retired --respond-to --registry --provisional --agent-key --key --root --comment --body-file --approve --profile'  # cargo, mutants, the local CI/contract/exchange/campaign tools and gh
+EXTERNAL_FLAGS='--locked --bin --bins --in-diff --shard --list --release --quick --proposal --signers --every-pin --executed --executed-python --retire --loss --because --replacement --counterexample --retired --respond-to --registry --provisional --agent-key --key --root --comment --body-file --approve --profile --actor --answers --pr --title --require-hashes --no-deps'  # cargo, mutants, the local CI/contract/exchange/campaign tools, gh, warrant.review and pip
 fail=0; n_tests=0; n_metrics=0; n_flags=0; n_adrs=0; n_paths=0
 bad() { echo "FAIL $*"; fail=1; }
 # shellcheck disable=SC2207  # paths in this tree have no spaces
@@ -85,9 +85,16 @@ fi
 # docs/RETIRED.md names retired paths on purpose (scripts/check-retired.sh checks it).
 # shellcheck disable=SC2016
 live_spans=$(for d in "${DOCS[@]}"; do [ "$d" = docs/RETIRED.md ] || grep -ohE '`[^`]+`' "$d"; done | tr -d '`')
+# A path docs/RETIRED.md's retired-objects table lists (or one under a retired directory) is history
+# an ADR may still name; check-retired.sh holds its bytes at the archive tag.
+retired=$(awk '/<!-- retired-objects / {p = 1; next} p && /^\| `/ {print; next} p && !/^\|/ {p = 0}' docs/RETIRED.md |
+    cut -d'|' -f2 | tr -d '` ')
 for p in $(echo "$live_spans" | grep -oxE '(bench|scripts|deploy|demo|docs|common|orchestrator|ebpf|ai)/[A-Za-z0-9_./-]+' | sed 's/:[0-9]*$//' | sort -u); do
     n_paths=$((n_paths + 1))
-    [ -e "$p" ] || bad "path $p is cited but does not exist"
+    [ -e "$p" ] && continue
+    gone=0
+    for r in $retired; do case "${p%/}" in "$r" | "$r"/*) gone=1 ;; esac; done
+    [ $gone = 1 ] || bad "path $p is cited but does not exist"
 done
 
 total=$((n_tests + n_metrics + n_flags + n_adrs + n_paths))

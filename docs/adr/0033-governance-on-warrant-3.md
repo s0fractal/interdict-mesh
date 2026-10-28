@@ -10,7 +10,7 @@ governance moves onto Warrant 3, deleting machinery, adding no metric.
 ## Decision
 
 **The store.** `.warrant/records.jsonl` and `.warrant/blobs/` hold this repository's Warrant 3
-records (warrant-graph, spec `docs/V3.md` of s0fractal/warrant); `.warrant/v3.json` is the receiver's
+records (warrant-graph; its specification is V3.md in s0fractal/warrant); `.warrant/v3.json` is the receiver's
 trust and profile, `.warrant/merge.json` the review loop's base branch, required checks and owner
 paths. Both configuration files are owner-read (`.github/CODEOWNERS`).
 
