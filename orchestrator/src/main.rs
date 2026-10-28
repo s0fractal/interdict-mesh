@@ -1351,7 +1351,10 @@ async fn main() -> Result<(), anyhow::Error> {
 
     if let Some(events_map_data) = bpf.take_map("EVENTS") {
         match RingBuf::try_from(events_map_data) {
-            Ok(ring_buf) => match AsyncFd::new(ring_buf) {
+            // SAFETY: the RingBuf owns its MapData, whose fd is an OwnedFd that is never replaced, so
+            // `as_raw_fd()` names the same open descriptor until the AsyncFd drops the RingBuf
+            // (RUSTSEC-2026-0386: `AsyncFd::new` no longer states this obligation).
+            Ok(ring_buf) => match unsafe { AsyncFd::register(ring_buf) } {
                 Ok(mut async_fd) => {
                     let worker = kernel_worker_health.clone();
                     worker.set(metrics::WorkerState::Running);
