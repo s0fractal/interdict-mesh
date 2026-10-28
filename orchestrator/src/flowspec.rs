@@ -527,6 +527,7 @@ fn has_canonical_discard(path: &serde_json::Value) -> bool {
 
 /// Withdraw owned paths no longer wanted; announce missing or non-discard wanted paths, at most
 /// `MAX_OPS_PER_ROUND` operations, withdrawals first (they unblock traffic).
+#[cfg(test)]
 pub fn plan(
     wanted: &HashSet<IpNet>,
     observed: &HashSet<IpNet>,

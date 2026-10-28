@@ -155,6 +155,7 @@ impl StateStore {
         self.shared.submitted.load(Ordering::SeqCst)
     }
 
+    #[cfg(test)]
     pub fn durable(&self) -> u64 {
         self.shared.durable.load(Ordering::SeqCst)
     }
@@ -221,6 +222,7 @@ impl StateStore {
             && self.pending_for(now_ms) <= STALE_AFTER
     }
 
+    #[cfg(test)]
     pub fn path(&self) -> &Path {
         &self.path
     }
@@ -233,6 +235,7 @@ impl StateStore {
     }
 }
 
+#[cfg(test)]
 fn now() -> u64 {
     crate::p2p::now_ms()
 }

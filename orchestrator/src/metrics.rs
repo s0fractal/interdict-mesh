@@ -106,6 +106,13 @@ pub struct WorkerHealth(std::sync::Arc<std::sync::atomic::AtomicU8>);
 #[derive(Clone, Copy)]
 #[repr(u8)]
 pub enum WorkerState {
+    #[cfg_attr(
+        not(test),
+        allow(
+            dead_code,
+            reason = "the default 0 of WorkerHealth's atomic; only tests set it explicitly"
+        )
+    )]
     Unknown = 0,
     Running = 1,
     Failed = 2,

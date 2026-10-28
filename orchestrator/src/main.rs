@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 // Release builds abort on panic (panic = "abort"), so a panic reachable from input (a peer's
 // frame, an IPC line, a trap connection, a file) stops the node. Outside tests, code must not
 // be able to panic: no unwrap/expect, no unchecked indexing or slicing, no panic!-family macros.

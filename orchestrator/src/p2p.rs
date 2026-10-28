@@ -39,8 +39,6 @@ use common::canonical::CanonicalParser;
 /// FIPS 204 context string of every envelope signature: a signature made for anything else
 /// with the same key never verifies as a mesh envelope.
 const SIGNATURE_CONTEXT: &[u8] = b"sokol-mesh-envelope";
-/// Every frame starts with these bytes and the wire version (`common::wire`, proved there).
-const WIRE_MAGIC: &[u8; 3] = common::wire::MAGIC;
 /// Wire versions this node speaks. Handshakes are always sent as v2 envelopes (the stable
 /// bootstrap format). Only v2 exists, so every frame is sealed as v2; a v3 must make the writer
 /// use the version negotiated for its connection (see [`negotiate`]).
@@ -52,6 +50,7 @@ pub const KEY_PREFIX: &str = "mldsa65:";
 const KEY_FILE_MAGIC: &[u8; 4] = b"SKK2";
 /// A pre-v2 key file: raw Dilithium3 public key (1952 bytes) and secret key (4000 bytes).
 const LEGACY_KEY_FILE_LEN: usize = 1952 + 4000;
+#[cfg(test)]
 pub const MAX_CLOCK_SKEW_MS: u64 = common::replay::MAX_CLOCK_SKEW_MS;
 /// How long a nonce is remembered after it arrived (`common::replay`, proved there to fit
 /// MAX_CLOCK_SKEW_MS).
@@ -234,6 +233,7 @@ pub struct NodeCrypto {
 }
 
 impl NodeCrypto {
+    #[cfg(test)]
     pub fn generate() -> Self {
         let mut seed = [0u8; 32];
         rand::rngs::OsRng.fill_bytes(&mut seed);
@@ -559,6 +559,7 @@ impl TrustStore {
     }
 
     /// Binds a pinned node to the only source address its connections are accepted from.
+    #[cfg(test)]
     pub fn bind_address(&mut self, node_id: u64, address: std::net::IpAddr) {
         self.addresses.insert(node_id, address.to_canonical());
     }
@@ -583,6 +584,7 @@ impl TrustStore {
         ids
     }
 
+    #[cfg(test)]
     pub fn insert(&mut self, node_id: u64, key: VerifyingKey<MlDsa65>) {
         self.keys.entry(node_id).or_default().push(key);
     }
@@ -689,6 +691,7 @@ impl ReplayGuard {
         }
     }
 
+    #[cfg(test)]
     fn check_and_record(
         &mut self,
         sender_id: u64,
@@ -931,6 +934,7 @@ pub fn seal(
 
 /// Authenticates an envelope and decodes its message. Checks run cheapest-first, and the
 /// replay cache is only written after the signature verified, so unknown senders cannot fill it.
+#[cfg(test)]
 pub fn open(
     trust: &TrustStore,
     replay: &mut ReplayGuard,
@@ -1109,6 +1113,7 @@ impl PeerRegistry {
         self
     }
 
+    #[cfg(test)]
     pub async fn add_peer(&self, addr: SocketAddr, link: PeerLink, node_id: u64, conn_id: u64) {
         let mut peers = self.peers.write().await;
         peers.insert(addr, (link, node_id, conn_id));
