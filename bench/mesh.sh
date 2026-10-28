@@ -472,7 +472,11 @@ soak)
         [ ${#distinct[@]} = 1 ] && [ "${distinct[0]}" != down ] && { agreed=1; break; }
         sleep 1
     done
-    if [ -n "$agreed" ]; then echo "PASS all $N nodes agree on the active blocks ($actives)"; else echo "FAIL active blocks still differ between nodes after 30 s: $actives"; fail=1; fi
+    if [ -z "$agreed" ]; then echo "FAIL active blocks still differ between nodes after 30 s: $actives"; fail=1
+    # Agreement on an empty table says nothing about convergence: every block expired during the
+    # settle (a TTL under 90 s + 30 s). The run must leave blocks to agree on.
+    elif [ "${distinct[0]}" = 0 ]; then echo "FAIL the nodes agree only on an empty table: TTL ${TTL} s did not outlive the settle"; fail=1
+    else echo "PASS all $N nodes agree on the active blocks ($actives)"; fi
     for i in $(seq 1 "$N"); do
         "$MON" --verify "$WORK/n$i/audit.log" >/dev/null 2>&1 || { echo "FAIL node $i audit chain does not verify"; fail=1; }
         cat "$WORK/n$i"/node.log* | grep -q "panicked" && { echo "FAIL node $i panicked"; fail=1; }
