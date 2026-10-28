@@ -35,7 +35,9 @@
 #              Every minute each node's RSS, fds, audit and state size, active and pending blocks
 #              and tick time go to $BENCH_OUT/soak.csv (or the work dir). At the end: the mesh must
 #              agree on the active blocks, every audit chain must verify, no node may have
-#              panicked; memory growth after the first 5 minutes is reported. Block TTL: $TTL, default 300 s.
+#              panicked, no block may still be pending; memory growth after the first 5 minutes
+#              is reported. SOAK_PLATEAU=1 also judges RSS and fds level per node (a run without
+#              restarts, ADR-0031 rule 5b). Block TTL: $TTL, default 300 s.
 #
 # recover:     recovery contract (T2, docs/RETIRED.md). Node 1's link is held to
 #              $RECOVER_RATE (8mbit) and it gets <signals> (30000) detector events at the IPC rate,
@@ -481,6 +483,27 @@ soak)
               for (n in seen) if (seen[n] < 2) { print "RSS growth: under two samples after the first 5 min"; exit }
               for (n in first) { g = (last[n] - first[n]) * 100 / first[n]; if (g > max) max = g; if (min == "" || g < min) min = g }
               printf "RSS growth after the first 5 min: min %.1f%%, max %.1f%% (per node)\n", min, max }' "$CSV"
+    # A decision still pending after the load and the settle is an unknown outcome, not a quiet one.
+    pending=$(awk -F, -v t="$(tail -1 "$CSV" | cut -d, -f1)" 'NR > 1 && $1 == t && $8 != 0 { printf "%s:%s ", $2, $8 }' "$CSV")
+    if [ -n "$pending" ]; then echo "FAIL blocks still pending at the end (node:count): $pending"; fail=1; else echo "PASS no block pending at the end"; fi
+    # SOAK_PLATEAU=1 (ADR-0031 rule 5b): without restarts every node is one process, so growth
+    # of its resources is visible. After the first 5 min, split each node's samples in thirds:
+    # the last third's RSS peak may exceed the first third's by at most 10 %, and its fd count
+    # at the end may not exceed the first third's peak (peer sockets come and go with cuts).
+    if [ "${SOAK_PLATEAU:-0}" = 1 ]; then
+        if [ "$restarts" != 0 ]; then echo "FAIL plateau needs a run without restarts ($restarts)"; fail=1
+        elif ! awk -F, 'NR > 1 && $1 >= 300 { n = $2; c[n]++; t[n, c[n]] = $1; r[n, c[n]] = $3; f[n, c[n]] = $4 }
+            END { bad = 0; for (n in c) {
+                      if (c[n] < 6) { print "FAIL plateau: node " n " has under 6 samples after the first 5 min"; bad = 1; continue }
+                      third = int(c[n] / 3); r1 = 0; r3 = 0; f1 = 0
+                      for (k = 1; k <= third; k++) { if (r[n, k] > r1) r1 = r[n, k]; if (f[n, k] > f1) f1 = f[n, k] }
+                      for (k = c[n] - third + 1; k <= c[n]; k++) if (r[n, k] > r3) r3 = r[n, k]
+                      printf "plateau node %s: RSS peak %d -> %d kB, fds %d -> %d\n", n, r1, r3, f1, f[n, c[n]]
+                      if (r3 > r1 * 1.10) { print "FAIL plateau: node " n " RSS grew over 10 % between the first and last third"; bad = 1 }
+                      if (f[n, c[n]] > f1) { print "FAIL plateau: node " n " holds more fds at the end than at its first-third peak"; bad = 1 } }
+                  exit bad }' "$CSV"; then fail=1
+        else echo "PASS plateau: RSS and fds level on every node"; fi
+    fi
     echo "samples: $CSV"
     exit $fail
     ;;
