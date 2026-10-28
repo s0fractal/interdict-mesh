@@ -15,7 +15,7 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location('proof_task_inputs', ROOT / 'scripts/contract-task.py')
+spec = importlib.util.spec_from_file_location('proof_task_inputs', ROOT / 'scripts/task_inputs.py')
 inputs_tool = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(inputs_tool)
 encode, digest, read = inputs_tool.encode, inputs_tool.digest, inputs_tool.read
@@ -71,7 +71,7 @@ def select_cases(root, challenge=None):
 def context(root, challenge=None):
     files = inputs_tool.checkout(root)
     cases, targets = select_cases(root, challenge)
-    required = {CATALOG, 'scripts/proof-task.py', 'scripts/contract-task.py'} | {c['file'] for c in cases}
+    required = {CATALOG, 'scripts/proof-task.py', 'scripts/task_inputs.py'} | {c['file'] for c in cases}
     if not required.issubset(files):
         raise ValueError('Stage proof inputs before making a context')
     pin = re.search(r'^\s*KANI_VERSION: (\S+)\s*$', read(root / '.github/workflows/ci.yml').decode(), re.M)

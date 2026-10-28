@@ -5,7 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 LEDGER=docs/RETIRED.md
-TAGS=(archive/2026-09-29 archive/2026-10-05 archive/2026-10-12)
+TAGS=(archive/2026-09-29 archive/2026-10-05 archive/2026-10-12 archive/2026-10-28)
 RETIRED_PATHS='docs/reviews/|docs/vision/|experiments/chromatic-boundaries|sokol-client|(^|[^A-Za-z0-9_])ai/|STRATEGY_REVIEW_2026-10-03|ci-protection-proposal|CONTRACT-SHADOW-PILOT|AGENT-PILOT|STATE-AND-PLAN'
 fail=0
 
@@ -52,4 +52,25 @@ while IFS='|' read -r _ path mode digest replacement loss _; do
     esac
 done <<<"$rows"
 [ $fail = 0 ] && echo "ok   $(echo "$rows" | wc -l | tr -d ' ') retired files: absent, digests match at archive/2026-10-12, losses named"
+# Retired objects (2026-10-28 on): a file or a directory, named by its Git object id at the tag.
+TAG=archive/2026-10-28
+git rev-parse -q --verify "refs/tags/$TAG^{commit}" >/dev/null ||
+    git fetch -q --depth=1 origin "refs/tags/$TAG:refs/tags/$TAG" 2>/dev/null || true
+objects=$(awk '/<!-- retired-objects / {p = 1; next} p && /^\| `/ {print; next} p && !/^\|/ {p = 0}' "$LEDGER")
+[ -n "$objects" ] || { echo "FAIL $LEDGER has no retired-objects rows"; fail=1; }
+while IFS='|' read -r _ path mode object replacement loss _; do
+    path=$(echo "$path" | tr -d '` '); mode=$(echo "$mode" | tr -d ' '); object=$(echo "$object" | tr -d ' ')
+    replacement=$(echo "$replacement" | sed 's/^ *//; s/ *$//'); loss=$(echo "$loss" | sed 's/^ *//; s/ *$//')
+    case "$mode" in SUPERSEDED|WITHDRAWN|REFUTED|ARCHIVED) ;; *) echo "FAIL $path: mode $mode"; fail=1 ;; esac
+    [ ! -e "$path" ] || { echo "FAIL $path is retired but still in the tree"; fail=1; }
+    got=$(git rev-parse -q --verify "$TAG:$path" 2>/dev/null || true)
+    [ "$got" = "$object" ] || { echo "FAIL $path: the object at $TAG is not $object"; fail=1; }
+    [ -n "$loss" ] && [ "$loss" != "—" ] || { echo "FAIL $path: a retirement names what is lost"; fail=1; }
+    case "$replacement" in
+        —) [ "$mode" != SUPERSEDED ] || { echo "FAIL $path: SUPERSEDED names its replacement"; fail=1; } ;;
+        ADR-*) ls docs/adr/"${replacement#ADR-}"-*.md >/dev/null 2>&1 || { echo "FAIL $path: $replacement does not exist"; fail=1; } ;;
+        *) [ -e "$replacement" ] || { echo "FAIL $path: replacement $replacement does not exist"; fail=1; } ;;
+    esac
+done <<<"$objects"
+[ $fail = 0 ] && echo "ok   $(echo "$objects" | wc -l | tr -d ' ') retired objects: absent, ids match at $TAG, losses named"
 exit $fail

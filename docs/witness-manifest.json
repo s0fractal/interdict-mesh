@@ -2013,6 +2013,9 @@
   "StreamTests.test_zero_pacing_fails_before_lapi_or_ipc_requests": [
    "scripts/test_crowdsec_stream.py:bd57ceda22f3aff046c8f0f6a7e93a34cdb47d98b526d660a8180cb1f43782cf"
   ],
+  "a_ban_racing_a_protection_change_does_not_block_the_protected_address": [
+   "orchestrator/src/control_exec.rs:cf61d7310ab22eecd8650961caa6b5171ad22a403198ce5b4db25e4481ad0e7e"
+  ],
   "a_block_shortened_while_protected_stays_suspended_until_the_target_is_allowed": [
    "orchestrator/src/block_table.rs:d2767bb462ef2c95bd21299867065fd559e19d73706aa5834cab53d9ba5635be"
   ],
@@ -2049,6 +2052,9 @@
   "a_detection_after_a_same_instant_retraction_is_enforced": [
    "orchestrator/src/block_table.rs:5750570e8dbbc9255ab0be282838ee2265a0ddd19edc24f0b25727cb93669517"
   ],
+  "a_detection_racing_a_protection_change_is_refused": [
+   "orchestrator/src/main.rs:329150878411d2d0486faa4d30606abe634e620955661c8033d004423d493603"
+  ],
   "a_detection_refused_at_capacity_leaves_no_event_and_no_strike": [
    "orchestrator/src/block_table.rs:9968fd97ea4fbb2a0538f5ad3961ce5b9ca8f1a4e8db78b264e6b4d63e1ede1e"
   ],
@@ -2069,6 +2075,9 @@
   ],
   "a_file_over_the_writer_byte_budget_is_refused_without_reading_or_replacing_it": [
    "orchestrator/src/state_store.rs:b6c2d68987ea3f7f6a8639e23c2370b5ec0e54f894e5b90d385432e4bf713297"
+  ],
+  "a_flush_of_many_own_claims_is_retracted_in_frames_a_peer_accepts": [
+   "orchestrator/src/control_exec.rs:a2e7caec0d74bfdd687830b5b078afd4002d43a2dfd9712bda39960d027f18f5"
   ],
   "a_flush_records_real_queue_overflow_without_a_following_record": [
    "orchestrator/src/main.rs:2d9f1b92f93dfed5eecfb8a9cd1ceed455779627b81d06e9b1ff1158dcdb4d32"
@@ -2118,6 +2127,9 @@
   "a_lift_is_not_undone_by_a_step_back_within_forget_grace": [
    "orchestrator/src/block_table.rs:a094ab77e3b2870f0f2ecbb70664cd364b77916a189295fac00fa8138aa44379"
   ],
+  "a_lifted_retraction_is_on_disk_before_it_is_answered": [
+   "orchestrator/src/ipc.rs:995fc943f94909ba0103bedf641089ef48df97f383ecdd50e401ea61405c2b4c"
+  ],
   "a_line_sent_before_the_request_does_not_retire_it": [
    "orchestrator/src/delivery.rs:8646d1ab7d7a86d24521af0ace8326c0c6f87cb5a9f6d321cadeb99a08ef7bfa"
   ],
@@ -2159,6 +2171,9 @@
   ],
   "a_peer_beyond_its_known_claims_share_is_refused_alone": [
    "orchestrator/src/block_table.rs:65c963aab63a59d8d1ff93ddda9582c772c3c738c1dce56bed2797919c49fead"
+  ],
+  "a_peer_claim_racing_a_protection_change_is_not_enforced": [
+   "orchestrator/src/mesh_dispatch.rs:3a105e21a2029efe3cd18358c1efd9a7bfae73936532872a098eaab5797c4a05"
   ],
   "a_peer_reason_cannot_frame_extra_operator_telemetry_lines": [
    "orchestrator/src/mesh_dispatch.rs:4b736d409903e659382e63f56a306755fb3451c1da27fbfc66c5d0a9595306ef"
@@ -2231,6 +2246,9 @@
   ],
   "a_retraction_capacity_refusal_is_not_an_ipc_success": [
    "orchestrator/src/main.rs:046251dd7210e6bb505b9b47fbf31185f5c52e6fde6b80c2d244aa800023bf50"
+  ],
+  "a_retraction_is_packed_into_full_frames_within_the_budget": [
+   "orchestrator/src/mesh_sync.rs:fe4b4ceeff92b165770cbdb7b280f104f3c31875f378a384f138c4679d40a889"
   ],
   "a_retraction_while_the_target_is_protected_takes_its_claim_back_mesh_wide": [
    "orchestrator/src/block_table.rs:d691736f53da0e746d65722d6c3a32c1bc5010724be20ca7eb628579c315845a"
@@ -2397,6 +2415,9 @@
   "client_logs_cannot_supply_replay_authority": [
    "orchestrator/src/main.rs:0380caecb5260a1ded9a8b11889e9d1511bbeb1e5bae2f2210b246c7cfb9f30f"
   ],
+  "concurrent_reloads_leave_table_and_registry_on_one_trust_store": [
+   "orchestrator/src/control_exec.rs:52c612d973f7881bf82455e7379a4334190e5aa53be2e83cf13a411adabcd032"
+  ],
   "control_outcomes_require_an_exact_bounded_complete_reply": [
    "orchestrator/src/bin/sokol-operator.rs:42dacf2b93b7bd297049fcc878ffcbc36c52210756eab8760caf7766bee08cf3"
   ],
@@ -2514,6 +2535,9 @@
   "maximal_writer_records_roundtrip_with_escaped_reasons_and_all_tables": [
    "orchestrator/src/state_input.rs:d025b33b067b27fbb9b5a1249b441e857a7ee4af325653b69b9120d94db46935"
   ],
+  "mesh_floors_roundtrip_within_their_bound_and_refuse_past_it": [
+   "orchestrator/src/state_input.rs:77f2f3fc0e17d53dbbacba9fc992c7fd8b708e37b34885b2457e67c195444fd6"
+  ],
   "mismatch_examples_are_bounded_without_stopping_replay": [
    "orchestrator/src/replay.rs:5df5b3aee8acb5911e86d90083ea41ad439b305472ffde013345510cbb4baaf5"
   ],
@@ -2610,6 +2634,9 @@
   "retraction_admission_reserves_every_needed_record": [
    "orchestrator/src/block_table.rs:f67a3ce22f77d95eb5c44f612be5e2c7c8607217d41d095a90cb17381ef10b9b"
   ],
+  "saved_floors_refuse_what_the_previous_process_accepted_after_the_start": [
+   "orchestrator/src/p2p.rs:5ca5673b3dbcb3e45f8c18daa0d0d44804ea744bad8776c13540f783bf249fd8"
+  ],
   "sequences_refuse_cardinality_and_invalid_records_without_eviction": [
    "orchestrator/src/state_input.rs:71c376ad639e89a90efd8af781a4dcc3719669bd9a70ab12c1ac06e7dfb7f252"
   ],
@@ -2659,84 +2686,735 @@
    "orchestrator/src/state_input.rs:bd58394d6d611264e81035d9574a0cd3c02e7fd07986f505b7245845b91fdfdb"
   ]
  },
- "contracts": {
-  "ABI-E1": "f2a8be03d5ae6544169766d38c99079a03ae6fdcf2cc723c5e1f3900fb9770c3",
-  "ABI-L1": "62f49c978eb9618b711be38ab22b2f8c47d276bc1a20a6f1bff49dcee9744330",
-  "AUDIT-A1": "46e30344f597862a3f8e8c0e4ec964aa3a1b749cb43db536c1fab43032636b3d",
-  "AUDIT-R1": "d9359f45dd60250020e38761884e7e0e80b688c6bf05e2c3c59b1f66685c368f",
-  "AUDIT-R2": "a2128cfe68dae5fa314e1159c902340de70d3a5c577e0b0bedd00b0a0eda05bb",
-  "AUDIT-W1": "422c3e75151a175762ef57e74130b054e3f7219c231cb24657db20db9e0ff978",
-  "AUDIT-W2": "abec3420670c3c23808954fb977332d11870483ffb5ae296d9d3c16d368e7563",
-  "AUDIT-W3": "f7727aa9d7ca67fa60af72d067448e8a54ffc96acbc8eeada0b8e3e6acf7d58f",
-  "CONTROL-B1": "ad04cc3f9b0f9f964213b7dbef5d230b9998682b31c32bbad39ec7f599f79879",
-  "CONTROL-L1": "83962842fe5c87c27c1f73144ed55d6c7d59c20750343e264a175b195e83df39",
-  "CS-P1": "20c86421cdf4044134642a59a00621fbcd7356166a8643864fb02dad24cb2687",
-  "CS-P2": "5dd517e4115b6735f6e7477f4118095dccc8075d384adeb95b2bbf1a0069b031",
-  "EXCHANGE-H1": "27642a447108fd8a5245d35882d1ff77f947e0a13250aee6d733c770ee157031",
-  "EXCHANGE-P1": "1f1fd4ba88f639ccf12ef8b384e15ba6d4556814bdddd7b953ca73f5033f0500",
-  "EXCHANGE-R1": "bf3b59a90682b83620bd46fb433c2fc5b4edcd809e596da709511f40167a3f6f",
-  "FASTNETMON-A1": "d7a9f0dd095b399579eb136f5aa8837278f07afe62dcda3c0a93c2eff11d94ec",
-  "FLOWSPEC-B1": "4bcfb9a6441b08485e2687a88e162720a37dcc60ed26ca003cb37d23ce3f7289",
-  "FLOWSPEC-P1": "23412916e4d4b48929c79ebd1541c49345a29b49377f67aff8ef23ac673153ce",
-  "FLOWSPEC-P2": "092a77fd366261837398647687cf247ee43845d3f66f263be8bbd108625df225",
-  "IPC-A1": "6a0096b5b18b5190ee613bc7e2e3e94604665f205385b18ae074bb0b9138aafa",
-  "IPC-L1": "56700a9f7476254a5c5112a725cd321d80592a56e38c82eca2c3d4547b521577",
-  "IPC-R1": "b9989e447aaf0ac528045bb46ae30f905b77868400866b3732711082527f9986",
-  "IPC-T1": "088af71858cc841192a1cac08dd3a0cfe6f6fcded7772bf9ba5fbd3a13122cc3",
-  "LEASE-C1": "d0ecabec0b99fb218c6bbc733fe834a076381493b93b4ca02a37bde868cf3119",
-  "LEASE-W1": "07105336ae7c8b08da79feb6b84897608cab06978ac9517f03e80f18b4451a30",
-  "MESH-A1": "83475cbf8f68688809123964d89096ccf2eca83eb242afd822d0132372547f03",
-  "MESH-A2": "14b7d34195160f94057a22ac5a3e4419975831c78169645f46c0184f71f7d2ab",
-  "MESH-C1": "25af225be034979edf4a33ac301263b53dd5019f8fffce2a6a8789fb77223a0c",
-  "MESH-K1": "b5c64769a38d45f8829f1df5214c8898179b2641dae6f415d36cb3e35ee4e629",
-  "MESH-N1": "ad2e1375dcf01ac64f0028c065e254dd2b7d94f41755e0c0df55665c36e0c3ee",
-  "MESH-R1": "8a23a2f3720c9b96ac29bd1ee776d2badff9b8b6e6c894b1ed2f604a1f837e5e",
-  "MESH-V1": "0a25e02498896aa457d83b29f6bb032461006726d5e563362972f52b920d25be",
-  "MESH-W1": "70bfce13af175b5b166edca4341696f86f06f8907ce2a8cd2d471aa09e189b3b",
-  "MONITOR-L1": "762fb11af9aca18b5e95d9e71061c430745e5f50a90341f7b8356417cc13368e",
-  "NODE-D1": "0765e06474e6a67f70ffa2f6ca4e0c78da7f252909be75c56a3a5c7b8740efd3",
-  "NODE-R1": "4618ac4d2bb0c89369d0a8b83d84cb96e1b22f630db08c56320e0b25022bcb15",
-  "NODE-R2": "3ebe18170f979f75008aa350f225e2afbb617ed4960d90b6568053bd7bc9bd71",
-  "NODE-R3": "745bb8369c5b678cc8cfd1e12a53cf61b32c027792f0d9f66b915eb0913f646a",
-  "NODE-R4": "8cf92b49ba813fd0f9065d7877260af8b9767edd0eb63b977928799166b467e5",
-  "NODE-R5": "9b6a8bf99e620cb06f68e6c4121c881c37d676d5be4cfa18c49626b6a389451d",
-  "OPERATOR-A1": "90001cbb1f092e3947434356b1ce169139b3e7a139998bbfd48aa1f553dbf798",
-  "OPERATOR-R1": "2451a9e49df816496929e713e38830a4ecdab59fccd22cd2fffac258c8cb5119",
-  "OPERATOR-T1": "2af779b4e665e0500e30f0d68e058ea4534558a42ee8ec5cf8dad8dc4e301d96",
-  "OPERATOR-T2": "0ed3f5826633ba95688e96c2f149b2914cdf5910974e9c25ad2e08166f898c02",
-  "OPERATOR-T3": "f7f957fc4707f56da80ea42bac09fc321971fde7f345c7a0dfb4928a62cc54dd",
-  "OPERATOR-T4": "5abd3aebf2c65131e3d98961f5ac595957f2dd992fb1ba21328a48369de7d101",
-  "OPERATOR-W1": "fda1edd612251a59d3d4549accda6a3915beebb95c118aa77e835f1b5891df75",
-  "POLICY-T1": "83f8d78479c6bd76211fbd10a7a17e282702b357dea6e8f5916eae28cd8f0496",
-  "REPLAY-B1": "109a413c0fab32fb51924d7832592578cc31a8d8de186747dfae1f0b28e5bc25",
-  "REPLAY-O1": "6fefc9e54ab9149a411559620e831cee20624df1750db07255ebd5efe001dd67",
-  "REPLAY-R1": "02e461a6ac12481a554c9af346378ed023100fce66f6a26224c20d8d84c68d4e",
-  "REPLAY-R2": "6234809388ac9d18ef96ea855bfc54ac8fecf0527d28da8587977e2faaab0352",
-  "REPLAY-R3": "3c228c7d000e878bc3643046f6b789ca25d8dd840e9dc43d1b9fe1c302986018",
-  "REPLAY-R4": "b6121e23b0da84c076200463ee131b3955db03f283f5ba0c8d64097c6ab9149a",
-  "REPLAY-R5": "5cb0e2725b64c4c0c50a90a45eec2b34aee78cdecd58fe647d7ed8f82dfc64af",
-  "SHUTDOWN-S1": "20f05174abd36f01bf7b650b1dc2d099bc9c482d2bccbd9b549db27d750e5cff",
-  "SHUTDOWN-S2": "4b603c1a2c197fc71e551940b80a2df275920b45405489d7e899fbeb4e1a7046",
-  "STATE-B1": "2e14f012cd4c37689c4d6a7ec815e40fd12cc714b2cdc2a8b1518d3a1d5fda4f",
-  "STATE-P1": "c77333a2be0f751dac1ec9ce6663e325d36efa51c8dc917ebe9cb81bd5af5561",
-  "STATE-P2": "93fa21f3199e8249b2367c1c03cfe7dc9fb86f4ac18bc32812cfb588c4a4bc52",
-  "STORM-S1": "8cfa43120290b691f73c473a645587821355a1e74df9a8f2e73964cf6669cac1",
-  "STORM-T1": "98e4242860e7eae61242b9da0f336711e67604265851877f1d181d810c2358b2",
-  "SUR-C1": "71649ca5848e6bfeec0e1cb516058d937298924631f88b0141127498686b614a",
-  "SUR-C2": "7fcaf10dafce330390b4f11b6d613a8f16500cbe135bdd57382e877471c642d0",
-  "SUR-D1": "0df7ecc50aad9a0ce7a4b75881a5dab0870bb4bd5947cd5ab0a7078e65554bd8",
-  "SUR-G1": "812cf4e7d434265b5a94250aaef909f4f5cc814308f1bcaddd4fbd806bacabcf",
-  "SUR-G2": "5bd8f38332a5ec711d597ba90f8da237b412e2da740b63e57fca993414958dad",
-  "SUR-G3": "a01235bfbae6b72e5866e26bb56b0223e280d7c0ab1ffca04bec1c29f58d066e",
-  "SUR-G4": "d43b633e2108b1dff3332736d2d3e5182af91bf6f624c57c183a910eba660fb1",
-  "SUR-Q1": "2bc447f61d219b83a7199f3a67cf4e87c4dd0c290714f971d7a4e4e60176a62b",
-  "SUR-R1": "f5edfc06e0f4f32425b18a4b2a92880f86fe1b1e9b17a487816d87364769b6e8",
-  "SUR-T1": "aa51941a60d06f354217c9fef3e85cfe1d6340a997faa08016dd44d1283e07ea",
-  "SUR-T2": "bd10db0bcde8109f8365e59820805a211ae783c95c613b0cd1d62860f6f3fbff",
-  "TRAP-S1": "e273ada65dd00dcee8e9a12dc66df9e6b5e304afb6898a411e541d8f9e317574",
-  "XDP-C1": "6a0fdba9024ac533c6eea93e0d2fc4b10e779748ddce53c50f80403bdf08938b"
+ "contracts": {},
+ "contracts_v2": {
+  "ABI-E1": "49d429558dc0376035a618ef29e66c8e2d378aaf532206d400483f1794869b9f",
+  "ABI-L1": "12261b92d8506e75dd59c0251065d0199f31b3e4518b98b6b41ddcfafd58e8bb",
+  "AUDIT-A1": "984807b817e9e6bfb48f1b30633b564e07932d895c7f5d18e3f3e033d6baa9a0",
+  "AUDIT-R1": "03638704ebdff17befee443e1c37a0b95435dcbd804b1f5533162a74a7a87b7c",
+  "AUDIT-R2": "ecf368e0a5c2f73f8defef63680c7820ac6d3137bcbb5056cdd3bd1bf7e1a458",
+  "AUDIT-W1": "43c11a63c376ed8b8aea28e1cbd06e45b9cd019291e39ef30aa47249de5fe05b",
+  "AUDIT-W2": "26e1483e96b48b05721beddb41759eba5c2874af48c1754ad52067086131e773",
+  "AUDIT-W3": "57037deb06ab769f022d37df594123b13eac3773c54d8262fcd8838a8142df8f",
+  "CONTROL-B1": "cba8ad46f8479af305112929df442db90893c67a4b19076f680a41d1fc128e96",
+  "CONTROL-L1": "2b4ff6bff89968dddd1ef20c495c648cee5ae8ae1cb8301047cbaf438069edc0",
+  "CS-P1": "b91871a88d291d8a1351658aa4491d7f15b02dad9f13784401c69c4bc69dc033",
+  "CS-P2": "c2f172be58765c879379245f375df528e0a10aad1c128570e9d203d09d26a56b",
+  "EXCHANGE-H1": "b31e7f15187a4cefd21e30f1a5acecec1a002e2a8e90b6f3593b7246a6e3ccae",
+  "EXCHANGE-P1": "46cfa88deb2b7a6c28b7d4febb32c69465b14bbbf33bb8d423f856c06487d01a",
+  "EXCHANGE-R1": "3621bebf9dac4a9115cf3806fea4c738d7d89c1e4698fab4b2d412d2f23bd628",
+  "FASTNETMON-A1": "3a4b2c7f16ee64c3fedfbc2634712e5c63a74ce5992129d1dfe7e186c37f263c",
+  "FLOWSPEC-B1": "29a6bbb1ce04580ad54b798617079cc3d35792d3dcc2319c9e08a6c74b8f93b4",
+  "FLOWSPEC-P1": "2c28cc79336e285e9bd7a11440351bf8987a550b7243b8f69a2f1a5dd40291c2",
+  "FLOWSPEC-P2": "f6d2f02c9096ec43d2e39b9aa004a1e10b201216d62ef6ee0892bd81dad9d22b",
+  "IPC-A1": "cc3cf90b2ca282cbed4ec88350f2e4b493252d4b1800712e0db465e048922f41",
+  "IPC-L1": "43b3873b1f258d08dbcfc262bff0b77cac582dc796ef8cc44565ac949e58f4c2",
+  "IPC-R1": "f325d52baee3548ba5441aab180046b6104668548e0107f544eccf5a2cdf20f9",
+  "IPC-T1": "0327d2368f9c8ed1a951aebf3ed790d1fa5b7e86ef0e55b64d0897751a2320fb",
+  "LEASE-C1": "d4c1a09b63b29944606ff90f40e829ad23f1cbb2133c41cdbfae17edfa696298",
+  "LEASE-W1": "72f35c5ca80f911e39fb43be0bade59fe0c158003e446eee01e975d774b720c6",
+  "MESH-A1": "7d2e7956326c7893059ea7e4bab5b22ed80243c9377c7cdb5d5e177b43b0868e",
+  "MESH-A2": "cfed90b42b47f390044292121773db52e3ad60e9b316d74c669ed8de0b3e70cd",
+  "MESH-C1": "590075dcc7b8bab980e3e2b8fa8caa0462458d271acbc29c227c5a82457b0d40",
+  "MESH-K1": "deb2463f8795f42f039cd217000c39ea28e97e11615c17266646b4fc5dc9c72a",
+  "MESH-N1": "ca1b0b28b3046dfebcae3896ada5858438da754cda778e654c98cab09dfd2912",
+  "MESH-R1": "d1dd76f0497e210c50b5eeb6e7bba48d65d55c122be3081970a59dd3b03bb42e",
+  "MESH-V1": "57964e66e41ecb7ae67154f694b87a4e5e51d05f0313b4baf90dc1db90972a44",
+  "MESH-W1": "c735e6ecacbefbb8467a28ee55dd5f2c85a459486b4399b149b34d89bfab0343",
+  "MONITOR-L1": "9b6a2ee5b60da5826ede4b30651596f679226756fea5d6c21c7f63fc59db209b",
+  "NODE-D1": "4312eafc0d230fdeb7745eb30bf7b833e6c9f345a987d9fbdde2af566a1c1a80",
+  "NODE-R1": "92745efc133445e44bb6054f6d29c02b384bc430956f25a4d7e7a571d39d3f11",
+  "NODE-R2": "0ab48ae860c5f7e9f8054852623f5ba79960c0948287825e4a6b9e5872ccb0e1",
+  "NODE-R3": "6bc493d4833e065f76afd7220c0b75626526bbe27304af80f14f87260c23749d",
+  "NODE-R4": "a2bb25b940f3fb9312de911af734020951df834b853e0ed16e3223258ef999d1",
+  "NODE-R5": "fdfae09b473f0678f8632af81a147798fa78e350ba738ced4825ee31c87b5ca3",
+  "OPERATOR-A1": "1e19e52ae92cdaec0b283d50e03a9180d57df44d3c287fbc69438059b0f5ee28",
+  "OPERATOR-R1": "4fb5cf803122c3b74595133391c474136bba8bf1e07e8f8e1827062c7803c51f",
+  "OPERATOR-T1": "a0cbc9cdaacce7dffd89bfc127b811ea4f2e9f216aadcbcf913d49d2d99425bd",
+  "OPERATOR-T2": "66242184edd5ad558f7f1bd90a012bd41657e32305d09ec53637e036acd01344",
+  "OPERATOR-T3": "95ed267ff64868c69a947f3034ed2e25fc2903a73767f1d832601edee9a89e5b",
+  "OPERATOR-T4": "f1b4bc88c74ccb60ebb6c7ed941fb13498fcbf87b3c90cf2bba4947fd4d0c841",
+  "OPERATOR-W1": "b0e1f891dc01f04848378477e3e7bab6b1df93ca3bf6f926cfb2a9e891b44458",
+  "POLICY-T1": "cdf5e793c06e6e5c83a6c45a107888213722d49da2671958c05144961bb70702",
+  "REPLAY-B1": "12121fc2d57f88418797c6de6dacb421aed7ed5c46e8773968d3a89efcbe9bc0",
+  "REPLAY-O1": "11cf1b5a0ac4b04941f6e0d50ed62b3f6200d65982f8fa38a6ddb6b642f2509b",
+  "REPLAY-R1": "74b31591ec92f80ba1aeaa6ffa1b3fa8511e6be1908ae1597fd757e4bd2c8eab",
+  "REPLAY-R2": "a32727b45219673d551f2e552b9b7330c57c3730948b05173bd5cc5625829767",
+  "REPLAY-R3": "1f04c8b987da830b6afa13428b1656feef6739a183a09404f0df217d008220e9",
+  "REPLAY-R4": "bb2d3f4652da56b0befb8519d7d801846f84dc2a64896daf4c4e81dcff227335",
+  "REPLAY-R5": "788b4a929d447258b489af1b5630bf962549c1f86af71891f9596b45825d87c5",
+  "SHUTDOWN-S1": "6a960099f5b3793873bf3bc984ca7a30a5bc2d2860eaaabfa2e4353e4e9e9572",
+  "SHUTDOWN-S2": "d24fa7452ea4ae396a6d22aedea82b3df72530dabefb0df14245c19ac3c12047",
+  "STATE-B1": "e3188cdc76877f41b8b4b473065f1e21226ab1ca0cac51ae576804b860bba21f",
+  "STATE-P1": "5861dfc34dad20e6277382c63c5c527f99ebdbb61190e76fa14eea9c35a724fb",
+  "STATE-P2": "1a0b7aeac56ce809431e2f0ad0f11c8e0d50c18d3a7c942452a47ad32f2155be",
+  "STORM-S1": "4741a923cbff08e79aef712077315a07cebd5a7fb1b46d239e647555cf9fe549",
+  "STORM-T1": "9008c03dd1b0bc4a5b47ce878f1fb53bfceafe5be55bc3f9d587789d8953c425",
+  "SUR-C1": "2bba677269f9402eac3a4fe3ae2397e4f722e4d8705d7ca5729069121aa1fc05",
+  "SUR-C2": "93fa120f975e8bb0863ba8e1fcf0b3a089740a23fbcbc4e85c756e28d8666c21",
+  "SUR-D1": "26ae6f2a0b2c8a5f92d0ed85d1ac2d7746d71c7d7672b2df548388bd2c10e565",
+  "SUR-G1": "cabe1468459923823ae2293c717e09305f153e81b6c313b11156d7e80970fd91",
+  "SUR-G2": "0d632551c1c5b9be18875af9961a656d7cf958ca4f55ccc1d005f2fa4af85f90",
+  "SUR-G3": "d81a8ca6b72c5bd6669e1f204511a79bc0122ad0f89b7801bfa40b1f9342d46b",
+  "SUR-G4": "017eaa222f8236a65dda946e440c08530daabf08d4388b377233ca1ac7ecc56f",
+  "SUR-Q1": "6fe4189098835151bb47300b754faac0632bf05b497a60dcf8daf9d466538649",
+  "SUR-R1": "8f7684e5c5bc463650adb246bcb5047e0d88cd6a5753fff480bc551398b6de3a",
+  "SUR-T1": "e88b4a84fd8c91210ade906ef85d6c4de9d22b85c8d7eadc325aa139bacee3cd",
+  "SUR-T2": "ddea39280b7b07448d0bb9fd901c1c1a1767aefbb558d8980073cd1257d2706b",
+  "TRAP-S1": "7297c7a2591dc2efe44997281292d51ba9a3686c6bb433ec482d6255a2561abf",
+  "XDP-C1": "0f298c6448bd3e0e170fbcc94369323d114eba6609cc17f838588fe70fae7b2e"
  },
  "rows": {
+  "ABI-E1": {
+   "statement": "1312906f98f5bc77a82bfd3de8804dced417f1ba3e17f25a99fc8fc78bafec47",
+   "witnesses": [
+    "the_xdp_program_writes_every_field_of_a_drop_event_before_submitting_it"
+   ]
+  },
+  "ABI-L1": {
+   "statement": "120894583ab49eda6bba66195f918691161b7c5f781c806ea5f68fcea7327198",
+   "witnesses": [
+    "a_drop_reason_has_a_metric_label_exactly_when_the_xdp_program_drops_with_it",
+    "the_drop_label_scan_refuses_a_reason_it_cannot_name",
+    "the_drop_label_scan_sees_a_reason_after_a_nested_call"
+   ]
+  },
+  "AUDIT-A1": {
+   "statement": "526ef1b1df64b24ac7f86c6e24ee5022b773dc2c6f40ac9892b9ddf340959b15",
+   "witnesses": [
+    "a_non_canonical_statement_file_fails_the_check",
+    "a_statement_file_named_for_another_statement_fails_the_check",
+    "a_statement_is_one_exact_line_and_parses_back",
+    "a_statement_is_written_once_and_never_rewritten",
+    "only_the_canonical_line_is_a_statement",
+    "statements_confirm_the_log_and_expose_a_recomputed_rewrite"
+   ]
+  },
+  "AUDIT-R1": {
+   "statement": "925245ad23875ffdfe8b4a51a5d1f8fab3cd9e4c2fa94838834f6e54a27df6a7",
+   "witnesses": [
+    "oversized_audit_records_are_counted_and_marked_before_following_data_or_flush"
+   ]
+  },
+  "AUDIT-R2": {
+   "statement": "3391e849068f5038f87103d3e6639b66060e132a1360ae05b6942ed97402cb12",
+   "witnesses": [
+    "a_failed_loss_notice_retains_its_count_until_recovery",
+    "a_flush_records_real_queue_overflow_without_a_following_record",
+    "disconnected_final_sync_records_real_queue_overflow",
+    "idle_sync_records_real_queue_overflow_without_a_following_record"
+   ]
+  },
+  "AUDIT-W1": {
+   "statement": "aefdcda6f406b2affd58293ad575f5af3cb25f839961e43c12a047fad892e158",
+   "witnesses": [
+    "a_head_for_zero_records_of_a_pruned_log_is_not_confirmed",
+    "a_peers_witness_confirms_the_log_and_exposes_a_recomputed_rewrite",
+    "a_witnessed_head_exposes_a_recomputed_rewrite_that_the_chain_alone_accepts"
+   ]
+  },
+  "AUDIT-W2": {
+   "statement": "2cf25fe8278d40505363c386bc23871f34d6aca2f604c0d016616f54c694e300",
+   "witnesses": [
+    "a_peers_audit_head_is_witnessed_once_per_interval",
+    "records_found_on_open_are_unsynced_until_the_next_sync"
+   ]
+  },
+  "AUDIT-W3": {
+   "statement": "7f0ed21ac77d9ba6aa9876459773b2981982078f713442141d545d232b6d3d50",
+   "witnesses": [
+    "a_handshake_without_features_still_parses",
+    "feature_commands_reach_only_peers_that_announced_the_feature"
+   ]
+  },
+  "CONTROL-B1": {
+   "statement": "e6394dd5a65fc35da81e2f6ca519069b8307d1abe59eee616ba5ba8542ec34b3",
+   "witnesses": [
+    "a_kept_operator_ban_is_not_answered_as_a_refusal"
+   ]
+  },
+  "CONTROL-L1": {
+   "statement": "6f11db72ac45c7b287889078bd3cf30b2a3ec246ad4e2c048bd4dab36d4724fb",
+   "witnesses": [
+    "an_overlong_line_gets_one_error_and_runs_no_command",
+    "normal_lines_still_run_one_command_each"
+   ]
+  },
+  "CONTROL-R1": {
+   "statement": "86eb9c3991382b6dcaf9c459ee3150e97f93e036c3ebf006636788f3e2e3797d",
+   "witnesses": [
+    "concurrent_reloads_leave_table_and_registry_on_one_trust_store"
+   ]
+  },
+  "CS-P1": {
+   "statement": "3a7a498491c605b9d6b136ebd1fa2c5812780d64141ddea96d051756e37650d8",
+   "witnesses": [
+    "StreamTests.test_zero_pacing_fails_before_lapi_or_ipc_requests",
+    "cli_pacing_accepts_positive_u32_bounds_and_zero_poll_interval",
+    "cli_rejects_zero_ipc_pacing_before_startup"
+   ]
+  },
+  "CS-P2": {
+   "statement": "5b5010be85defb53015b734ab5a470e68df2908c74cbda92557ce99d3cb61214",
+   "witnesses": [
+    "ipc_pacing_interval_does_not_round_below_the_configured_budget",
+    "ipc_pacing_intervals_are_positive_minimal_integer_budgets"
+   ]
+  },
+  "EXCHANGE-H1": {
+   "statement": "014883ed2266c3201f211c81a6953e5726606f1ca7bb9db9760be208b9b2c153",
+   "witnesses": [
+    "HostilePack.test_a_record_citing_bytes_outside_the_pack_is_refused_by_inspect",
+    "HostilePack.test_names_that_collide_after_case_or_unicode_folding_are_refused",
+    "HostilePack.test_received_python_never_runs_in_the_recipient_owner_gate",
+    "HostilePack.test_refused_observation_cannot_carry_a_native_pass_verdict",
+    "Interpretation.test_a_later_phase_on_another_source_is_source_mismatch_whatever_an_earlier_phase_says"
+   ]
+  },
+  "EXCHANGE-P1": {
+   "statement": "fe447c6d4245e8e9b0c8fb40a2d06db26dc38adf931c87024c33443a6d5b1065",
+   "witnesses": [
+    "Interpretation.test_author_status_cannot_override_transcript",
+    "Interpretation.test_fixed_isolation_profile_exposes_no_home_key_or_network",
+    "Interpretation.test_only_named_assertion_red_and_complete_repair_reproduce",
+    "Interpretation.test_unrun_budget_and_wrong_phase_are_never_success",
+    "PublicWarrant.test_readdressing_a_changed_witness_cannot_bypass_owner_pin",
+    "PublicWarrant.test_recipient_reply_is_prior_linked_and_view_does_not_upgrade_execution"
+   ]
+  },
+  "EXCHANGE-R1": {
+   "statement": "a8ee0caaf9d71dd1ff89a81ae7509d4ec516ca3993fd261dd44b43fec7021822",
+   "witnesses": [
+    "RegistryWithinLock.test_a_crate_of_another_project_or_version_is_refused",
+    "RegistryWithinLock.test_a_dedicated_registry_for_the_lockfile_is_admitted",
+    "RegistryWithinLock.test_the_index_cache_is_metadata_and_not_restricted",
+    "RegistryWithinLock.test_unpacked_sources_of_another_project_are_refused"
+   ]
+  },
+  "FASTNETMON-A1": {
+   "statement": "62c8fc877167dfed4f734277cfa4801ff3c67b8f41b24cba1d902546cb3fd227",
+   "witnesses": [
+    "a_node_that_comes_up_within_the_budget_still_gets_the_report",
+    "a_node_that_never_answers_makes_the_hook_fail_within_its_budget_without_claiming_delivery",
+    "a_node_that_records_the_report_makes_the_hook_report_delivery_and_exit_zero",
+    "a_report_the_node_rejects_is_not_called_delivered",
+    "the_first_line_the_node_sees_is_the_ack_handshake"
+   ]
+  },
+  "FLOWSPEC-B1": {
+   "statement": "33cccc039362416096cbd9c93330c9049278ac9fceabfa020d8ccd7f182bbeb8",
+   "witnesses": [
+    "a_full_ipv6_owned_profile_fits_the_rib_budget",
+    "a_timed_out_call_is_killed",
+    "an_overflowing_call_is_reaped_before_return_and_a_later_call_works",
+    "an_oversized_valid_empty_rib_is_unavailable_not_observed_absence",
+    "both_command_pipes_can_fill_their_exact_budgets_without_deadlock",
+    "excessive_command_stderr_is_a_bounded_diagnostic",
+    "excessive_command_stdout_is_refused_not_an_accepted_write",
+    "pipe_byte_limits_accept_equality_and_refuse_the_next_byte"
+   ]
+  },
+  "FLOWSPEC-P1": {
+   "statement": "7ac220fa8731711f45e0e274ad26c41f113258239e6c4fc0bb9cf01025a60059",
+   "witnesses": [
+    "a_repeated_key_inside_a_path_is_rejected_and_authorizes_no_withdrawal",
+    "a_repeated_rib_key_cannot_hide_a_foreign_path_from_the_round"
+   ]
+  },
+  "FLOWSPEC-P2": {
+   "statement": "68bc071c07fc1b38fa053512e24106b5e78c3d921f8c4118c607cef53e6a1602",
+   "witnesses": [
+    "the_default_community_is_64512_and_the_node_id_and_is_refused_above_16_bits"
+   ]
+  },
+  "IPC-A1": {
+   "statement": "92729d9c94dad884353091082bed03a9a49265b45baf26d170ce17883b9cc335",
+   "witnesses": [
+    "a_line_sent_before_the_request_does_not_retire_it",
+    "a_surplus_answer_does_not_settle_the_next_signal",
+    "an_unterminated_ack_does_not_retire_the_signal",
+    "unknown_reply_keeps_the_obligation_and_a_later_ack_retires_it"
+   ]
+  },
+  "IPC-D1": {
+   "statement": "090e2e6873d7047b40a8cabcf21137beb099374e741e608e527f474c4d5573c9",
+   "witnesses": [
+    "a_lifted_retraction_is_on_disk_before_it_is_answered"
+   ]
+  },
+  "IPC-L1": {
+   "statement": "5bb9a01775868b71bffffc135bb07b9694cac90d199e400add02b8e99f251b45",
+   "witnesses": [
+    "an_adapter_cannot_be_counted_under_a_source_of_this_node",
+    "only_this_nodes_own_source_names_are_relabelled"
+   ]
+  },
+  "IPC-R1": {
+   "statement": "7d16704800297f6e2d79383db3843e71721b3826d19fc4449b63acac5d6013e0",
+   "witnesses": [
+    "a_capacity_refusal_is_not_reported_as_a_protected_target",
+    "a_retraction_answers_lifted_only_when_nothing_else_blocks_the_target",
+    "a_wanted_block_not_yet_written_still_blocks"
+   ]
+  },
+  "IPC-T1": {
+   "statement": "0645fb0b02b8d286fb2bd047db0bd2a91232abb6bb676bfd7c6843827c655671",
+   "witnesses": [
+    "forwarding_expiry_is_counted_loss_not_an_ack_and_spends_flush_budget",
+    "invalid_freshness_input_does_not_evict_or_create_a_deadline",
+    "lost_ack_then_freshness_expiry_does_not_resend_or_undo_the_signal",
+    "lost_answer_keeps_expiry_and_later_retry_sends_its_retraction"
+   ]
+  },
+  "LEASE-C1": {
+   "statement": "9cfb620a9c62bef643e756c837675b81e834233bd19cc2ddae784d69d290ea14",
+   "witnesses": [
+    "a_lease_is_capped_by_its_first_record_and_kept_for_the_grace",
+    "a_lift_is_not_undone_by_a_step_back_within_forget_grace",
+    "a_used_lease_is_not_renewed_by_a_step_back_within_forget_grace_and_a_resend",
+    "an_uncapped_peer_claim_is_not_revived_past_the_cap_by_a_small_step_back",
+    "lease_records_stay_bounded_by_forgetting_the_first_ended_one",
+    "past_forget_grace_a_step_back_lets_a_resent_lease_or_lift_count_again",
+    "restored_lease_records_keep_the_bound_and_drop_those_past_retention"
+   ]
+  },
+  "LEASE-W1": {
+   "statement": "44d106a6e3e5d53e7f871cceaa4d60ec5622cd6745b0f3f6a8b1be45d751bb0a",
+   "witnesses": [
+    "a_wait_for_the_table_does_not_shorten_a_peer_claims_lease"
+   ]
+  },
+  "MESH-A1": {
+   "statement": "e178c368d29c176307e2bd1920dfb9c02c21ed9a4c0bae382cbd1270a6461c4e",
+   "witnesses": [
+    "an_authenticated_connection_survives_a_replayed_frame",
+    "an_unauthenticated_connection_cannot_buy_more_than_one_verification",
+    "one_peer_cannot_hold_more_connections_than_the_bounds_assume",
+    "other_peers_connections_do_not_use_up_a_nodes_slots"
+   ]
+  },
+  "MESH-A2": {
+   "statement": "592d22412e1651ada3a3af4363a52b32326a2b3fb272142f4fba2c391640cb08",
+   "witnesses": [
+    "a_bound_node_authenticates_only_from_its_address",
+    "a_handshake_relayed_by_another_peer_does_not_take_over_its_delivery",
+    "a_reload_that_moves_a_node_closes_its_connection",
+    "peers_file_addresses_are_parsed_and_checked",
+    "the_startup_warning_names_exactly_the_unbound_peers"
+   ]
+  },
+  "MESH-C1": {
+   "statement": "da5ec13027b8a76393d6e589fce630b96149a646e67b58241cbac009ab82c786",
+   "witnesses": [
+    "each_issuer_counts_apart_and_the_label_set_is_bounded",
+    "peer_claims_are_counted_under_their_issuer",
+    "peer_claims_are_rendered_by_issuer_and_result"
+   ]
+  },
+  "MESH-F1": {
+   "statement": "456d7145f9803303df214af67ddc9e0ed1c2d3fb9ab7f71bdc7ec546a4007822",
+   "witnesses": [
+    "a_flush_of_many_own_claims_is_retracted_in_frames_a_peer_accepts",
+    "a_retraction_is_packed_into_full_frames_within_the_budget"
+   ]
+  },
+  "MESH-K1": {
+   "statement": "32f95310c1f2e76c1b172501d10bbdaacc8c6820e0cc9c58e0c574e0f50f04fc",
+   "witnesses": [
+    "a_one_slot_peer_cannot_deny_this_nodes_own_detections_by_volume",
+    "a_peer_beyond_its_known_claims_share_is_refused_alone",
+    "a_peers_share_frees_exactly_as_its_claims_end",
+    "a_refused_share_reload_answers_error_and_keeps_trust_then_can_be_retried",
+    "a_reload_at_the_held_known_claims_bound_applies_and_ignores_own_claims",
+    "a_reload_below_held_known_claims_keeps_the_previous_envelopes",
+    "an_explicit_large_peer_share_can_exhaust_the_shared_peer_budget",
+    "peers_together_leave_the_room_kept_for_this_nodes_own_decisions"
+   ]
+  },
+  "MESH-N1": {
+   "statement": "af453360e55dcde12ced354de4287e00fe8858ef0746170a3f76d4afa12a279a",
+   "witnesses": [
+    "a_frame_at_the_edge_of_the_skew_window_is_not_accepted_twice",
+    "a_frame_fresh_at_the_edge_of_the_window_is_still_remembered",
+    "a_peer_whose_clock_is_behind_is_fenced_off_only_just_after_the_start",
+    "a_restarted_node_refuses_envelopes_stamped_before_its_start",
+    "an_accepted_envelope_is_refused_again_after_a_purge_and_a_step_back",
+    "an_envelope_stamped_after_a_restart_passes_the_fence_even_if_seen_before",
+    "the_floor_refuses_purged_timestamps_and_those_before_the_start"
+   ]
+  },
+  "MESH-N2": {
+   "statement": "ec8449838ce065a5f637d0a584ea33384fb90527a7d9a9c3c586b6d93899c3bb",
+   "witnesses": [
+    "mesh_floors_roundtrip_within_their_bound_and_refuse_past_it",
+    "saved_floors_refuse_what_the_previous_process_accepted_after_the_start"
+   ]
+  },
+  "MESH-R1": {
+   "statement": "0a61b57b5f032c72e5ba7a8c41bf5ba519bac6524564664fbc149a2c675a8874",
+   "witnesses": [
+    "a_reload_stops_broadcasts_to_a_revoked_or_moved_node_at_once",
+    "drop_untrusted_unregisters_and_names_revoked_and_moved_nodes"
+   ]
+  },
+  "MESH-V1": {
+   "statement": "8147ac5d30704d3e5b5b97796ada0ed9e5a4f74e51024406607425d287a247f2",
+   "witnesses": [
+    "a_signature_is_verified_without_holding_the_replay_lock"
+   ]
+  },
+  "MESH-W1": {
+   "statement": "9e9b3f62b975ab3f4c08f68fe010fc4ce4af7721f7a420097c64c29d8d883417",
+   "witnesses": [
+    "a_frame_splits_into_its_header_payload_and_signature",
+    "frames_of_other_protocol_versions_are_named"
+   ]
+  },
+  "MONITOR-L1": {
+   "statement": "c30c421dc42ce3c5f3b51395278941a203af21afc6ef2b6d22a80030b35d0d63",
+   "witnesses": [
+    "Monitoring.test_a_renamed_label_value_an_alert_selects_fails",
+    "Monitoring.test_a_renamed_metric_fails"
+   ]
+  },
+  "NODE-D1": {
+   "statement": "7a65cae6a697519d005fe57189f0611ec6cf3659269209fafd3e7dcf2d9c2f07",
+   "witnesses": [
+    "a_detection_after_a_same_instant_retraction_is_enforced",
+    "a_detection_refused_at_capacity_leaves_no_event_and_no_strike",
+    "a_permanent_redetection_after_a_same_instant_retraction_is_enforced"
+   ]
+  },
+  "NODE-R1": {
+   "statement": "c453a4278300d636bee0ab25daa9ecd4919048cb497483da8e149ab155c52401",
+   "witnesses": [
+    "a_capacity_refusal_preserves_retraction_intent_for_retry",
+    "a_full_retractor_set_preserves_support_until_its_owner_fits",
+    "a_shortening_capacity_refusal_keeps_both_event_supports",
+    "retraction_admission_reserves_every_needed_record"
+   ]
+  },
+  "NODE-R2": {
+   "statement": "d4d39d12e8dd63fa013c2d601a1b60347f39ba51ce89c5cd873be5160d540766",
+   "witnesses": [
+    "a_plain_lift_needs_no_free_claim_slot",
+    "an_event_still_held_needs_no_new_retraction_storage",
+    "an_existing_record_can_accept_its_owner_at_the_global_capacity"
+   ]
+  },
+  "NODE-R3": {
+   "statement": "9994d5f12f166099c8d0447720f61dc54f0011c7abe5bef20fb1433c094bf9e1",
+   "witnesses": [
+    "a_retraction_capacity_refusal_is_a_final_refusal_not_a_recorded_effect",
+    "a_retraction_capacity_refusal_is_not_an_ipc_success"
+   ]
+  },
+  "NODE-R4": {
+   "statement": "850d42cca881271d5e80b567297dcd8ee46b507d94d997ed23d16ca822da4658",
+   "witnesses": [
+    "a_remaining_reason_with_the_same_end_keeps_the_block_unchanged",
+    "a_shortened_block_stays_blocked_until_the_remaining_reason_ends"
+   ]
+  },
+  "NODE-R5": {
+   "statement": "8a972cd7c4d184bb521badb547482ca4b6226ad4a9d27d2f3345ca516fbd9307",
+   "witnesses": [
+    "a_block_shortened_while_protected_stays_suspended_until_the_target_is_allowed",
+    "a_retraction_at_the_claims_exact_end_finds_nothing_standing",
+    "a_retraction_while_the_target_is_protected_takes_its_claim_back_mesh_wide"
+   ]
+  },
+  "OPERATOR-A1": {
+   "statement": "94eed1b88f9c1ddb42ae3225d2821aa6012020b583b3b3832299449600414858",
+   "witnesses": [
+    "alert_ids_keep_increasing_past_the_alert_cap"
+   ]
+  },
+  "OPERATOR-R1": {
+   "statement": "5c6820e17122fe964e96bc73e219570547a4318f676c886865ca5667b885edeb",
+   "witnesses": [
+    "a_command_applied_without_a_reply_has_an_unknown_outcome",
+    "a_list_reply_reports_its_total_and_refuses_malformed_targets",
+    "a_live_heartbeat_cannot_make_failed_ban_readback_fresh",
+    "a_written_command_timeout_is_unknown_and_has_a_fixed_deadline",
+    "ban_readback_age_is_independent_of_heartbeat_and_wall_time",
+    "control_outcomes_require_an_exact_bounded_complete_reply",
+    "late_readback_cannot_overwrite_a_new_attempt_or_route",
+    "unread_and_invalid_lists_stay_unknown_then_recover"
+   ]
+  },
+  "OPERATOR-T1": {
+   "statement": "3468b5c80719f77cde51819524f10b39e33128be051d5ac61fae271ca6d9ff4b",
+   "witnesses": [
+    "a_vector_cannot_choose_the_operator_tier_or_supply_header_fields",
+    "malformed_telemetry_identity_does_not_invent_node_zero_or_one",
+    "opaque_vectors_survive_the_socket_and_operator_data_api",
+    "operator_tiers_are_exact_fields_and_unknown_tiers_remain_unknown"
+   ]
+  },
+  "OPERATOR-T2": {
+   "statement": "6374466d59c9104a9eb9bda79ae9d3071e17476d174c80e2f67b6561f2659109",
+   "witnesses": [
+    "a_detector_block_is_not_reported_as_a_trap_tier",
+    "a_kernel_drop_is_not_reported_as_a_trap_tier"
+   ]
+  },
+  "OPERATOR-T3": {
+   "statement": "c1a1fc29cb74ade6be5db4ac5b415eeea55b036bbdce9893f2ac1560f491ec06",
+   "witnesses": [
+    "a_peer_reason_cannot_frame_extra_operator_telemetry_lines",
+    "attacker_bytes_reach_trap_telemetry_only_as_terminal_vector_text"
+   ]
+  },
+  "OPERATOR-T4": {
+   "statement": "1cd361eb3bc5b109f50837bf23ffae27af861077d7840c682c7e0b54d5324ab8",
+   "witnesses": [
+    "a_clients_vector_cannot_choose_the_shown_tier_or_ip"
+   ]
+  },
+  "OPERATOR-W1": {
+   "statement": "12ceff05fcf3d3b8957a57e377b8ec0e0f182d9bf0fb146bc7e62528cc663bff",
+   "witnesses": [
+    "a_not_yet_durable_confirmation_keeps_its_warning"
+   ]
+  },
+  "POLICY-L1": {
+   "statement": "f11fe1682015065a9f37f4cb651def6e6781c97688c0f6697307ee2caf9cff95",
+   "witnesses": [
+    "a_ban_racing_a_protection_change_does_not_block_the_protected_address",
+    "a_detection_racing_a_protection_change_is_refused",
+    "a_peer_claim_racing_a_protection_change_is_not_enforced"
+   ]
+  },
+  "POLICY-T1": {
+   "statement": "f820d57a81cc3353f42d85e64c9c421b4d1acb610bc6ba213f1fefd849dda10b",
+   "witnesses": [
+    "ProtectionTypes.test_a_new_reason_requires_a_source_role_decision",
+    "ProtectionTypes.test_production_diagnostic_strings_cannot_construct_protection",
+    "a_matching_diagnostic_cannot_redirect_a_signal_to_its_destination",
+    "legacy_fixture_labels_keep_their_typed_protection_identity",
+    "matching_diagnostic_text_does_not_grant_local_source_authority",
+    "only_local_and_home_protection_name_the_remote_destination"
+   ]
+  },
+  "REPLAY-B1": {
+   "statement": "095b625bf251303d0008c4f31ff378325a8a4c3ab621a506d2c594f5126c82a0",
+   "witnesses": [
+    "a_scan_keeps_the_open_file_identity_and_initial_complete_prefix",
+    "a_sealed_segment_cannot_grow_while_consumers_scan_it",
+    "a_torn_or_non_text_tail_never_certifies_a_complete_replay",
+    "a_zero_sequence_segment_cannot_replace_the_genesis_chain",
+    "chain_consumers_validate_the_next_segment_before_offering_it",
+    "cli_totals_and_omission_markers_agree_with_the_complete_input",
+    "foreign_build_diagnostics_cannot_grow_with_each_run",
+    "late_chain_failure_discards_the_tentative_file_replay",
+    "mismatch_examples_are_bounded_without_stopping_replay",
+    "peer_witnesses_come_from_the_verified_pass",
+    "retained_diagnostics_preserve_counts_and_utf8_at_the_exact_budget",
+    "retained_segment_inventory_refuses_limit_plus_one",
+    "shortening_or_completing_a_torn_record_during_scan_is_unverified"
+   ]
+  },
+  "REPLAY-O1": {
+   "statement": "e4215f925b1f388e86159bdbd2f2c4ecf87c1f2d0b86f47099429cc7b4b07203",
+   "witnesses": [
+    "a_waiting_detection_records_a_time_not_before_the_table_moved_on"
+   ]
+  },
+  "REPLAY-R1": {
+   "statement": "ce8a4b0581d100a838d0facf4943bfb405a648d260341eff06291e253b0b93a1",
+   "witnesses": [
+    "a_wrong_retraction_outcome_remains_a_mismatch",
+    "an_unverified_capacity_refusal_fences_dependent_replay_until_a_fresh_start"
+   ]
+  },
+  "REPLAY-R2": {
+   "statement": "fc2a104a55e03bc41e69229dd45d91479a7adcf4681d24cc9e50b5ae78ec6006",
+   "witnesses": [
+    "a_partially_reproduced_audit_is_not_a_successful_cli_result"
+   ]
+  },
+  "REPLAY-R3": {
+   "statement": "fea1098819fd097010f7af13c9d5c8526c1c7c4967303d149bfffa69edd19c8c",
+   "witnesses": [
+    "a_real_source_ttl_survives_reason_decoys",
+    "free_text_reason_is_not_a_field_namespace",
+    "generated_reasons_preserve_fields_and_bytes",
+    "reason_fields_cannot_hide_a_wrong_detector_ttl"
+   ]
+  },
+  "REPLAY-R4": {
+   "statement": "e519e99153808c494581312293c5fa3f6ad3060fd872adf997eefe4c289db4f9",
+   "witnesses": [
+    "client_logs_cannot_supply_replay_authority"
+   ]
+  },
+  "REPLAY-R5": {
+   "statement": "6c532d40ab60cc36a9a7be5feb06e6a6239b5d0938b7a1de2dc20484b9a30996",
+   "witnesses": [
+    "a_gap_alone_prevents_a_successful_cli_result",
+    "explicit_audit_gaps_fence_dependent_decisions"
+   ]
+  },
+  "SHUTDOWN-S1": {
+   "statement": "111ee8723b13ebcc72cfe29c69ce45ff23099973d59eb6b66aedb0ad4a9da86e",
+   "witnesses": [
+    "a_closed_owner_refuses_late_child_registration",
+    "child_handlers_are_joined_with_their_listener",
+    "producer_quiescence_keeps_shutdown_record_last",
+    "quiesce_joins_a_stalled_producer_before_final_state_and_audit"
+   ]
+  },
+  "SHUTDOWN-S2": {
+   "statement": "78caa70844e42a5a4e70287417e1702a921a6403eae14f4a96109bed0ac5e8f4",
+   "witnesses": [
+    "a_timed_out_cleanup_worker_is_cancelled_and_joined",
+    "local_decision_is_audited_before_cancellable_mesh_publication"
+   ]
+  },
+  "STATE-B1": {
+   "statement": "2f0da61604a0caf4bad51d7b605c6a3a68008de8fce66699075458b3819d48ef",
+   "witnesses": [
+    "a_byte_budget_counts_whitespace_and_refuses_a_growing_stream",
+    "a_failed_restore_keeps_the_node_degraded_until_the_loss_is_accepted",
+    "a_file_over_the_writer_byte_budget_is_refused_without_reading_or_replacing_it",
+    "an_overlong_saved_reason_is_refused_and_the_original_bytes_are_kept",
+    "maximal_writer_records_roundtrip_with_escaped_reasons_and_all_tables",
+    "oversized_state_fields_are_refused_in_each_table",
+    "sequences_refuse_cardinality_and_invalid_records_without_eviction",
+    "wire_string_and_atom_bounds_apply_before_serde_allocates"
+   ]
+  },
+  "STATE-P1": {
+   "statement": "a5027de0f05beba50ede83e6500b13e76758392b154a5c249aadb42b243024d4",
+   "witnesses": [
+    "a_save_replaces_the_state_file_atomically_whatever_its_name",
+    "an_unreadable_state_file_is_kept_aside_and_survives_the_next_save"
+   ]
+  },
+  "STATE-P2": {
+   "statement": "9ee9047a6b6418819c3278d759fbec00be55e725792305faf8e5085b2edea53f",
+   "witnesses": [
+    "a_full_restore_merges_into_what_it_holds_and_drops_only_new_entries",
+    "a_restore_keeps_every_bounded_table_within_its_runtime_bound",
+    "operator_lifts_past_the_bound_are_counted"
+   ]
+  },
+  "STORM-S1": {
+   "statement": "f783e2051340f38ad86ca8ab2a2bb206815d2e74e023ce15a17edc93a880a145",
+   "witnesses": [
+    "a_defense_reports_the_operators_base_flags",
+    "a_malformed_header_flood_above_the_threshold_is_an_attack_in_every_mode",
+    "attack_drop_reasons_above_the_threshold_count",
+    "drops_just_below_the_threshold_are_not_an_attack",
+    "drops_only_storm_mode_adds_above_the_threshold_are_not_an_attack",
+    "storm_drops_are_left_out_and_every_other_reason_counts",
+    "strict_parse_drops_count_when_the_operator_set_the_flag_or_storm_only_observes",
+    "the_xdp_program_drops_unparsable_headers_in_strict_mode_with_their_own_reason"
+   ]
+  },
+  "STORM-T1": {
+   "statement": "8f64bfbb34fa0dd33b84df76731c94d8ef1a581e6123d79452662c2716053e81",
+   "witnesses": [
+    "a_storm_threshold_outside_zero_to_one_is_refused",
+    "a_storm_threshold_outside_zero_to_one_is_refused_at_startup"
+   ]
+  },
+  "SUR-C1": {
+   "statement": "e45831ad90d9885e01696dc5e578fa69bd6a79c6d34996c4dbcb021ca6001788",
+   "witnesses": [
+    "detected_truncation_fences_offsets_from_previous_contents",
+    "failed_install_does_not_erase_the_selected_resume_anchor",
+    "resume_retains_its_anchor_while_the_source_is_missing"
+   ]
+  },
+  "SUR-C2": {
+   "statement": "550458b9edaa62becdee95c100eff68b143feaef85fc9cca4bc28b4a022064df",
+   "witnesses": [
+    "a_cursor_is_replaced_not_rewritten_in_place_whatever_its_name",
+    "a_damaged_cursor_rereads_the_log_instead_of_skipping_it"
+   ]
+  },
+  "SUR-D1": {
+   "statement": "5c8cbec8fceb13d34d61a75a832608feb2491f9e0278feb1e207ee4b72a06bd3",
+   "witnesses": [
+    "RecoveryTests.test_cooldown_diagnostics_aggregate_across_batches_without_losing_counts",
+    "rate_only_diagnostics_wait_for_the_shared_interval_and_preserve_pending_counts",
+    "refusal_diagnostics_do_not_wrap_or_reemit_saturated_totals",
+    "refusal_diagnostics_preserve_counts_and_space_emissions_across_batches"
+   ]
+  },
+  "SUR-G1": {
+   "statement": "9d8ba0127c46f1d98a7c98a8fa8639314d87485fb56c2ad8ba6193b778b64903",
+   "witnesses": [
+    "gate_cooldown_memory_has_a_hard_bound_without_eviction",
+    "gate_generated_history_preserves_cooldown_and_bounded_unique_memory"
+   ]
+  },
+  "SUR-G2": {
+   "statement": "1b6e73b23807ddd0c0dc52ddf837e0ccdae5cb806382dd4eaff97b0224446e18",
+   "witnesses": [
+    "a_mapped_and_a_plain_address_of_one_host_share_a_cooldown",
+    "gate_capacity_refusal_keeps_live_cooldowns_and_releases_only_expired_slots",
+    "gate_rate_refusal_does_not_start_cooldown_and_zero_policies_are_defined"
+   ]
+  },
+  "SUR-G3": {
+   "statement": "a3a144f683eaca73faf53a5a99c01c8016829b0c5e096e501955de8d7c7cbe02",
+   "witnesses": [
+    "gate_generated_history_preserves_cooldown_and_bounded_unique_memory"
+   ]
+  },
+  "SUR-G4": {
+   "statement": "bc22a1fcce0e431daf8e0a95be133b9f056b99ec3dc63fa6d35070bcbab6c938",
+   "witnesses": [
+    "every_gate_refusal_has_one_counted_policy_reason",
+    "gate_generated_history_preserves_cooldown_and_bounded_unique_memory",
+    "gate_refusal_counters_saturate_independently"
+   ]
+  },
+  "SUR-Q1": {
+   "statement": "6965ea15db2cfdec8bab854927a4ece4d547fdbcc4d1c37d9521e8cba763e785",
+   "witnesses": [
+    "a_full_queue_drops_the_oldest_and_counts_it",
+    "invalid_input_cannot_evict_a_queued_signal"
+   ]
+  },
+  "SUR-R1": {
+   "statement": "973141e07201ebea0473949e8b7bb71f965c84f53462484f55d5e53055717ac9",
+   "witnesses": [
+    "a_read_error_preserves_completed_alerts_and_unfinished_bytes",
+    "read_errors_before_a_complete_line_preserve_the_cursor_and_retry_bytes"
+   ]
+  },
+  "SUR-T1": {
+   "statement": "ddd5811e8fc6f058361b2c4a64ec31c9945c824e27f6990e0168abc3587fb5ff",
+   "witnesses": [
+    "forwarding_budget_ages_exactly_and_future_timestamps_cannot_enlarge_it"
+   ]
+  },
+  "SUR-T2": {
+   "statement": "09ce954fefc413a43072ba7918c1a117df2120a4fa5f7edc9cfca94816145999",
+   "witnesses": [
+    "RecoveryTests.test_invalid_forwarding_age_leaves_cursor_and_ipc_untouched",
+    "cli_forwarding_age_accepts_zero_and_normal_intervals_but_rejects_bad_numbers",
+    "cli_rejects_unrepresentable_forwarding_age_before_startup"
+   ]
+  },
+  "TRAP-S1": {
+   "statement": "b8817d0363d3874a9c4437faaf37884b776adb8a13e3e3609568b84e8c969f02",
+   "witnesses": [
+    "a_trickling_client_cannot_hold_a_trap_slot_past_the_session_deadline"
+   ]
+  },
+  "XDP-C1": {
+   "statement": "386bf26a6b3ca62bb8664fa44fd0fcb7b91ed0df4bd80c52b971d7582d89b8bf",
+   "witnesses": [
+    "a_failed_stats_read_keeps_the_last_counters_and_is_counted"
+   ]
+  }
+ },
+ "rows_v2": {
   "ABI-E1": {
    "statement": "1312906f98f5bc77a82bfd3de8804dced417f1ba3e17f25a99fc8fc78bafec47",
    "witnesses": [
@@ -3363,7 +4041,7 @@
   },
   "scripts/witness-pin.py": {
    "executable": true,
-   "sha256": "2b8603e0faa8b1a6627bedcc148d92ec989156d363516eda84177b2c4b6b2977"
+   "sha256": "644a7ffa0be939edeb4926d1d739cb6a1697eafe9481cc366eba6782e9a1bc7c"
   }
  },
  "trust_root_v2": {
@@ -3389,6 +4067,10 @@
     "matrix.arch",
     "}}.json\""
    ],
+   "scripts/contract-store.py": [
+    "check",
+    "$EVERY_PIN"
+   ],
    "scripts/proof-task.py": [
     "run"
    ],
@@ -3401,7 +4083,7 @@
   },
   "scripts/witness-pin.py": {
    "executable": true,
-   "sha256": "2b8603e0faa8b1a6627bedcc148d92ec989156d363516eda84177b2c4b6b2977"
+   "sha256": "644a7ffa0be939edeb4926d1d739cb6a1697eafe9481cc366eba6782e9a1bc7c"
   }
  },
  "witnesses": {
@@ -3471,6 +4153,9 @@
   "StreamTests.test_zero_pacing_fails_before_lapi_or_ipc_requests": [
    "scripts/test_crowdsec_stream.py:7a9cc86a61a984b692c1294648017ff8b4d1ae018742129ce070592944dfe8ce"
   ],
+  "a_ban_racing_a_protection_change_does_not_block_the_protected_address": [
+   "orchestrator/src/control_exec.rs:f0d34eb7cb474fb4ef1d76e59fd0070703295c6ad71c3c6f95f26d62196d8404"
+  ],
   "a_block_shortened_while_protected_stays_suspended_until_the_target_is_allowed": [
    "orchestrator/src/block_table.rs:1ad28cc9294ab1650e9e3f01e80c00e46c73e916bdadd4a4c1def16a2c2f8687"
   ],
@@ -3507,6 +4192,9 @@
   "a_detection_after_a_same_instant_retraction_is_enforced": [
    "orchestrator/src/block_table.rs:568663d0e5acbf56de779805a11d939d0ca87c7c651cbe90adff2b06798700c6"
   ],
+  "a_detection_racing_a_protection_change_is_refused": [
+   "orchestrator/src/main.rs:c26e8d5c17e4ecd201f588144cae220c610f75aed9b3511aa5276c768a99b975"
+  ],
   "a_detection_refused_at_capacity_leaves_no_event_and_no_strike": [
    "orchestrator/src/block_table.rs:d8898bdce5f3c4c004eb7eaeb0dd89c417eacd36e304fd160f038df88b35ecd6"
   ],
@@ -3527,6 +4215,9 @@
   ],
   "a_file_over_the_writer_byte_budget_is_refused_without_reading_or_replacing_it": [
    "orchestrator/src/state_store.rs:f730d7d9593b5a07f7d349345ca355f3608a3f16adf7573f239fb6d44075d989"
+  ],
+  "a_flush_of_many_own_claims_is_retracted_in_frames_a_peer_accepts": [
+   "orchestrator/src/control_exec.rs:dfd6f557596d58b235f4f7e0bef77372074e6e47a3344b4e8b1c4ce2a74ff87b"
   ],
   "a_flush_records_real_queue_overflow_without_a_following_record": [
    "orchestrator/src/main.rs:647c2d250aa2f6a1f356dc0f5e9a89798908d7985293a090cccfc7a2040e5385"
@@ -3576,6 +4267,9 @@
   "a_lift_is_not_undone_by_a_step_back_within_forget_grace": [
    "orchestrator/src/block_table.rs:8830fc392740ee9f8f03acf8cef1bace4759c00de6b5f1e59a3be000265f60de"
   ],
+  "a_lifted_retraction_is_on_disk_before_it_is_answered": [
+   "orchestrator/src/ipc.rs:6862b4e820c4be51b1f1b47ca3b2612ade65deb3ce0f6ad79006845323dd8ed9"
+  ],
   "a_line_sent_before_the_request_does_not_retire_it": [
    "orchestrator/src/delivery.rs:3f476f8638b77d4c2ea93c1097033d7db48bec0ef154ee5716c9b42ac3f7dd7f"
   ],
@@ -3617,6 +4311,9 @@
   ],
   "a_peer_beyond_its_known_claims_share_is_refused_alone": [
    "orchestrator/src/block_table.rs:1f5e371c2dc361bbe7ef8d682ba6c58377ed12451ca7e7d5cb123ad67716e64f"
+  ],
+  "a_peer_claim_racing_a_protection_change_is_not_enforced": [
+   "orchestrator/src/mesh_dispatch.rs:58f8bc0f960f27921592bbc964dc3530fcb0b8072bc1e2985ba4360958ded91c"
   ],
   "a_peer_reason_cannot_frame_extra_operator_telemetry_lines": [
    "orchestrator/src/mesh_dispatch.rs:aa57e7c0b5cdbde509924e18a34f71fadc80ff9687133f3bf6e0c457c0882ae2"
@@ -3689,6 +4386,9 @@
   ],
   "a_retraction_capacity_refusal_is_not_an_ipc_success": [
    "orchestrator/src/main.rs:b6d2c70928903768f294f61324d5c58c47bb63e8157015ca12e690e581e03adc"
+  ],
+  "a_retraction_is_packed_into_full_frames_within_the_budget": [
+   "orchestrator/src/mesh_sync.rs:448d38c18ead8985d30c99c6c8ef8e746083b405dc6691fccc0da374d4ceb7b6"
   ],
   "a_retraction_while_the_target_is_protected_takes_its_claim_back_mesh_wide": [
    "orchestrator/src/block_table.rs:70cdb47750918a96fa40d43d837ae79146905c410757e9f93db59595b0198914"
@@ -3855,6 +4555,9 @@
   "client_logs_cannot_supply_replay_authority": [
    "orchestrator/src/main.rs:d7f9fb6fdf61fdd2e10ce75f6570ad35d0ad219edfcff3cfd74ca0131fd4999c"
   ],
+  "concurrent_reloads_leave_table_and_registry_on_one_trust_store": [
+   "orchestrator/src/control_exec.rs:e20d73decbdfecaa3c6d8616ab71d98d7eb64ce502e56a3caf40cd7991a274d5"
+  ],
   "control_outcomes_require_an_exact_bounded_complete_reply": [
    "orchestrator/src/bin/sokol-operator.rs:94ecff1ba1ebd3fe7c874dfc2ac01e4c995880f6c88ee79b0a80e6404e6fe9cd"
   ],
@@ -3972,6 +4675,9 @@
   "maximal_writer_records_roundtrip_with_escaped_reasons_and_all_tables": [
    "orchestrator/src/state_input.rs:8fd2ea21a963e1127f71f781da7a179548ebbf5af2f2c9491f418507bbbd6135"
   ],
+  "mesh_floors_roundtrip_within_their_bound_and_refuse_past_it": [
+   "orchestrator/src/state_input.rs:a379546ec86207520cfe807169fa3c84e15b3d3bef46ff395245ae0f2a101eb1"
+  ],
   "mismatch_examples_are_bounded_without_stopping_replay": [
    "orchestrator/src/replay.rs:65f38ae11e1d8e638323631bcf8ebbe7936ffa9fd75aaa0159fb4eae8eca3107"
   ],
@@ -4067,6 +4773,9 @@
   ],
   "retraction_admission_reserves_every_needed_record": [
    "orchestrator/src/block_table.rs:4c02a188abd2794498f179c5003caf1ff72f43017cd2a838c40a28b242b9bdc9"
+  ],
+  "saved_floors_refuse_what_the_previous_process_accepted_after_the_start": [
+   "orchestrator/src/p2p.rs:992265cc57545812b7365464f977229d0f48af90de2671f56b39a68438217149"
   ],
   "sequences_refuse_cardinality_and_invalid_records_without_eviction": [
    "orchestrator/src/state_input.rs:e74448d4408f367fad02342e5f49d1460f75a3dd6903452d9496fbca03532aa7"

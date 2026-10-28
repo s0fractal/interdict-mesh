@@ -1,0 +1,6 @@
+3db5000 PROPOSALS: record declined replay_order and RETRY_CAP_MS requests
+8457a88 cidr_normalize: accept /0 (default-route block)
+fa79d0b retry_delay_jittered: +-10% deterministic jitter, cap kept below idle timeout
+89b0124 cidr_key: whitespace-tolerant key, bare IPv4 means /32
+e99b56f replay_order_by_node: stable (node, at) grouping
+ed52418 ttl_renew: capped, non-wrapping TTL renewal

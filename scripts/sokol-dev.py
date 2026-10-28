@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """One bounded entry point to Sokol's existing evidence tools.
 
-context/explain ID; check ID; challenge CASE; inventory/map/next; verify REPORT;
-exchange <the existing counterexample-task.py arguments>.
+challenge CASE; inventory/map/next; exchange <the existing counterexample-task.py arguments>.
+A contract's witnesses run as cargo or unittest cases by name (its lineage in .warrant/records.jsonl).
 No annotation, imported report or diagram supplies an executable command.
 """
 import argparse
@@ -11,7 +11,6 @@ import importlib.util
 import io
 import json
 from pathlib import Path
-import re
 import subprocess
 import sys
 
@@ -28,7 +27,7 @@ def module(name):
 
 
 def inventory(signers=None):
-    gate, inputs = module('witness-pin'), module('contract-task')
+    gate, inputs = module('witness-pin'), module('task_inputs')
     contracts = gate.load_contracts(ROOT)
     hashes = inputs.checkout(ROOT)
     trust = Path(signers).resolve() if signers else ROOT / '.github/witness-signers'
@@ -69,21 +68,13 @@ def graph(value):
             'execution': 'UNKNOWN', 'limits': ['Evidence placement, not compiler-resolved dependencies or architectural proof.']}
 
 
-def commands(action, identity=None, signers=None, replay=False):
+def commands(action, identity=None):
     prefix = [sys.executable, '-I']
-    if action in ('context', 'explain', 'check'):
-        if not isinstance(identity, str) or not re.fullmatch(r'[A-Z][A-Z0-9]*-[A-Z0-9-]+', identity):
-            raise ValueError('Invalid contract ID')
-        return prefix + [str(ROOT / 'scripts/contract-task.py')] + (['--signers', str(signers)] if signers else []) + [
-            'run' if action == 'check' else 'context', identity]
     if action == 'challenge':
         cases, _ = module('proof-task').catalog(ROOT)
         if identity not in {c['id'] for c in cases}:
             raise ValueError('Unknown fixed proof challenge; use next for the supported catalog')
         return prefix + [str(ROOT / 'scripts/proof-task.py'), 'run', '--challenge', identity]
-    if action == 'verify':
-        return prefix + [str(ROOT / 'scripts/contract-task.py')] + (['--signers', str(signers)] if signers else []) + [
-            'verify', identity] + (['--replay'] if replay else [])
     raise ValueError('Unsupported action')
 
 
@@ -100,11 +91,7 @@ def main():
     sub = parser.add_subparsers(dest='action', required=True)
     for name in ('inventory', 'map', 'next'):
         sub.add_parser(name)
-    for name in ('context', 'explain', 'check', 'challenge'):
-        sub.add_parser(name).add_argument('identity')
-    p = sub.add_parser('verify')
-    p.add_argument('identity')
-    p.add_argument('--replay', action='store_true')
+    sub.add_parser('challenge').add_argument('identity')
     sub.add_parser('exchange').add_argument('arguments', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     try:
@@ -125,7 +112,7 @@ def main():
         if args.action == 'exchange':
             command = [sys.executable, '-I', str(ROOT / 'scripts/counterexample-task.py'), *args.arguments]
         else:
-            command = commands(args.action, args.identity, args.signers, getattr(args, 'replay', False))
+            command = commands(args.action, args.identity)
         # Existing owners enforce their input/output/run bounds and record their own reports.
         return subprocess.call(command, cwd=ROOT)
     except (ValueError, OSError, KeyError, TypeError, UnicodeError, subprocess.SubprocessError) as error:

@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-INPUTS = ("docs/contracts/IPC-A1.shadow.json", "docs/INVARIANTS.md", "docs/witness-manifest.json", "docs/witness-manifest.json.sig",
+INPUTS = (".warrant/records.jsonl", "docs/INVARIANTS.md", "docs/witness-manifest.json", "docs/witness-manifest.json.sig",
           ".github/witness-signers", "orchestrator/src/delivery.rs", "scripts/check-delivery.sh",
           "scripts/stargate_delivery_probe.rs", ".github/workflows/stargate-shadow.yml",
           "scripts/witness-pin.py", "scripts/outbox-task.py")
@@ -45,7 +45,7 @@ def packet(root, budget=8192, since=None):
     if len(rows) != 1:
         raise ValueError("Missing or ambiguous IPC-A1")
     manifest = json.loads(read(root, "docs/witness-manifest.json"))
-    pin = manifest["rows"]["IPC-A1"]
+    pin = manifest["rows_v2"]["IPC-A1"]
     if not isinstance(pin["witnesses"], list) or not pin["witnesses"]:
         raise ValueError("Missing pinned witnesses")
     body = {"profile": "sokol.agent.outbox-task.v1", "base_commit": base,

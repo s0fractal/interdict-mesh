@@ -16,7 +16,7 @@ import unicodedata
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location('counterexample_inputs', ROOT / 'scripts/contract-task.py')
+spec = importlib.util.spec_from_file_location('counterexample_inputs', ROOT / 'scripts/task_inputs.py')
 inputs = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(inputs)
 worker_spec = importlib.util.spec_from_file_location('counterexample_worker', ROOT / 'scripts/counterexample_worker.py')
@@ -213,19 +213,24 @@ def validate_descriptor(pack, desc, signers):
         if not pin.verify_manifest(*paths):
             raise ValueError('Owner signature invalid')
     signed = document(manifest)
-    contract = document(blob(pack, files['docs/contracts/OPERATOR-R1.shadow.json']['sha256']))
-    if contract['statement'] != body['statement'] or sorted(contract['witnesses']) != sorted(worker.WITNESSES):
-        raise ValueError('Contract statement or witness set differs')
-    pinned_row = signed['rows']['OPERATOR-R1']
-    if (pin.sha(' '.join(contract['statement'].split())) != pinned_row['statement']
-            or sorted(worker.WITNESSES) != pinned_row['witnesses']):
-        raise ValueError('Contract statement differs from owner pin')
+    # The contract is the received store's lineage, read as data under the recipient's checker.
     with tempfile.TemporaryDirectory(prefix='sokol-pack-contract-') as directory:
         private = Path(directory).resolve()
-        path = private / 'docs/contracts/OPERATOR-R1.shadow.json'
-        path.parent.mkdir(parents=True)
-        path.write_bytes(blob(pack, files['docs/contracts/OPERATOR-R1.shadow.json']['sha256']))
-        if pin.contract_pins(private)['OPERATOR-R1'] != signed['contracts']['OPERATOR-R1']:
+        for name, entry in files.items():
+            if name.startswith('.warrant/'):
+                path = private / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(blob(pack, entry['sha256']))
+        contract = pin.load_contracts(private).get('OPERATOR-R1')
+        if contract is None:
+            raise ValueError('Contract OPERATOR-R1 is not in the received store')
+        if contract['statement'] != body['statement'] or sorted(contract['witnesses']) != sorted(worker.WITNESSES):
+            raise ValueError('Contract statement or witness set differs')
+        pinned_row = signed[pin.ROWS]['OPERATOR-R1']
+        if (pin.sha(' '.join(contract['statement'].split())) != pinned_row['statement']
+                or sorted(worker.WITNESSES) != pinned_row['witnesses']):
+            raise ValueError('Contract statement differs from owner pin')
+        if pin.contract_pins(private)['OPERATOR-R1'] != signed[pin.CONTRACTS]['OPERATOR-R1']:
             raise ValueError('Contract history differs from owner pin')
     locations = pin.rust_witness_hashes(source, worker.CASE_FILE, set(worker.WITNESSES))
     for name in worker.WITNESSES:
@@ -535,7 +540,7 @@ def replay(pack, output, binary, signers, actor, key, toolchain, registry, respo
     tools = toolchain_identity(toolchain)
     method = {name: digest(read(ROOT / name)) for name in
               ('scripts/counterexample_worker.py', 'scripts/counterexample-task.py',
-               'scripts/contract-task.py', 'scripts/witness-pin.py')}
+               'scripts/task_inputs.py', 'scripts/witness-pin.py')}
     with tempfile.TemporaryDirectory(prefix='sokol-recipient-') as directory:
         source = Path(directory).resolve() / 'source'
         source.mkdir()

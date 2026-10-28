@@ -1,0 +1,25 @@
+{
+  "gate": "warrant-review/gate@1",
+  "base": "main",
+  "required": [
+    {
+      "check": "build-test-smoke",
+      "workflow": ".github/workflows/ci.yml"
+    },
+    {
+      "check": "witness-gate (base)",
+      "workflow": ".github/workflows/witness-gate.yml"
+    }
+  ],
+  "hold_label": "hold",
+  "owner_paths": [
+    ".github/",
+    ".warrant/merge.json",
+    ".warrant/v3.json",
+    "AGENTS.md",
+    "docs/adr/",
+    "docs/witness-manifest.json",
+    "docs/witness-manifest.json.sig",
+    "scripts/witness-pin.py"
+  ]
+}

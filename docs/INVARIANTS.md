@@ -1,6 +1,6 @@
 # Node invariants
 
-<!-- Every invariant row is generated from docs/contracts/<ID>.shadow.json; change a contract with scripts/contract.py, never this table by hand. -->
+<!-- Every invariant row is rendered from its sokol-contract@1 lineage in .warrant/records.jsonl (ADR-0033); file a new version, then `scripts/witness-pin.py regenerate`, never edit this table by hand. -->
 
 This ledger records properties of the node and its adapters: Suricata and CrowdSec admission,
 the shared IPC outbox, detector retraction, audit replay, shutdown, XDP smoke evidence and

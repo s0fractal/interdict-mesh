@@ -41,7 +41,7 @@ Bounds come from the harness itself. The JSON validator covers at most eight byt
 ten-character alphabet; audit inputs range over their Rust types. Calibration refuses more
 than 32 challenges, ambiguous anchors, patches over 4 KiB, exports/logs over 2 MiB, or more
 than 8,192 checks per harness; execution has a total 1,800-second budget. Input-copy bounds
-are shared with `contract-task.py`. These limits do not bound compiler disk use or peak RSS;
+are shared with `task_inputs.py`. These limits do not bound compiler disk use or peak RSS;
 external tools and omitted environment inputs are not authenticated. Formal coverage of the
 orchestrator (beyond the storm, lease, framing and replay-window code it calls in `common`), XDP logic and native-NIC
 production behavior remains outside these proofs.
