@@ -109,5 +109,5 @@ exclude_re = [
     "bin/interdict-suricata.rs:\\d+:\\d+: replace main with \\(\\)$",
     # The one-merge aliases of ADR-0034 only exec the renamed adapter; the base gate's pinned Python
     # witnesses run through them (main's argument vectors) on that merge. Deleted after it.
-    "bin/sokol-(suricata|crowdsec)\\.rs:\\d+:\\d+: replace main with \\(\\)$",
+    "bin/sokol-(suricata|crowdsec)/main\\.rs:\\d+:\\d+: replace main with \\(\\)$",
 ]

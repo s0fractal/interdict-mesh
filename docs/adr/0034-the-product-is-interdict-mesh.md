@@ -30,9 +30,10 @@ kept, because renaming it would invalidate what already exists or change an owne
 nothing a user sees. Before RC-1 there are no deployments: no compatibility alias is added for users.
 One alias is added for one merge: the base gate runs the pinned Python witnesses with the argument
 vectors of main's `ci.yml`, which name `target/release/sokol-suricata` and `sokol-crowdsec`, and their
-`__main__` blocks are inside the pinned closures. `orchestrator/src/bin/sokol-suricata.rs` and
-`orchestrator/src/bin/sokol-crowdsec.rs` only exec the renamed adapter from the same directory (a
-Cargo target per file; no build pin changes). The first pull request after the merge deletes them.
+`__main__` blocks are inside the pinned closures. `orchestrator/src/bin/sokol-suricata/main.rs` and
+`orchestrator/src/bin/sokol-crowdsec/main.rs` only exec the renamed adapter from the same directory
+(Cargo names a target per `src/bin` entry; no build pin changes; a directory, not the old file path,
+so Git still sees the adapters' files as moved). The first pull request after the merge deletes them.
 
 **Earlier ADRs** keep their prose (they record what was decided, under the name of the time); the
 identifiers in their code spans (metrics, file paths, binaries, units, environment) now name the live
