@@ -22,7 +22,7 @@ class ProofTask(unittest.TestCase):
         self.root = Path(self.temp.name).resolve()
         # Every source the catalog challenges, so a new proof file needs no edit here.
         sources = sorted({c['file'] for c in json.loads((ROOT / tool.CATALOG).read_text())['cases']})
-        for name in ('scripts/proof-task.py', 'scripts/contract-task.py', tool.CATALOG,
+        for name in ('scripts/proof-task.py', 'scripts/task_inputs.py', tool.CATALOG,
                      *sources, '.github/workflows/ci.yml'):
             target = self.root / name
             target.parent.mkdir(parents=True, exist_ok=True)

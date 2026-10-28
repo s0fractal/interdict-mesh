@@ -168,6 +168,14 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
+      # The contracts are Warrant 3 records (ADR-0033): warrant-graph and its dependencies at exact
+      # versions and hashes, in a venv first on PATH, so every later `python3` has it.
+      - name: Warrant 3 (warrant-graph, pinned with hashes)
+        run: |
+          python3 -m venv "$RUNNER_TEMP/warrant"
+          "$RUNNER_TEMP/warrant/bin/pip" install --quiet --no-deps --require-hashes -r .github/warrant-requirements.txt
+          echo "$RUNNER_TEMP/warrant/bin" >> "$GITHUB_PATH"
+
       - name: Install the pinned Rust toolchain (rust-toolchain.toml)
         run: |
           rustup show active-toolchain || rustup toolchain install
@@ -296,6 +304,16 @@ jobs:
             [ "$status" = 0 ]
           fi
 
+      # The store as Warrant 3 assesses it, and every acceptance carried from a signature
+      # re-verified; on main every contract leaf is accepted (ADR-0033).
+      - name: The contract store under Warrant 3 (scripts/witness-pin.py check-store)
+        if: matrix.policy_checks && matrix.part == 'test'
+        env:
+          EVERY_PIN: ${{ github.event_name == 'push' && '--every-pin' || '' }}
+        run: |
+          # shellcheck disable=SC2086  # empty or one flag
+          python3 scripts/witness-pin.py check-store $EVERY_PIN
+
       - name: Cited evidence exists (tests in the compiler's list, metrics, flags, ADRs, paths)
         if: matrix.policy_checks && matrix.part == 'test'
         run: |
@@ -340,8 +358,8 @@ jobs:
           python3 scripts/test_mutants_scope.py
           python3 scripts/test_check_agents_rules.py
           python3 scripts/test_check_claims.py
-          python3 scripts/test_check_review.py
           python3 scripts/test_witness_pin.py
+          python3 scripts/test_task_inputs.py
           python3 scripts/test_gate_provenance.py
           python3 scripts/test_trust_root.py
           python3 scripts/test_sokol_dev.py
@@ -354,9 +372,6 @@ jobs:
           python3 scripts/test_counterexample_registry.py
           python3 scripts/test_check_monitoring.py
           python3 scripts/test_outbox_task.py
-          python3 scripts/test_contract_shadow.py
-          python3 scripts/test_contract_tool.py
-          python3 scripts/test_contract_task.py
 
       - name: Portable counterexample and public Warrant integration regressions
         if: matrix.part == 'test'

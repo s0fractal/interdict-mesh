@@ -10,16 +10,10 @@ spec.loader.exec_module(dev)
 
 
 class Workbench(unittest.TestCase):
-    def test_an_input_cannot_add_shell_or_extra_arguments(self):
-        for identity in ('IPC-A1;touch /tmp/not-a-task', '../IPC-A1', '--root', 'ipc-a1'):
+    def test_only_the_fixed_challenge_action_builds_a_command(self):
+        for action in ('context', 'check', 'verify', 'IPC-A1;touch /tmp/not-a-task'):
             with self.assertRaises(ValueError):
-                dev.commands('check', identity)
-
-    def test_context_and_execution_are_separate_fixed_actions(self):
-        self.assertEqual(dev.commands('context', 'IPC-A1')[-2:], ['context', 'IPC-A1'])
-        self.assertEqual(dev.commands('check', 'IPC-A1')[-2:], ['run', 'IPC-A1'])
-        self.assertNotIn('--replay', dev.commands('verify', '/tmp/report.json'))
-        self.assertEqual(dev.commands('verify', '/tmp/report.json', replay=True)[-1], '--replay')
+                dev.commands(action, 'IPC-A1')
 
     def test_an_unknown_challenge_cannot_select_a_command(self):
         with patch.object(dev, 'module') as load:

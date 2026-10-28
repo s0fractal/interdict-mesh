@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
-"""Owner-pinned witnesses for docs/INVARIANTS.md (ADR-0023).
+"""Owner-pinned witnesses for docs/INVARIANTS.md (ADR-0023, ADR-0033).
 
 scripts/check-claims.sh shows that a cited test exists. It cannot show that the test still
 tests what the row claims: a witness can be weakened under its old name and still pass.
 This pins, for every invariant row, its statement, its list of witnesses and the normalized
-body of each witness, in docs/witness-manifest.json signed by the owner (ssh-keygen -Y).
+body of each witness, in docs/witness-manifest.json signed by the owner (ssh-keygen -Y). A row
+is rendered from its contract: a sokol-contract@1 lineage in .warrant/records.jsonl, whose leaf
+version the tier's manifest pins by record id (provisional rows: the agent's, ADR-0028).
 
     witness-pin.py check [--signers FILE] [--every-pin] [--executed CARGO_TEST_LOG]
         # CI: exit 1 on an unsigned change; with --every-pin (a push to main) also on anything
-        # new that is not pinned yet; with --executed also when a pinned witness did not run
-        # and pass (the Rust ones in that `cargo test` log; the Python ones are run here)
+        # new that is not pinned or accepted yet; with --executed also when a pinned witness did
+        # not run and pass (the Rust ones in that `cargo test` log; the Python ones are run here)
     witness-pin.py sign --key PRIVATE_KEY   # owner: re-pin the current tree and sign it
     witness-pin.py sign-provisional --key AGENT_KEY
                                             # agent: pin the provisional rows (ADR-0028)
+    witness-pin.py carry --actor A --key SEED
+                                            # after a signature: its acceptances into the store
+    witness-pin.py check-store [--signers FILE] [--every-pin]
+                                            # CI: the store under Warrant 3 (needs warrant-graph)
+    witness-pin.py regenerate               # render docs/INVARIANTS.md rows from the store
     witness-pin.py closure WITNESS          # the test items pinned with a witness
     witness-pin.py --root CANDIDATE check   # trusted checker, candidate bytes left intact
     witness-pin.py run-python               # run the pinned Python witnesses, print a log for
@@ -30,12 +37,13 @@ from __future__ import annotations
 import ast
 import hashlib
 import json
-from itertools import islice
 import pathlib
 import re
 import stat
 import subprocess
 import sys
+import tempfile
+import time
 import unicodedata
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -61,23 +69,16 @@ def git_files(pattern: str) -> list[pathlib.Path]:
 
 
 MAX_CONTRACTS = 256
-MAX_CONTRACT_BYTES = 2_097_152
 CONTRACT_ID = re.compile(r'[A-Z][A-Z0-9]*-[A-Z0-9-]+')
-GENERATED_MARKER = re.compile(
-    r'^<!-- Generated ([A-Z][A-Z0-9]*-[A-Z0-9-]+) from docs/contracts/\1\.shadow\.json; '
-    r'edit the contract, then regenerate\. -->$', re.M)
-
-
-def contract_marker(rid: str) -> str:
-    if not isinstance(rid, str) or not CONTRACT_ID.fullmatch(rid):
-        raise ValueError('Invalid contract ID')
-    return f'<!-- Generated {rid} from docs/contracts/{rid}.shadow.json; edit the contract, then regenerate. -->'
+SCHEMA = 'sokol-contract@1'
+TIER_ACTOR = {'owner': 's0fractal', 'provisional': 'agent'}
 
 
 def contract_row(contract: dict) -> str:
-    """Public legacy table projection; the signed statement hash format stays unchanged."""
+    """The table row of one contract; the signed statement hash format stays unchanged."""
     rid = contract['id']
-    contract_marker(rid)
+    if not isinstance(rid, str) or not CONTRACT_ID.fullmatch(rid):
+        raise ValueError('Invalid contract ID')
     if contract['profile'] != 'sokol.contract-shadow.v1':
         raise ValueError('Unsupported contract profile')
     for field in ('statement', 'evidence_text'):
@@ -87,25 +88,9 @@ def contract_row(contract: dict) -> str:
     return '| ' + rid + ' | ' + marker + contract['statement'] + ' | ' + contract['evidence_text'] + ' |'
 
 
-def project_invariants(text: str, contract: dict) -> str:
-    """Render one contract into its marked slot; other rows keep their current owners."""
-    rid = contract['id']
-    marker = contract_marker(rid)
-    lines = text.splitlines(keepends=True)
-    indices = [i for i, line in enumerate(lines) if line.startswith('| ' + rid + ' |')]
-    if len(indices) != 1 or text.count(marker) != 1:
-        raise ValueError('Missing or ambiguous generated ' + rid + ' slot')
-    index = indices[0]
-    if index + 1 >= len(lines) or lines[index + 1].rstrip('\r\n') != marker:
-        raise ValueError('Generated marker must follow ' + rid)
-    lines[index] = contract_row(contract) + '\n'
-    return ''.join(lines)
-
-
-# Once a document carries this line, every invariant row is rendered from its contract and no
-# per-row marker is used: a marker line after a row in the middle of a table would end the table.
-DECLARATION = ('<!-- Every invariant row is generated from docs/contracts/<ID>.shadow.json; '
-               'change a contract with scripts/contract.py, never this table by hand. -->')
+# Once a document carries this line, every invariant row is rendered from its contract lineage.
+DECLARATION = ('<!-- Every invariant row is rendered from its sokol-contract@1 lineage in .warrant/records.jsonl '
+               '(ADR-0033); file a new version, then `scripts/witness-pin.py regenerate`, never edit this table by hand. -->')
 
 
 RETIREMENT_MODES = ('SUPERSEDED', 'WITHDRAWN', 'REFUTED', 'ARCHIVED')
@@ -142,110 +127,154 @@ def retired(contract: dict) -> bool:
     return contract.get('status') == 'retired'
 
 
-def load_contracts(root: pathlib.Path) -> dict:
-    """Bounded local contract sources by ID; proposals live in a subdirectory and are not sources."""
-    directory = root / 'docs/contracts'
-    if directory.is_symlink():
-        raise ValueError('Symlink contract directory refused')
-    sources = list(islice(directory.glob('*.shadow.json'), MAX_CONTRACTS + 1))
-    if len(sources) > MAX_CONTRACTS:
-        raise ValueError('Too many contracts')
-    contracts = {}
-    for path in sorted(sources):
-        if path.is_symlink():
-            raise ValueError('Symlink contract source refused')
-        with path.open('rb') as stream:
-            data = stream.read(MAX_CONTRACT_BYTES + 1)
-        if len(data) > MAX_CONTRACT_BYTES:
-            raise ValueError('Contract exceeds bound')
-        contract = json.loads(data)
-        rid = contract['id']
-        contract_marker(rid)
-        if path.name != rid + '.shadow.json':
-            raise ValueError('Contract filename differs from ID')
-        names = sorted({w for w in re.findall(r'`([^`]+)`', contract['evidence_text'])
-                        if RUST_TEST.fullmatch(w) or PY_TEST.fullmatch(w)})
-        if not names or names != contract['witnesses']:
-            raise ValueError('Contract witness list differs from its evidence text')
-        contract_row(contract)
-        check_retirement(contract)
-        if contract.get('tier', 'provisional') != 'provisional' or (contract.get('tier') and retired(contract)):
-            raise ValueError(rid + ': tier is absent (owner-accepted) or "provisional", and a provisional row is not retired')
-        contracts[rid] = contract
-    return contracts
-
-
-def generated_invariants(text: str, root: pathlib.Path) -> str:
-    """Validate all source-backed rows using bounded local contract data only."""
-    marker_ids = [m.group(1) for m in GENERATED_MARKER.finditer(text)]
-    if len(marker_ids) != text.count('<!-- Generated ') or len(set(marker_ids)) != len(marker_ids):
-        raise ValueError('Malformed or duplicate generated contract marker')
-    contracts = load_contracts(root)
-    if DECLARATION in text:
-        if marker_ids or text.count(DECLARATION) != 1:
-            raise ValueError('A generated document has one declaration and no per-row markers')
-        hidden = [(m.start(), m.end()) for m in re.finditer(r"<!--.*?(?:-->|\Z)", text, re.S)]
-        offset, fenced = 0, False
-        for line in text.splitlines(keepends=True):
-            stripped = line.strip()
-            if stripped.startswith(("```", "~~~")):
-                fenced = not fenced
-            elif ROW.match(line) and (fenced or any(a <= offset < b for a, b in hidden)):
-                raise ValueError('A row is hidden in a comment or code block: ' + ROW.match(line).group(1))
-            elif stripped.startswith("|") and not ROW.match(line) and not (fenced or any(a <= offset < b for a, b in hidden)):
-                cell = unicodedata.normalize("NFKC", stripped.strip("|").split("|")[0]).strip()
-                cell = re.sub(r"[\u2010-\u2015\u2212]", "-", cell)
-                if CONTRACT_ID.fullmatch(cell):
-                    raise ValueError('A table line names ' + cell + ' but is not a row (| ID | ...)')
-            offset += len(line)
-        row_ids = [m.group(1) for m in map(ROW.match, text.splitlines()) if m]
-        for rid in row_ids:
-            if rid not in contracts:
-                raise ValueError(rid + ' has no contract source; every row is generated')
-        for rid, contract in contracts.items():
-            if retired(contract):
-                if rid in row_ids:
-                    raise ValueError('Retired ' + rid + ' still has a row')
-                new = contract['retirement']['replacement']
-                if new is not None and (new not in contracts or retired(contracts[new]) or new not in row_ids):
-                    raise ValueError('Retired ' + rid + ' is superseded by ' + new + ', which is not an active row')
-                continue
-            if row_ids.count(rid) != 1:
-                raise ValueError('Contract ' + rid + ' needs exactly one row')
-            if contract_row(contract) not in text.splitlines():
-                raise ValueError('Generated ' + rid + ' is stale; regenerate from its contract')
-        return text
-    for contract in contracts.values():
-        if project_invariants(text, contract) != text:
-            raise ValueError('Generated ' + contract['id'] + ' is stale; regenerate from its contract')
-    if set(contracts) != set(marker_ids):
-        raise ValueError('Generated markers and contract sources differ')
-    return text
-
-
 def provisional(contract: dict) -> bool:
     return contract.get('tier') == 'provisional'
 
 
-def contract_pins(root: pathlib.Path, tier: str = "owner") -> dict:
-    """What a signer accepts about each contract of its tier: the rendered row and its decision
-    history. Unsigned explanations (annotations) are left out on purpose."""
-    pins = {}
-    for rid, c in load_contracts(root).items():
-        if provisional(c) != (tier == "provisional"):
+MAX_STORE_BYTES = 64 * 1024 * 1024
+
+
+def record_id(record: dict) -> str:
+    """A Warrant 3 record's id: sha256 of its canonical JSON (RFC 8785 for these records: ASCII keys, integers)."""
+    return hashlib.sha256(json.dumps(record, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()
+
+
+def store_records(root: pathlib.Path) -> dict:
+    """{id: record} of .warrant/records.jsonl, read as data with the standard library alone: the base gate and a
+    recipient's checker run without the Warrant package. Authenticity is not decided here: a leaf counts only
+    as the version a tier's SSH-signed manifest pins by this id (`check`); `check-store` assesses the store."""
+    path = root / '.warrant/records.jsonl'
+    if any(p.is_symlink() for p in (path, path.parent)):
+        raise ValueError('Symlink store refused')
+    if not path.is_file():
+        return {}
+    with path.open('rb') as stream:
+        data = stream.read(MAX_STORE_BYTES + 1)
+    if len(data) > MAX_STORE_BYTES:
+        raise ValueError('Store exceeds bound')
+    out = {}
+    for line in data.split(b'\n'):
+        if line.strip():
+            record = json.loads(line)['record']
+            out[record_id(record)] = record
+    return out
+
+
+def load_contracts(root: pathlib.Path) -> dict:
+    """Each sokol-contract@1 lineage's leaf as the contract it states, by ID: {profile, id, statement,
+    evidence_text, witnesses, decisions?, tier?, status?, retirement?, annotations?} and `version`, the
+    leaf's record id (whose bytes cover the whole path through `lineage`)."""
+    recs = {i: r for i, r in store_records(root).items() if r.get('kind') == 'entity' and r.get('schema') == SCHEMA}
+    children = {}
+    for i, r in recs.items():
+        if r['lineage'] is not None:
+            children.setdefault(r['lineage'], []).append(i)
+    contracts = {}
+    for root_id in sorted(i for i, r in recs.items() if r['lineage'] is None):
+        path = [root_id]
+        while children.get(path[-1]):
+            if len(children[path[-1]]) != 1:
+                raise ValueError('Contract lineage ' + root_id[:12] + ' is forked')
+            path.append(children[path[-1]][0])
+        bodies = [recs[v]['body'] for v in path]
+        for before, after in zip(bodies, bodies[1:]):
+            # ADR-0024's history rule: each later version says why, against the statement it replaces.
+            decision = after.get('decision')
+            if not (isinstance(decision, dict) and isinstance(decision.get('because'), str) and decision['because'].strip()
+                    and decision.get('previous_statement_sha256') == sha(before['statement'])):
+                raise ValueError(after.get('id', '?') + ': a later version names its reason and the statement it replaces')
+        leaf = bodies[-1]
+        contract = {k: leaf[k] for k in ('profile', 'id', 'statement', 'evidence_text', 'witnesses')}
+        if 'annotations' in leaf:
+            contract['annotations'] = leaf['annotations']
+        decisions = [b['decision'] for b in bodies if 'decision' in b]
+        if decisions:
+            contract['decisions'] = decisions
+        if leaf['state'] == 'provisional':
+            contract['tier'] = 'provisional'
+        elif leaf['state'] == 'retired':
+            contract.update(status='retired', retirement=leaf['retirement'])
+        elif leaf['state'] != 'active':
+            raise ValueError(contract['id'] + ': state is active, provisional or retired')
+        rid = contract['id']
+        if rid in contracts or any(b['id'] != rid for b in bodies):
+            raise ValueError(rid + ': one ID, one lineage')
+        names = sorted({w for w in re.findall(r'`([^`]+)`', contract['evidence_text'])
+                        if RUST_TEST.fullmatch(w) or PY_TEST.fullmatch(w)})
+        if not names or names != contract['witnesses']:
+            raise ValueError(rid + ': contract witness list differs from its evidence text')
+        contract_row(contract)
+        check_retirement(contract)
+        contracts[rid] = {**contract, 'version': path[-1]}
+        if len(contracts) > MAX_CONTRACTS:
+            raise ValueError('Too many contracts')
+    if len(contracts) != len({i for i, r in recs.items() if r['lineage'] is None}):
+        raise ValueError('A contract lineage has no leaf')
+    return contracts
+
+
+def generated_invariants(text: str, root: pathlib.Path) -> str:
+    """With the declaration, every row of the document is its contract's rendering (ADR-0024)."""
+    contracts = load_contracts(root)
+    if DECLARATION not in text:
+        if contracts:
+            raise ValueError('The store holds contracts: docs/INVARIANTS.md needs its declaration line')
+        return text
+    if text.count(DECLARATION) != 1:
+        raise ValueError('A generated document has one declaration')
+    hidden = [(m.start(), m.end()) for m in re.finditer(r"<!--.*?(?:-->|\Z)", text, re.S)]
+    offset, fenced = 0, False
+    for line in text.splitlines(keepends=True):
+        stripped = line.strip()
+        if stripped.startswith(("```", "~~~")):
+            fenced = not fenced
+        elif ROW.match(line) and (fenced or any(a <= offset < b for a, b in hidden)):
+            raise ValueError('A row is hidden in a comment or code block: ' + ROW.match(line).group(1))
+        elif stripped.startswith("|") and not ROW.match(line) and not (fenced or any(a <= offset < b for a, b in hidden)):
+            cell = unicodedata.normalize("NFKC", stripped.strip("|").split("|")[0]).strip()
+            cell = re.sub(r"[\u2010-\u2015\u2212]", "-", cell)
+            if CONTRACT_ID.fullmatch(cell):
+                raise ValueError('A table line names ' + cell + ' but is not a row (| ID | ...)')
+        offset += len(line)
+    row_ids = [m.group(1) for m in map(ROW.match, text.splitlines()) if m]
+    for rid in row_ids:
+        if rid not in contracts:
+            raise ValueError(rid + ' has no contract lineage; every row is generated')
+    for rid, contract in contracts.items():
+        if retired(contract):
+            if rid in row_ids:
+                raise ValueError('Retired ' + rid + ' still has a row')
+            new = contract['retirement']['replacement']
+            if new is not None and (new not in contracts or retired(contracts[new]) or new not in row_ids):
+                raise ValueError('Retired ' + rid + ' is superseded by ' + new + ', which is not an active row')
             continue
-        accepted = {k: c.get(k) for k in ('statement', 'evidence_text', 'witnesses', 'decisions')}
-        if retired(c):
-            # Only a retired contract carries these keys, so the pins of active ones keep the
-            # bytes earlier checkers compute.
-            accepted.update(status=c['status'], retirement=c['retirement'])
-        pins[rid] = sha(json.dumps(accepted, sort_keys=True, ensure_ascii=False, separators=(',', ':')))
-    return pins
+        if row_ids.count(rid) != 1:
+            raise ValueError('Contract ' + rid + ' needs exactly one row')
+        if contract_row(contract) not in text.splitlines():
+            raise ValueError('Generated ' + rid + ' is stale; run scripts/witness-pin.py regenerate')
+    return text
 
 
-def open_proposals(root: pathlib.Path) -> list[str]:
-    directory = root / 'docs/contracts/proposals'
-    return sorted(p.name for p in islice(directory.glob('*.proposal.json'), MAX_CONTRACTS)) if directory.is_dir() else []
+def regenerate(text: str, root: pathlib.Path) -> str:
+    """Render every row from its lineage's leaf and drop retired rows. A new contract's row is placed by
+    hand first (a line `| ID | … |` where it belongs); this fills it."""
+    contracts = load_contracts(root)
+    out = []
+    for line in text.splitlines(keepends=True):
+        m = ROW.match(line)
+        if m and m.group(1) in contracts:
+            if retired(contracts[m.group(1)]):
+                continue
+            line = contract_row(contracts[m.group(1)]) + '\n'
+        out.append(line)
+    return ''.join(out)
+
+
+def contract_pins(root: pathlib.Path, tier: str = "owner") -> dict:
+    """What a signer accepts about each contract of its tier: the leaf version of its lineage, whose
+    record id covers the statement, evidence, witnesses, decision and state, and through `lineage`
+    the whole history. Unsigned annotations are inside the version too (#67 GAPS G7)."""
+    return {rid: c['version'] for rid, c in load_contracts(root).items() if provisional(c) == (tier == "provisional")}
 
 
 def rows() -> dict:
@@ -875,6 +904,10 @@ TARGET_SECTIONS = ("lib", "bin", "test", "bench", "example", "workspace")
 CLOSURES = "closures_v4"
 BUILD = "build_v3"
 TRUST = "trust_root_v2"
+# rows_v2 and contracts_v2 (ADR-0033): the tiers come from the store, and a contract's pin is its leaf
+# version's record id. `rows` and `contracts` stay as the last JSON-contract checker computed them.
+ROWS = "rows_v2"
+CONTRACTS = "contracts_v2"
 TRUST_PATHS = (".github/witness-signers", "scripts/witness-pin.py",
                ".github/workflows/witness-gate.yml")
 MAX_TRUST_BYTES = 262_144
@@ -991,12 +1024,11 @@ def current(tier: str = "owner") -> dict:
               **py_bodies({w for w in cited if PY_TEST.fullmatch(w)})}
     closures = {**rust_closures({w for w in cited if RUST_TEST.fullmatch(w)}),
                 **py_closures({w for w in cited if PY_TEST.fullmatch(w)})}
-    return {"rows": table, "witnesses": {w: sorted(bodies.get(w, [])) for w in sorted(cited)},
+    return {ROWS: table, "witnesses": {w: sorted(bodies.get(w, [])) for w in sorted(cited)},
             CLOSURES: {w: sorted(closures.get(w, [])) for w in sorted(cited)},
             BUILD: build_pins() if tier == "owner" else {},
-            "trust_root_v1": trust_pins(False) if tier == "owner" else {},
             TRUST: trust_pins() if tier == "owner" else {},
-            "contracts": contract_pins(ROOT, tier)}
+            CONTRACTS: contract_pins(ROOT, tier)}
 
 
 def verify_manifest(manifest: pathlib.Path, signature: pathlib.Path, signers: pathlib.Path,
@@ -1016,8 +1048,8 @@ def verify(signers: pathlib.Path) -> bool:
 def compare(pinned: dict, now: dict, who: str) -> tuple[list[str], list[str]]:
     """What changed in one tier against what its signer pinned."""
     problems, notes = [], []
-    for rid, row in pinned["rows"].items():
-        cur = now["rows"].get(rid)
+    for rid, row in pinned.get(ROWS, {}).items():
+        cur = now[ROWS].get(rid)
         if cur is None:
             problems.append(f"{rid}: pinned invariant row was removed")
             continue
@@ -1030,8 +1062,8 @@ def compare(pinned: dict, now: dict, who: str) -> tuple[list[str], list[str]]:
     for w, where in pinned["witnesses"].items():
         if w in now["witnesses"] and now["witnesses"][w] != where:
             problems.append(f"witness {w} changed: its body is not the one the {who} pinned")
-    # closures (#21), closures_v2 (#22), closures_v3 (#40) and build (#22) are earlier rules,
-    # kept frozen for checkers of those versions; closures_v4 follows Python imports of local
+    # closures (#21), closures_v2 (#22), closures_v3 (#40), build (#22), rows and contracts (ADR-0024) are
+    # earlier rules, kept frozen for checkers of those versions; closures_v4 follows Python imports of local
     # modules, build_v2 adds the Rust toolchain file, build_v3 the base gate workflow.
     closures = pinned.get(CLOSURES)
     if closures is None:
@@ -1041,16 +1073,77 @@ def compare(pinned: dict, now: dict, who: str) -> tuple[list[str], list[str]]:
         for w, where in closures.items():
             if w in now[CLOSURES] and now[CLOSURES][w] != where and now["witnesses"].get(w) == pinned["witnesses"].get(w):
                 problems.append(f"witness {w} changed: its attributes or a test item it reaches are not the ones the {who} pinned")
-    for rid in sorted(set(now["rows"]) - set(pinned["rows"])):
+    for rid in sorted(set(now[ROWS]) - set(pinned.get(ROWS, {}))):
         notes.append(f"{rid}: new invariant row, not pinned yet")
-    for rid, pin in pinned.get("contracts", {}).items():
-        if rid not in now["contracts"]:
-            problems.append(f"{rid}: pinned contract was removed")
-        elif now["contracts"][rid] != pin:
-            problems.append(f"{rid}: contract statement, witnesses or decision history changed")
-    for rid in sorted(set(now["contracts"]) - set(pinned.get("contracts", {}))):
+    for rid, pin in pinned.get(CONTRACTS, {}).items():
+        if rid not in now[CONTRACTS]:
+            problems.append(f"{rid}: pinned contract was removed or left this tier")
+        elif now[CONTRACTS][rid] != pin:
+            problems.append(f"{rid}: the contract's leaf version is not the one the {who} pinned")
+    for rid in sorted(set(now[CONTRACTS]) - set(pinned.get(CONTRACTS, {}))):
         notes.append(f"{rid}: contract is not pinned yet")
     return problems, notes
+
+
+def tier_manifests(signers: pathlib.Path):
+    """[(tier, manifest bytes, signature bytes)] of the manifests that verify under `signers`."""
+    out = []
+    for tier, manifest, signature, principal in (("owner", MANIFEST, SIGNATURE, "owner"),
+                                                ("provisional", PROVISIONAL, PROVISIONAL_SIG, "agent")):
+        if verify_manifest(manifest, signature, signers, principal):
+            out.append((tier, manifest.read_bytes(), signature.read_bytes()))
+    return out
+
+
+def check_store(signers: pathlib.Path, every_pin: bool = False) -> int:
+    """The store as Warrant 3 assesses it under .warrant/v3.json (needs the pinned warrant-graph): canonical, no
+    rejected line, no problem; every contract leaf accepted by its tier's signer (`carry` files that after a
+    signature; with --every-pin, a push to main, a leaf still waiting is a failure); and every acceptance `carry`
+    filed re-verified from the manifest and signature it names: the tier's SSH signature under `signers`,
+    pinning exactly that version. The acceptances the migration derived from Git history are vouched for by its
+    replay at the commit that added the store (ADR-0033)."""
+    from warrant.engine import assess
+    from warrant.store import Store
+    doc = json.loads((ROOT / '.warrant/v3.json').read_text())
+    snap = Store(ROOT / '.warrant').snapshot()
+    rep = assess(snap, doc['trust'], doc['profile'])
+    problems, notes = [], []
+    if rep['problems'] or rep['rejected'] or not rep['canonical']:
+        problems.append('store: ' + json.dumps({'problems': rep['problems'][:5], 'rejected': sorted(rep['rejected'])[:5],
+                                                'canonical': rep['canonical']}))
+    contracts = load_contracts(ROOT)
+    for lin in rep['lineages'].values():
+        if lin['schema'] == SCHEMA and lin['leaf'] is not None and lin['effective'] != lin['leaf']:
+            rid = snap.lines[lin['leaf']][0]['record']['body']['id']
+            (problems if every_pin else notes).append(f"{rid}: its leaf version is not accepted in the store yet "
+                                                      "(scripts/witness-pin.py carry, after the tier's signature)")
+    if sum(1 for lin in rep['lineages'].values() if lin['schema'] == SCHEMA) != len(contracts):
+        problems.append('store: a contract lineage the engine excludes or forks')
+    versions = {i: e[0]['record'] for i, e in snap.lines.items()}
+    for i, envs in sorted(snap.lines.items()):
+        r = envs[0]['record']
+        if r['kind'] != 'attest' or not r['body'].get('carried'):
+            continue
+        tier = r['body'].get('tier')
+        target = versions.get(r['body']['target'], {'body': {}})['body']
+        m, s = snap.blobs.get(r['body'].get('manifest')), snap.blobs.get(r['body'].get('signature'))
+        ok = tier in TIER_ACTOR and r['actor'] == TIER_ACTOR[tier] and m is not None and s is not None
+        if ok:
+            with tempfile.TemporaryDirectory() as tmp:
+                pathlib.Path(tmp, 'm').write_bytes(m)
+                pathlib.Path(tmp, 's').write_bytes(s)
+                ok = verify_manifest(pathlib.Path(tmp, 'm'), pathlib.Path(tmp, 's'), signers,
+                                     'owner' if tier == 'owner' else 'agent')
+            ok = ok and json.loads(m).get(CONTRACTS, {}).get(target.get('id')) == r['body']['target']
+        if not ok:
+            problems.append(f"acceptance {i[:12]} by {r['actor']}: no {tier} signature under {signers.name} pins its version")
+    for x in notes:
+        print('note', x)
+    for x in problems:
+        print('FAIL', x)
+    if not problems:
+        print(f"ok   store: {len(snap.lines)} records, {len(contracts)} contract lineages, basis {rep['basis']}")
+    return 1 if problems else 0
 
 
 def check(signers: pathlib.Path, every_pin: bool = False, executed_log: pathlib.Path | None = None,
@@ -1062,7 +1155,7 @@ def check(signers: pathlib.Path, every_pin: bool = False, executed_log: pathlib.
             problems.append(f"witness {w} is cited but no test function has that name")
     if not verify(signers):
         problems.append(f"{MANIFEST.relative_to(ROOT)} is not signed by a key in {signers}")
-        pinned = {"rows": {}, "witnesses": {}}
+        pinned = {ROWS: {}, "witnesses": {}}
     else:
         pinned = json.loads(MANIFEST.read_text())
     found, noted = compare(pinned, now, "owner")
@@ -1083,17 +1176,17 @@ def check(signers: pathlib.Path, every_pin: bool = False, executed_log: pathlib.
     # The agent's tier (ADR-0028): provisional rows, signed by the `agent` principal of the
     # same signers file. It cannot hold an owner row: those are not in agent_now, so pinning
     # one there reads as a removed row.
-    agent_pinned = {"rows": {}, "witnesses": {}}
-    if PROVISIONAL.exists() or agent_now["rows"]:
+    agent_pinned = {ROWS: {}, "witnesses": {}}
+    if PROVISIONAL.exists() or agent_now[ROWS]:
         if PROVISIONAL.exists() and verify_manifest(PROVISIONAL, PROVISIONAL_SIG, signers, "agent"):
             agent_pinned = json.loads(PROVISIONAL.read_text())
         elif PROVISIONAL.exists():
             problems.append(f"{PROVISIONAL.relative_to(ROOT)} is not signed by the agent key in {signers}")
         # A row the owner has promoted is the owner's now: the agent's old pin of it lapses.
-        promoted = set(pinned["rows"]) | set(pinned.get("contracts", {}))
+        promoted = set(pinned.get(ROWS, {})) | set(pinned.get(CONTRACTS, {}))
         agent_pinned = {**agent_pinned,
-                        "rows": {r: v for r, v in agent_pinned["rows"].items() if r not in promoted},
-                        "contracts": {r: v for r, v in agent_pinned.get("contracts", {}).items() if r not in promoted},
+                        ROWS: {r: v for r, v in agent_pinned.get(ROWS, {}).items() if r not in promoted},
+                        CONTRACTS: {r: v for r, v in agent_pinned.get(CONTRACTS, {}).items() if r not in promoted},
                         "witnesses": {k: v for k, v in agent_pinned["witnesses"].items() if k not in now["witnesses"]},
                         CLOSURES: {k: v for k, v in agent_pinned.get(CLOSURES, {}).items() if k not in now["witnesses"]}}
         found, noted = compare(agent_pinned, agent_now, "agent")
@@ -1101,8 +1194,6 @@ def check(signers: pathlib.Path, every_pin: bool = False, executed_log: pathlib.
         notes += [x.replace(": new invariant row, not pinned yet", ": new provisional row, not pinned yet") for x in noted]
     if executed_log is not None:
         problems += executed(executed_log, {**pinned["witnesses"], **agent_pinned["witnesses"]}, python_log_path)
-    for name in open_proposals(ROOT):
-        notes.append(f"open proposal {name}: unsigned intent, not accepted")
     if every_pin:
         # On main nothing may stand unpinned: a merge that kept another branch's manifest would
         # otherwise leave a row only noted, as MESH-K1 was after #7 and #8 (ADR-0023).
@@ -1115,8 +1206,8 @@ def check(signers: pathlib.Path, every_pin: bool = False, executed_log: pathlib.
     if problems:
         print("A pinned witness or invariant changes only with a new owner signature: scripts/witness-pin.py sign")
         return 1
-    extra = f"; {len(agent_pinned['rows'])} provisional rows match the agent's" if agent_pinned["rows"] else ""
-    print(f"ok   {len(pinned['rows'])} invariant rows and {len(pinned['witnesses'])} witnesses match the owner's pins{extra}")
+    extra = f"; {len(agent_pinned[ROWS])} provisional rows match the agent's" if agent_pinned[ROWS] else ""
+    print(f"ok   {len(pinned[ROWS])} invariant rows and {len(pinned['witnesses'])} witnesses match the owner's pins{extra}")
     return 0
 
 
@@ -1149,12 +1240,52 @@ def sign(key: str, tier: str = "owner") -> int:
         print("FAIL refusing to pin witnesses that do not exist:", ", ".join(missing))
         return 1
     path, signature = (MANIFEST, SIGNATURE) if tier == "owner" else (PROVISIONAL, PROVISIONAL_SIG)
-    if tier == "owner" and MANIFEST.exists():
+    if path.exists():
         # Checkers of earlier rules still read their own fields; each stays as pinned.
-        for field, value in json.loads(MANIFEST.read_text()).items():
+        for field, value in json.loads(path.read_text()).items():
             now.setdefault(field, value)
     write_signed(path, signature, now, key)
-    print(f"signed {len(now['rows'])} {'provisional ' if tier != 'owner' else ''}rows, {len(now['witnesses'])} witnesses")
+    print(f"signed {len(now[ROWS])} {'provisional ' if tier != 'owner' else ''}rows, {len(now['witnesses'])} witnesses")
+    return 0
+
+
+def carry(actor: str, key: str) -> int:
+    """After a signer pinned new leaf versions (`sign`, `sign-provisional`): file the acceptance each
+    pin means as an attest by the tier's actor (s0fractal, agent) in the store, unsigned in Warrant
+    terms, with the manifest and signature as blobs, and vouch for them with one migration@1 attest by
+    `actor` (a `migrator` in .warrant/v3.json). `check` re-verifies each from its blobs; the voucher
+    only makes the store's own assessment agree with the signatures (ADR-0033)."""
+    from warrant import jcs as C
+    from warrant import records as R
+    from warrant.repo import Repo, load_key
+    recs = store_records(ROOT)
+    done = {(r["actor"], r["body"]["target"]) for r in recs.values() if r["kind"] == "attest"}
+    at = int(time.time())
+    attests, blobs = [], []
+    for tier, m, s in tier_manifests(SIGNERS):
+        for rid, v in sorted(json.loads(m).get(CONTRACTS, {}).items()):
+            if (TIER_ACTOR[tier], v) in done:
+                continue
+            if recs.get(v, {}).get("body", {}).get("id") != rid:
+                print(f"FAIL {rid}: the {tier} manifest pins {v[:12]}, which is not a version of {rid} in the store")
+                return 1
+            body = {"target": v, "verdict": "accept", "tier": tier, "carried": True,
+                    "manifest": hashlib.sha256(m).hexdigest(), "signature": hashlib.sha256(s).hexdigest()}
+            attests.append(R.record("attest", TIER_ACTOR[tier], at, body, refs=[v, body["manifest"], body["signature"]]))
+            blobs += [m, s]
+    if not attests:
+        print("nothing to carry: every pinned leaf is accepted in the store")
+        return 0
+    repo = Repo(ROOT)
+    mapping = C.canon({"migration": "sokol-witness/carry@1", "map": [[R.rid(r), [r["body"]["manifest"], r["body"]["signature"]], []]
+                                                                    for r in attests]})
+    for data in blobs + [mapping]:
+        repo.store.put_blob(data)
+    repo.store.add_lines([R.line(r)[1] for r in attests])
+    maph = hashlib.sha256(mapping).hexdigest()
+    repo.file(actor, load_key(key, ROOT), [R.record("attest", actor, at, {"target": maph, "verdict": "migrated",
+                                                                          "records": len(attests)}, R.MIGRATION, refs=[maph])])
+    print(f"carried {len(attests)} acceptance(s), vouched for by {actor}")
     return 0
 
 
@@ -1167,6 +1298,15 @@ if __name__ == "__main__":
         sys.exit(sign(args[args.index("--key") + 1]))
     if args[:1] == ["sign-provisional"] and "--key" in args:
         sys.exit(sign(args[args.index("--key") + 1], "provisional"))
+    if args[:1] == ["carry"] and "--actor" in args and "--key" in args:
+        sys.exit(carry(args[args.index("--actor") + 1], args[args.index("--key") + 1]))
+    if args[:1] == ["check-store"]:
+        sys.exit(check_store(pathlib.Path(args[args.index("--signers") + 1]) if "--signers" in args else SIGNERS,
+                             every_pin="--every-pin" in args))
+    if args[:1] == ["regenerate"]:
+        INVARIANTS.write_text(regenerate(INVARIANTS.read_text(), ROOT))
+        generated_invariants(INVARIANTS.read_text(), ROOT)
+        sys.exit(0)
     if args[:1] == ["closure"] and len(args) == 2:
         w = args[1]
         (rust_closures if RUST_TEST.fullmatch(w) else py_closures)({w})

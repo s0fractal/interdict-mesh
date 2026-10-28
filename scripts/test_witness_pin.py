@@ -6,6 +6,8 @@ makes one change and runs the check with the owner's signers file, as CI does fr
 
     python3 scripts/test_witness_pin.py
 """
+import hashlib
+import json
 import os
 from pathlib import Path
 import shutil
@@ -549,6 +551,108 @@ class WitnessPin(unittest.TestCase):
         self.assertEqual(r.returncode, 1, r.stdout)
         self.assertIn("witness RecoveryTests.test_recovery_keeps_the_cursor did not run and pass", r.stdout)
 
+
+DECLARATION = ('<!-- Every invariant row is rendered from its sokol-contract@1 lineage in .warrant/records.jsonl '
+               '(ADR-0033); file a new version, then `scripts/witness-pin.py regenerate`, never edit this table by hand. -->')
+
+
+def record_id(record):
+    return hashlib.sha256(json.dumps(record, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
+
+
+def version(rid, statement, witness, lineage=None, state="active", **extra):
+    body = {"state": state, "id": rid, "profile": "sokol.contract-shadow.v1", "statement": statement,
+            "evidence_text": f"`{witness}`", "witnesses": [witness], **extra}
+    return {"warrant": "3", "kind": "entity", "actor": "sokol-core/files", "at": 1791590400, "prev": None,
+            "schema": "sokol-contract@1", "lineage": lineage, "refs": [], "guard": None, "body": body}
+
+
+class StoreContracts(WitnessPin):
+    """ADR-0033: rows are rendered from contract lineages in .warrant/records.jsonl, and the owner pins
+    each lineage's leaf by its record id."""
+
+    def setUp(self):
+        self.roots = {}
+        lines = []
+        for line in INVARIANTS.splitlines()[2:]:
+            rid, statement, evidence = [c.strip() for c in line.strip("|").split("|")]
+            r = version(rid, statement, evidence.strip("`"))
+            self.roots[rid] = (record_id(r), r)
+            lines.append(r)
+        self.records = lines
+        super().setUp()
+
+    def write_store(self):
+        store = self.dir / ".warrant/records.jsonl"
+        store.parent.mkdir(exist_ok=True)
+        store.write_text("".join(json.dumps({"record": r, "sig": None}, sort_keys=True) + "\n" for r in self.records))
+        run(self.dir, "git", "add", "-A")
+
+    def pin(self, key):
+        if not (self.dir / ".warrant/records.jsonl").exists():
+            self.write_store()
+            text = (self.dir / "docs/INVARIANTS.md").read_text()
+            (self.dir / "docs/INVARIANTS.md").write_text(DECLARATION + "\n\n" + text)
+            run(self.dir, "git", "add", "-A")
+        return super().pin(key)
+
+    def successor(self, rid, statement, because="a counterexample", parent=None):
+        pid, prev = parent or self.roots[rid]
+        decision = {"because": because, "previous_statement_sha256": hashlib.sha256(prev["body"]["statement"].encode()).hexdigest(),
+                    "proposal_sha256": None}
+        r = version(rid, statement, prev["body"]["witnesses"][0], lineage=pid, decision=decision)
+        self.records.append(r)
+        self.write_store()
+        return record_id(r), r
+
+    def regenerate(self):
+        return run(self.dir, "python3", "scripts/witness-pin.py", "regenerate")
+
+    def test_a_row_edited_by_hand_is_refused_and_regenerate_restores_it(self):
+        self.edit("docs/INVARIANTS.md", "A refusal creates no cooldown.", "A refusal creates a short cooldown.")
+        r = self.check()
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("T-1 is stale", r.stderr)
+        self.assertEqual(self.regenerate().returncode, 0)
+        self.assertEqual(self.check().returncode, 0)
+
+    def test_a_new_leaf_version_waits_for_the_owner_signature(self):
+        self.successor("T-1", "A refusal creates no cooldown, on any path.")
+        self.assertEqual(self.regenerate().returncode, 0)
+        self.assert_refused("T-1: the contract's leaf version is not the one the owner pinned")
+        self.assertEqual(self.pin(self.key).returncode, 0)
+        self.assertEqual(self.check().returncode, 0)
+
+    def test_a_forked_lineage_is_refused(self):
+        self.successor("T-1", "One successor.")
+        self.successor("T-1", "Another successor.")
+        r = self.check()
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("is forked", r.stderr)
+
+    def test_a_later_version_without_its_reason_is_refused(self):
+        self.successor("T-1", "A refusal creates no cooldown, on any path.", because=" ")
+        r = self.regenerate()
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("names its reason", r.stderr)
+
+    def test_a_retired_contract_drops_its_row_only_with_the_owner_signature(self):
+        pid, prev = self.roots["H-3"]
+        decision = {"because": "withdrawn", "proposal_sha256": None,
+                    "previous_statement_sha256": hashlib.sha256(prev["body"]["statement"].encode()).hexdigest()}
+        retirement = {"mode": "WITHDRAWN", "loss": ["the restart start check"], "replacement": None, "counterexamples": []}
+        self.records.append(version("H-3", prev["body"]["statement"], prev["body"]["witnesses"][0], lineage=pid,
+                                    state="retired", decision=decision, retirement=retirement))
+        self.write_store()
+        self.assertEqual(self.regenerate().returncode, 0)
+        self.assertNotIn("| H-3 |", (self.dir / "docs/INVARIANTS.md").read_text())
+        self.assert_refused("H-3: pinned invariant row was removed")
+
+
+
+# The table-only cases above run once, in WitnessPin; StoreContracts runs its own.
+for _name in [n for n in vars(WitnessPin) if n.startswith("test_") and n not in vars(StoreContracts)]:
+    setattr(StoreContracts, _name, None)
 
 if __name__ == "__main__":
     unittest.main()

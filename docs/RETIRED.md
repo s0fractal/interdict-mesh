@@ -212,8 +212,28 @@ git show archive/2026-10-05:orchestrator/src/bin/sokol-client.rs
 який виконано, і він конкурував із `ROADMAP.md`. Агент, що прочитає будь-який із них як
 чинний, отримає хибну картину. `docs/AGENT-TASKS.md` лишається: він описує живий інструмент.
 
-Рядки `docs/INVARIANTS.md` так не прибираються: їхній надгробок — контракт
-(`contract.py propose <ID> --retire`, ADR-0024).
+Рядки `docs/INVARIANTS.md` так не прибираються: їхній надгробок — версія лінії контракту
+зі станом `retired` (ADR-0024, ADR-0033).
+
+## Записи 2026-10-28
+
+Прибрано з дерева після `0fec343a` (ADR-0033: контракти й рецензії — записи Warrant 3); об'єкти —
+під тегом `archive/2026-10-28` (= `0fec343a`). Рішення власника s0fractal 2026-10-28. Рядок нижче:
+шлях, режим, id об'єкта Git у тезі (blob файла, tree каталогу), заміна, втрата. ADR-0024, ADR-0028 і
+ADR-0032 і далі називають ці шляхи як історію; тому вони не додані до `RETIRED_PATHS`.
+
+<!-- retired-objects archive/2026-10-28: path | mode | git object at the tag | replacement | loss -->
+| `scripts/contract.py` | SUPERSEDED | 45de51155e77c7e689e551a70339fae0ab9e6af6 | ADR-0033 | команди propose/accept/promote/regenerate/list над JSON-контрактами і перевірки пропозиції в момент подання (застарілий хеш контракту, неіснуючий свідок); тепер версія перевіряється, коли `witness-pin.py check` читає стор |
+| `scripts/contract-task.py` | SUPERSEDED | 98a4b1d783a2450bc3e23d165d5f7bb9203e502c | scripts/task_inputs.py | команди context/run/verify і непідписані звіти прогону свідків контракту; обмежене введення й контекст контракту живуть у `scripts/task_inputs.py` |
+| `scripts/contract-shadow.py` | WITHDRAWN | 6563e52779f69785b4e6f9a1f80a88b78cd8ccd5 | — | проєкції IPC-A1 у Markdown і обмежений JSON для агента |
+| `scripts/check-review.py` | SUPERSEDED | 93730da0d4c6c2bf45e7e48f22844737a145c2f2 | ADR-0033 | перевірка GitHub, що рецензія голови з ACCEPT від логіна з allowlist існує; її не замінює жодна перевірка GitHub (ADR-0033, втрата 1) |
+| `scripts/test_contract_tool.py` | SUPERSEDED | 1f2aa49efbcb494e8154baac27c9f9c59ea1fdb0 | scripts/test_witness_pin.py | тести contract.py; правила рядків і надгробків тепер у `StoreContracts` |
+| `scripts/test_contract_task.py` | SUPERSEDED | 35a35dd145ddd1b21f2c26a454ab5331e974a2b9 | scripts/test_task_inputs.py | тести формату звітів і раннера contract-task; тести обмеженого введення перенесено |
+| `scripts/test_contract_shadow.py` | WITHDRAWN | fd1fbe28d2a2a8f6d5cfb1cdcf6f6e96830791d2 | — | тести проєкцій contract-shadow.py |
+| `scripts/test_check_review.py` | SUPERSEDED | 5e28c3395d6da3a33702b76580b2e3e0abe84352 | ADR-0033 | тести check-review.py |
+| `.github/workflows/agent-review.yml` | SUPERSEDED | 3a19585e2e357d2584279c0fc5c9b91b4735c948 | ADR-0033 | перевірка `agent-review` (ніколи не була обов'язковою) |
+| `.github/review-allowlist` | SUPERSEDED | ac8d7acd2dc6a10cd4ef8860117d31cd70a0e091 | .warrant/v3.json | рецензії від будь-якого логіна зі списку, зокрема людини, через GitHub |
+| `docs/contracts` | SUPERSEDED | 0c5a2f3a46adb4b13bab07cc76e884605f143752 | .warrant/records.jsonl | 80 JSON-контрактів і каталог пропозицій як файли; кожен контракт і кожне рішення — версія лінії в сторі (міграція `verify`: IDENTICAL) |
 
 ## Перевірка
 
@@ -221,8 +241,10 @@ git show archive/2026-10-05:orchestrator/src/bin/sokol-client.rs
 - кожен ID знахідки (`F`, `R26-`, `R27-`, `N`, `T`), згаданий у коді чи документах,
   розшифровано вище;
 - жоден живий файл не посилається на прибраний шлях;
-- теги `archive/2026-09-29`, `archive/2026-10-05` і `archive/2026-10-12` на місці;
+- теги `archive/2026-09-29`, `archive/2026-10-05`, `archive/2026-10-12` і `archive/2026-10-28` на місці;
 - кожен рядок таблиці `retired-files`: файла немає в дереві, sha256 байтів у тезі збігається,
+  втрата не порожня, заміна існує;
+- кожен рядок таблиці `retired-objects`: шляху немає в дереві, id об'єкта в тезі збігається,
   втрата не порожня, заміна існує.
 
 Перевірка відмовляє, якщо не знайшла жодного ID: порожня область не рахується як успіх.

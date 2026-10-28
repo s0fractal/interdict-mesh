@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
-"""Bounded contract context and local witness execution; reports require replay for trust.
+"""Bounded inputs for the evidence tools (proof-task.py, counterexample-task.py, sokol-dev.py).
 
-context ID [--proposal FILE]   read only; native execution UNKNOWN
-run ID [--proposal FILE]       local fixed runner; retains a report outside the checkout
-verify REPORT [--replay]       input correspondence only, or a fresh independent execution
-
-The signed gate remains the owner of normalization and signature checks. This tool never
-accepts a proposal, signs, imports a recipe from annotations or declares a statement proved.
+Bounded reads, a bounded process runner, the tracked-file inventory and its hash-checked private
+copy, and `prepare`: a contract's context packet from its lineage in .warrant/records.jsonl, bound
+to the owner's signed manifest. Kept from scripts/contract-task.py when its own command line (context,
+run, verify reports) was removed (ADR-0033). Nothing here accepts, signs or declares a statement proved.
 """
-import argparse
-from collections import Counter
 from contextlib import contextmanager
 import hashlib
 import importlib.util
@@ -21,7 +17,6 @@ import re
 import selectors
 import signal
 import subprocess
-import sys
 import tempfile
 import time
 
@@ -138,7 +133,7 @@ def copied_inputs(root, inputs):
 
 
 def checker(root):
-    spec = importlib.util.spec_from_file_location('contract_task_pin', root / 'scripts/witness-pin.py')
+    spec = importlib.util.spec_from_file_location('task_inputs_pin', root / 'scripts/witness-pin.py')
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -155,23 +150,19 @@ def configuration():
             'environment_sha256': {k: digest(os.environ.get(k, '').encode()) for k in keys}}
 
 
-def prepare(root, rid, signers=None, proposal=None):
+def prepare(root, rid, signers=None):
+    """The context of one contract: its leaf version in the store, its witnesses' bodies and whether they
+    and the leaf are what the owner pinned (MATCH) or the row is not the owner's (UNPINNED)."""
     pin = checker(root)
-    pin.contract_marker(rid)
+    if not isinstance(rid, str) or not pin.CONTRACT_ID.fullmatch(rid):
+        raise ValueError('Invalid contract ID')
     hashes = checkout(root)
     contract = pin.load_contracts(root).get(rid)
-    source = f'docs/contracts/{rid}.shadow.json'
-    if proposal:
-        source = Path(proposal).as_posix()
-        if not re.fullmatch(r'docs/contracts/proposals/[A-Z0-9-]+-[0-9a-f]{12}\.proposal\.json', source):
-            raise ValueError('Proposal must be a local proposal path')
-        contract = json.loads(read(root / source))
-        if contract.get('id') != rid or contract.get('status') != 'UNSIGNED_INTENT':
-            raise ValueError('Invalid proposal identity or status')
+    source = '.warrant/records.jsonl'
     if not contract:
         raise ValueError('Unknown contract')
     if source not in hashes:
-        raise ValueError('Stage the contract/proposal before making a reproducible context')
+        raise ValueError('Stage the store before making a reproducible context')
     trust = Path(signers).resolve() if signers else root / '.github/witness-signers'
     trust_bytes = read(trust)
     manifest_bytes = read(root / 'docs/witness-manifest.json')
@@ -214,12 +205,12 @@ def prepare(root, rid, signers=None, proposal=None):
             body_locations[witness] = python.get(witness, [])
         if not body_locations.get(witness):
             raise ValueError('Missing witness body: ' + witness)
-    correspondence = 'UNSIGNED_PROPOSAL' if proposal else 'UNPINNED'
-    if not proposal and rid in manifest['rows']:
-        if current_rows[rid] != manifest['rows'][rid] or any(
+    correspondence = 'UNPINNED'
+    if rid in manifest.get(pin.ROWS, {}):
+        if current_rows[rid] != manifest[pin.ROWS][rid] or any(
                 sorted(body_locations[w]) != manifest['witnesses'].get(w) for w in witnesses):
             raise ValueError('Selected contract or witness differs from owner pin')
-        if current_contracts[rid] != manifest.get('contracts', {}).get(rid):
+        if current_contracts.get(rid) != manifest.get(pin.CONTRACTS, {}).get(rid):
             raise ValueError('Selected contract history differs from owner pin')
         correspondence = 'MATCH'
     files = sorted({location.rsplit(':', 1)[0] for v in body_locations.values() for location in v})
@@ -235,6 +226,7 @@ def prepare(root, rid, signers=None, proposal=None):
         recipe = None
     config = configuration()
     body = {'profile': 'sokol.agent.contract-task.v1', 'contract_id': rid, 'source': source,
+            'version': contract['version'],
             'statement': contract['statement'], 'witnesses': witnesses, 'witness_files': files,
             'binding': {'owner_signature': 'VERIFIED_AGAINST_SUPPLIED_SIGNERS',
                         'signers_sha256': digest(trust_bytes),
@@ -259,167 +251,3 @@ def prepare(root, rid, signers=None, proposal=None):
     return packet, hashes
 
 
-def execute(root, packet):
-    body = packet['body']
-    recipe = body['recipe']
-    if recipe not in RECIPES or body['command'] != RECIPES[recipe]:
-        raise ValueError('No supported fixed witness runner')
-    if recipe != 'delivery' and platform.system() != 'Linux':
-        raise ValueError('Rust verification requires Linux')
-    if any(w.startswith('live_gobgp_') for w in body['witnesses']) and not os.environ.get('SOKOL_GOBGP_TEST_BIN'):
-        raise ValueError('Live GoBGP witnesses require the pinned fixture binaries')
-    if not body['witnesses'] or not all(re.fullmatch(r'[a-z][a-z0-9_]*', w) for w in body['witnesses']):
-        raise ValueError('Invalid witness filter')
-    deadline = time.monotonic() + RUN_TIMEOUT
-    output = bytearray()
-    status = 0
-    passed_counts = Counter()
-    compiled_counts = Counter()
-    rejected = set()
-    runner_env = os.environ.copy()
-    if recipe != 'delivery' and runner_env.get('CARGO_TARGET_DIR'):
-        cache = Path(runner_env['CARGO_TARGET_DIR'])
-        if not cache.is_absolute():
-            raise ValueError('Witness cache requires an absolute CARGO_TARGET_DIR')
-        namespace = digest(encode({'snapshot': body['snapshot'], 'configuration': body['configuration']}))
-        runner_env['CARGO_TARGET_DIR'] = str(cache / 'sokol-contract-task' / namespace)
-        runner_env['CARGO_BUILD_TARGET_DIR'] = runner_env['CARGO_TARGET_DIR']
-        runner_env['CARGO_BUILD_BUILD_DIR'] = str(Path(runner_env['CARGO_TARGET_DIR']) / 'build')
-    elif recipe != 'delivery':
-        runner_env['CARGO_TARGET_DIR'] = str(root / 'target')
-        runner_env['CARGO_BUILD_TARGET_DIR'] = runner_env['CARGO_TARGET_DIR']
-        runner_env['CARGO_BUILD_BUILD_DIR'] = str(root / 'target/build')
-
-    def run(command):
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            raise ValueError('Verifier exceeded total time bound')
-        code, text = run_bounded(root, command, timeout=remaining,
-                                 bound=MAX_OUTPUT_BYTES - len(output), env=runner_env)
-        output.extend(text)
-        return code, text
-
-    def listed(text):
-        return Counter(name.decode() for name in re.findall(rb'^([A-Za-z0-9_:]+): test$', text, re.M))
-
-    def passed(text):
-        return Counter(name.decode() for name in re.findall(rb'^test ([A-Za-z0-9_:]+) \.\.\. ok$', text, re.M))
-
-    def ignored(text):
-        return {name.decode() for name in re.findall(rb'^test ([A-Za-z0-9_:]+) \.\.\. ignored\b', text, re.M)}
-
-    if recipe == 'delivery':
-        status, text = run(RECIPES[recipe])
-        compiled = listed(text)
-        successes = passed(text)
-        for witness in body['witnesses']:
-            matches = {name: n for name, n in compiled.items() if name.rsplit('::', 1)[-1] == witness}
-            compiled_counts[witness] = sum(matches.values())
-            passed_counts[witness] = sum(successes[name] for name in matches)
-            if not matches or any(successes[name] != n or name in ignored(text) for name, n in matches.items()):
-                rejected.add(witness)
-    else:
-        for witness in body['witnesses']:
-            command = [witness if arg == '{witness}' else arg for arg in RECIPES[recipe]]
-            status, listing = run(command[:-3] + ['--', '--list', '--format', 'terse', '--color', 'never'])
-            matches = {name: n for name, n in listed(listing).items() if name.rsplit('::', 1)[-1] == witness}
-            compiled_counts[witness] = sum(matches.values())
-            if status or not matches:
-                rejected.add(witness)
-                break
-            # Use the compiler's full names and exact filters. A similarly named helper
-            # cannot print an invented successful line in place of a missing witness.
-            for name, expected in sorted(matches.items()):
-                exact = [name if arg == '{witness}' else arg for arg in RECIPES[recipe]]
-                status, text = run(exact[:-3] + ['--', '--exact', '--color', 'never'])
-                observed = passed(text)[name]
-                passed_counts[witness] += observed
-                if status or observed != expected or name in ignored(text):
-                    rejected.add(witness)
-                    break
-            if rejected:
-                break
-    output = bytes(output)
-    missing = sorted({w for w in body['witnesses'] if not passed_counts[w]} | rejected)
-    result = 'RECORDED_PASS' if status == 0 and not missing else 'RECORDED_FAIL'
-    return {'status': result, 'returncode': status, 'missing_witnesses': missing,
-            'named_pass_counts': {w: passed_counts[w] for w in body['witnesses']},
-            'compiled_match_counts': {w: compiled_counts[w] for w in body['witnesses']},
-            'output_sha256': digest(output)}, output
-
-
-def make_report(root, rid, signers=None, proposal=None):
-    packet, inputs = prepare(root, rid, signers, proposal)
-    with copied_inputs(root, inputs) as work:
-        frozen, frozen_inputs = prepare(work, rid, signers, proposal)
-        if frozen != packet or frozen_inputs != inputs:
-            raise ValueError('Private verifier snapshot differs from context')
-        execution, output = execute(work, frozen)
-        execution['input_binding'] = 'HASH_CHECKED_PRIVATE_TRACKED_COPY'
-    after, after_inputs = prepare(root, rid, signers, proposal)
-    if after != packet or after_inputs != inputs:
-        execution['status'] = 'STALE'
-    report = {'profile': 'sokol.agent.witness-run.v1', 'context': packet,
-              'inputs': inputs, 'execution': execution, 'authenticity': 'UNSIGNED_LOCAL_REPORT'}
-    if len(encode(report)) > MAX_FILE_BYTES:
-        raise ValueError('Essential report exceeds byte bound')
-    return report, output
-
-
-def verify_report(root, report, signers=None, replay=False):
-    if not isinstance(report, dict) or report.get('profile') != 'sokol.agent.witness-run.v1':
-        raise ValueError('Unsupported report profile')
-    old = report['context']
-    if not isinstance(old, dict) or not isinstance(old.get('body'), dict):
-        raise ValueError('Invalid report context')
-    body = old['body']
-    if not isinstance(body.get('binding'), dict):
-        raise ValueError('Invalid report binding')
-    proposal = body['source'] if body['binding']['correspondence'] == 'UNSIGNED_PROPOSAL' else None
-    packet, inputs = prepare(root, body['contract_id'], signers, proposal)
-    if packet != old or inputs != report['inputs']:
-        return {'binding': 'STALE', 'execution': 'UNKNOWN'}
-    if not replay:
-        return {'binding': 'MATCH', 'execution': 'UNKNOWN', 'historical_execution': 'UNVERIFIED',
-                'reason': 'Matching bytes and an unsigned report cannot establish a past run'}
-    # Ignore every execution claim and command in the imported report; rerun our fixed recipe.
-    fresh, _ = make_report(root, body['contract_id'], signers, proposal)
-    return {'binding': 'MATCH' if fresh['execution']['status'] != 'STALE' else 'STALE',
-            'execution': {'RECORDED_PASS': 'REPLAYED_PASS', 'RECORDED_FAIL': 'REPLAYED_FAIL',
-                          'STALE': 'UNKNOWN'}[fresh['execution']['status']],
-            'fresh_result': fresh['execution']}
-
-
-def main():
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--signers', type=Path)
-    sub = parser.add_subparsers(dest='action', required=True)
-    for action in ('context', 'run'):
-        p = sub.add_parser(action)
-        p.add_argument('id')
-        p.add_argument('--proposal')
-    p = sub.add_parser('verify')
-    p.add_argument('report', type=Path)
-    p.add_argument('--replay', action='store_true')
-    args = parser.parse_args()
-    try:
-        if args.action == 'context':
-            value, _ = prepare(ROOT, args.id, args.signers, args.proposal)
-        elif args.action == 'run':
-            value, output = make_report(ROOT, args.id, args.signers, args.proposal)
-            directory = Path(tempfile.mkdtemp(prefix='sokol-witness-run-')).resolve()
-            (directory / 'report.json').write_bytes(encode(value) + b'\n')
-            (directory / 'output.log').write_bytes(output)
-            print(directory)
-            return 0 if value['execution']['status'] == 'RECORDED_PASS' else 1
-        else:
-            value = verify_report(ROOT, json.loads(read(args.report)), args.signers, args.replay)
-        print(encode(value).decode())
-        return 0 if value.get('binding') != 'STALE' and value.get('execution') != 'REPLAYED_FAIL' else 1
-    except (ValueError, KeyError, TypeError, OSError, UnicodeError, subprocess.SubprocessError) as error:
-        print(json.dumps({'status': 'REFUSED', 'execution': 'UNKNOWN', 'reason': str(error)}), file=sys.stderr)
-        return 2
-
-
-if __name__ == '__main__':
-    sys.exit(main())

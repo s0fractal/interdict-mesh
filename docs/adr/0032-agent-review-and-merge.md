@@ -1,6 +1,7 @@
 # ADR-0032. The review record is a required check; agents merge behind it
 
-Status: PROPOSED. The check, the allowlist and the code-owner file are in the tree; whether
+Status: SUPERSEDED by ADR-0033 (2026-10-28): reviews are Warrant 3 records; the check, the
+allowlist and the workflow are removed. Was: PROPOSED. The check, the allowlist and the code-owner file are in the tree; whether
 the check is required, whether code-owner review is required and whether agents may merge
 behind them are the owner's decisions, listed at the end. Nothing here is accepted until the
 owner makes them. Date: 2026-10-20. Extends ADR-0023 (owner-pinned witnesses), ADR-0030

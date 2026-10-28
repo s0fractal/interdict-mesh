@@ -86,37 +86,33 @@ on a rule here that does neither, and on a cited test, path or flag that does no
 - Documentation claims only what a named test, metric, flag or path shows. *Checked by:*
   `scripts/check-claims.sh`, which checks that what is cited exists (a test in the compiler's
   own list of tests, a proof with `#[kani::proof]` attached), not that it proves the claim.
-- A row of [docs/INVARIANTS.md](docs/INVARIANTS.md) is generated from its contract in
-  `docs/contracts/`; it is never edited by hand. To change a boundary, record an intent with
-  `scripts/contract.py propose` naming the reason (a counterexample, a measurement, a
-  requirement), and stop: accepting it and re-pinning is the owner's act (ADR-0023, ADR-0024).
-  A pinned witness is not weakened, renamed or dropped either; if one is in the way, propose.
-  *Checked by:* `scripts/witness-pin.py check`, run from the base branch in CI
-  (`scripts/test_witness_pin.py` and `scripts/test_contract_tool.py` for the checkers).
+- A row of [docs/INVARIANTS.md](docs/INVARIANTS.md) is rendered from its contract, a
+  `sokol-contract@1` lineage in `.warrant/records.jsonl`; it is never edited by hand. To change
+  a boundary, file a new version of its lineage through the Warrant agent interface
+  (`warrant_prepare`, then `warrant_commit`, as `claude` or `codex`) whose `decision` names the
+  reason (a counterexample, a measurement, a requirement), run `scripts/witness-pin.py
+  regenerate`, and stop: accepting it is the tier's signature over the manifest that pins the
+  new leaf (the owner's `witness-pin.py sign`, ADR-0023; a provisional row's `sign-provisional`,
+  ADR-0028), after which `witness-pin.py carry` files that acceptance in the store (ADR-0033).
+  A pinned witness is not weakened, renamed or dropped either; if one is in the way, file a
+  version and stop. *Checked by:* `scripts/witness-pin.py check`, run from the base branch in CI,
+  and `scripts/witness-pin.py check-store` (`scripts/test_witness_pin.py` for the checker).
 - A retired subject stays retired. *Checked by:* `scripts/check-retired.sh` (see
   [Removing things](#removing-things)).
 
 ## Review
 
-Each pull request is reviewed by an agent before merge, and the review belongs in the pull
-request, tied to the head it was about: a review that leaves no record cannot be checked or
-reused. The record is a pull-request review (or an issue comment on the pull request) whose
-body carries these two lines, each on a line of its own, with the findings under them:
-
-```
-review-of: <the pull request's full head sha>
-verdict: ACCEPT
-```
-
-(`verdict: AMEND` with the findings when it is not ready;
-`gh pr review <number> --comment --body-file review.md` posts it.) A record counts when its
-author is a login in `.github/review-allowlist` (adding a login is the owner's act) and is not
-the pull request's author; a reviewer's last word on a head is what counts, and a new push
-makes every earlier record stale: the new head needs its own. Human read-through runs in
-parallel and may lag; it is not a merge gate. Required checks are the CI jobs of
-`protect-main`. *Checked by:* the `agent-review` job (`scripts/check-review.py`, from main,
-on every push and every review; `scripts/test_check_review.py`), ADR-0032; that the job is a
-required check is the owner's ruleset change.
+Each pull request is reviewed by an agent before merge, and the review is kept as Warrant 3
+records in `.warrant/records.jsonl`, tied to the head it was about (ADR-0033): a review that
+leaves no record cannot be checked or reused. The author opens the pull request's `pr-head@1`
+lineage and files a head version naming the reviewed commit (`python3 -m warrant.review open
+--pr N --title … --actor … --key …`, then `head --pr N`), and pushes those records. The
+reviewer, the `pr/acceptor` of `.warrant/v3.json` (Codex, woken by the review waker), accepts
+the head version or files `finding@1` records against it; the author answers findings with a
+new head version (`head --pr N --answers …`). A new push needs a new head version: an
+acceptance is of one head. `python3 -m warrant.review view` shows where each pull request
+stands. Human read-through runs in parallel and may lag; the owner merges every pull request by
+hand, and required checks are the CI jobs of `protect-main`.
 
 ## Removing things
 
