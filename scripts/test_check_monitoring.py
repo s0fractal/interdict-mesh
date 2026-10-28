@@ -68,6 +68,22 @@ class Monitoring(unittest.TestCase):
                     f'{old} -> {new}: an alert now selects a series nobody exports, '
                     f'and the check passed: {r.stdout.strip()}')
 
+    def test_a_test_only_item_before_the_labels_does_not_end_the_scan(self):
+        # 0e6f15f put test-only constants under a top-level #[cfg(test)] above the label literals;
+        # a scan that stopped at the first such attribute missed every label after it.
+        self.mutate('orchestrator/src/metrics.rs', 'use std::fmt::Write;\n',
+                    'use std::fmt::Write;\n\n#[cfg(test)]\nconst FIXTURE_ONLY: u8 = 0;\n')
+        r = self.run_check()
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_a_label_value_rendered_only_in_the_test_module_fails(self):
+        self.mutate('orchestrator/src/metrics.rs', '{ "native" } else { "generic" }', '{ "native" } else { "skb" }')
+        self.mutate('orchestrator/src/metrics.rs', '#[cfg(test)]\nmod tests {\n',
+                    '#[cfg(test)]\nmod tests {\n    const RENDERED_ONLY_HERE: &str = "generic";\n')
+        r = self.run_check()
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn('label value "generic" is selected but not rendered', r.stdout)
+
 
 if __name__ == '__main__':
     unittest.main()

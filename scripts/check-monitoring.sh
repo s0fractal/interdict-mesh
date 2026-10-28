@@ -20,8 +20,14 @@ done
 # nothing and the alert never fires, while promtool's rule tests (synthetic series) stay green.
 # Each value (each part of a =~ alternation) must be a string literal in the code that renders
 # the labels, outside its tests. `instance`, `job` and dashboard variables are Prometheus' own.
+# Each file is read up to its top-level test module (`#[cfg(test)]` then `mod NAME {`); a
+# top-level test-only item before it (a constant, a helper) does not end the scan.
 label_src=$(for f in orchestrator/src/metrics.rs orchestrator/src/detections.rs orchestrator/src/p2p.rs \
-    orchestrator/src/block_table.rs common/src/lib.rs; do sed '/^#\[cfg(test)\]/q' "$f"; done)
+    orchestrator/src/block_table.rs common/src/lib.rs; do
+    awk '/^#\[cfg\(test\)\]$/ {held = $0; next}
+         held != "" {if ($0 ~ /^mod [A-Za-z0-9_]+ *\{/) exit; print held; held = ""}
+         {print}' "$f"
+done)
 values=$(grep -ohE 'interdict_[a-z0-9_]+\{[^}]*\}' deploy/prometheus/interdict-alerts.yml deploy/grafana/interdict-dashboard.json \
     | grep -oE '[a-z_]+=~?\\?"[^"\\]*' | grep -vE '^(instance|job)=' | grep -v '\$' \
     | sed -E 's/^[a-z_]+=~?\\?"//' | tr '|' '\n' | sort -u)
