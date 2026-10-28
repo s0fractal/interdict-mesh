@@ -82,7 +82,9 @@ Upstream FlowSpec (S5 за межами RIB вузла) не має цілі: RF
    2026-10-29 with the event memory saturated first and RSS and the state file judged against
    ceilings derived from the bounds, see the amendment of that date). Для RC-2 —
    ще й `--profile long` (24 год і 72 год);
-6. немає відкритого P1; межі названі (native NIC, upstream FlowSpec — NOT_QUALIFIED).
+6. немає відкритого P1; межі названі (native NIC, upstream FlowSpec — NOT_QUALIFIED; S7 at the
+   bounds of the block table, amendment 2026-10-29). RC-2 also needs the state write at the
+   bounds within S7 (same amendment).
 
 Підтримка: RC-N підтримується до RC-N+1 або 90 днів, що раніше. Виправлення безпеки — лише
 на останньому RC. Відповідь на повідомлення про вразливість — власник, ціль ≤ 7 днів
@@ -156,3 +158,23 @@ claim bound (`MAX_KNOWN_CLAIMS`) is likewise covered by its capacity tests and b
 
 **What RC-1 still cannot see:** growth tied to claim lifetimes longer than 720 s, and anything
 slower than 10 % in 98 min. RC-2's `--profile long` runs with the default `--block-ttl-max`.
+
+**Named RC-1 limit: S7 is not met with the block table at its bounds** (owner decision
+2026-10-29). Derived ceilings with every table at its bound (RUNBOOK §4): RSS the node's own
+idle RSS + 518 MiB + 2.8 MB per pinned peer, a state file of 228 MiB. Each tick in which the
+table changed, `submit_state` copies its durable part (`take_persisted`) under the table lock
+inside the maintenance tick: 0.12 s at 25 % of every bound, 0.25 s at 50 %, 0.38 s at 75 %,
+0.57 s at 100 % (`measure_memory_at_all_bounds`, `MEASURE_SHARE`). Above about 85 % this step
+alone keeps the tick past S7's 500 ms, and IPC answers and mesh adoption wait as long. Most of
+it is the node's own claims and their records. To get there the node must hold close to
+`MAX_KNOWN_CLAIMS` (262 144) claims at once: detectors reporting more than about 290 new
+addresses per second for the first block's TTL (`--block-ttl`, 900 s), or the IPC's
+2 000 lines/s of new addresses for about 2 min; with the RC-1 rehearsal's load (5 signals/s)
+never. RC-1 ships with this limit named; `interdict_tick_seconds_max` shows an operator when a
+node approaches it.
+
+**RC-2 admission condition (added to rule 6):** with every table of the block table at its
+bound, one state write keeps the maintenance tick within S7 (≤ 500 ms, measured by
+`measure_memory_at_all_bounds` on the reference VM and by `interdict_tick_seconds_max` under
+load). How is chosen by measurement: lower bounds, an incremental state file, or a copy taken
+outside the table lock. ROADMAP item 0a.

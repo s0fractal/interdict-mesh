@@ -1,6 +1,9 @@
 {
   "measured": "2026-10-29, sokol-lab (Lima vz, aarch64, Ubuntu 24.04, glibc 2.39), release build of this change",
-  "by": ["block_table::tests::measure_memory_at_bounds", "block_table::tests::measure_memory_at_all_bounds"],
+  "by": [
+    "block_table::tests::measure_memory_at_bounds",
+    "block_table::tests::measure_memory_at_all_bounds"
+  ],
   "bounds": {
     "MAX_EVENTS": 65536,
     "MAX_STRIKES": 65536,
@@ -34,17 +37,60 @@
     "heap_bytes": 465735812,
     "rss_kb": 530876,
     "state_bytes": 238859397,
-    "take_and_serialize_ms": 665,
-    "save_state_ms": 361
+    "take_persisted_locked_ms": 572,
+    "save_state_ms": 369
   },
   "replay_guard_bytes_per_peer": 2800000,
   "eviction_margin": 4096,
   "notes": {
     "all_bounds": "One table with every bound full: 262144 own claims with 512-byte reasons, 262144 retraction and lease records, 65536 event ids and strikes, 65536 targets with 8 reasons each. rss_kb is the process's VmRSS growth over the fill in a fresh test process.",
-    "take_and_serialize_ms": "take_persisted plus serde_json::to_vec; take_persisted runs under the table lock in submit_state.",
     "save_state_ms": "The state writer thread: serialize, write, fsync, rename, fsync of the directory.",
     "mesh floor": "A (u64, u64) pair at its widest: 2 x 20 digits, brackets, comma and separator.",
     "replay_guard_bytes_per_peer": "ADR-0013: about 40 bytes x 70000 nonces of a peer at its frame limit; analytic, not measured.",
-    "eviction_margin": "Signals past the larger count bound in the saturation, so every node evicts and the run can check that it did."
-  }
+    "eviction_margin": "Signals past the larger count bound in the saturation, so every node evicts and the run can check that it did.",
+    "take_persisted_locked_ms": "take_persisted alone: submit_state holds the table lock for it inside the maintenance tick; the writer thread serializes.",
+    "shares_of_all_bounds": "MEASURE_SHARE=<percent>: every table filled to that share of its bound, each in a fresh process."
+  },
+  "shares_of_all_bounds": [
+    {
+      "percent": 10,
+      "heap_bytes": 38926158,
+      "rss_kb": 45436,
+      "state_bytes": 23862165,
+      "take_persisted_locked_ms": 46,
+      "save_state_ms": 37
+    },
+    {
+      "percent": 25,
+      "heap_bytes": 116434052,
+      "rss_kb": 133432,
+      "state_bytes": 59703045,
+      "take_persisted_locked_ms": 121,
+      "save_state_ms": 79
+    },
+    {
+      "percent": 50,
+      "heap_bytes": 232867972,
+      "rss_kb": 265908,
+      "state_bytes": 119415685,
+      "take_persisted_locked_ms": 246,
+      "save_state_ms": 168
+    },
+    {
+      "percent": 75,
+      "heap_bytes": 298740868,
+      "rss_kb": 340640,
+      "state_bytes": 179137541,
+      "take_persisted_locked_ms": 379,
+      "save_state_ms": 246
+    },
+    {
+      "percent": 100,
+      "heap_bytes": 465735812,
+      "rss_kb": 530876,
+      "state_bytes": 238859397,
+      "take_persisted_locked_ms": 572,
+      "save_state_ms": 369
+    }
+  ]
 }

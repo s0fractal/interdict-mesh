@@ -3866,6 +3866,12 @@ mod tests {
     fn measure_memory_at_all_bounds() {
         let at = T0;
         let reason = "r".repeat(MAX_REASON_BYTES);
+        // MEASURE_SHARE=<percent> fills every table to that share of its bound instead.
+        let share: usize = std::env::var("MEASURE_SHARE")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(100);
+        let upto = |bound: usize| bound * share / 100;
         // Every bound at once in one table (claims all own, 512-byte reasons): the worst case
         // the table can hold, its RSS on this host's allocator, and what one state write costs.
         let rss_kb = || {
@@ -3882,13 +3888,13 @@ mod tests {
         };
         let rss_before = rss_kb();
         let (heap, mut t) = heap_of(1, |t| {
-            for i in 0..MAX_EVENTS {
+            for i in 0..upto(MAX_EVENTS) {
                 t.record_event("ids", &i.to_string(), at);
             }
-            for i in 0..MAX_STRIKES {
+            for i in 0..upto(MAX_STRIKES) {
                 t.strike(net_of(i), at);
             }
-            for i in 0..MAX_SUPPORT_TARGETS {
+            for i in 0..upto(MAX_SUPPORT_TARGETS) {
                 for e in 0..MAX_SUPPORT_PER_TARGET {
                     t.note_support(
                         net_of(i),
@@ -3897,7 +3903,7 @@ mod tests {
                     );
                 }
             }
-            for i in 0..MAX_KNOWN_CLAIMS {
+            for i in 0..upto(MAX_KNOWN_CLAIMS) {
                 t.issue_own(
                     net_of(i),
                     ClaimKind::Detector,
@@ -3906,7 +3912,7 @@ mod tests {
                     Some(at + 1000 * S),
                 );
             }
-            let ids: Vec<ClaimId> = (0..MAX_KNOWN_CLAIMS)
+            let ids: Vec<ClaimId> = (0..upto(MAX_KNOWN_CLAIMS))
                 .map(|i| blake3::hash(&i.to_le_bytes()).to_hex().to_string())
                 .collect();
             t.retract(1, &ids, at);
@@ -3915,20 +3921,21 @@ mod tests {
             }
         });
         let rss_after = rss_kb();
+        // submit_state holds the table lock for take_persisted only; the writer thread serializes.
         let started = std::time::Instant::now();
         let state = t.take_persisted(at);
+        let locked = started.elapsed();
         let bytes = serde_json::to_vec(&state).unwrap();
-        let serialize = started.elapsed();
         let path = std::env::temp_dir().join(format!("measure-state-{}.json", std::process::id()));
         let started = std::time::Instant::now();
         crate::state_store::save_state(&path, &state).unwrap();
         let write = started.elapsed();
         std::fs::remove_file(&path).unwrap();
         println!(
-            "all bounds | heap {heap} bytes | RSS +{} kB | state file {} bytes | take+serialize {:?} | save_state (serialize, write, fsync, rename) {:?}",
+            "{share} % of all bounds | heap {heap} bytes | RSS +{} kB | state file {} bytes | take_persisted under the lock {:?} | save_state (serialize, write, fsync, rename) {:?}",
             rss_after.zip(rss_before).map_or(-1, |(a, b)| a - b),
             bytes.len(),
-            serialize,
+            locked,
             write
         );
         drop(t);

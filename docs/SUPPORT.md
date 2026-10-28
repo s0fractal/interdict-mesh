@@ -71,8 +71,9 @@ SKIP.
 
 - Linux з XDP, systemd, root лише для встановлення (служба працює як `interdict`).
 - Memory and disk for the bounded tables: RSS up to the node's idle RSS + 518 MiB + 2.8 MB per
-  pinned peer, a state file up to 228 MiB, and at the bound 0.67 s of table lock per state
-  write ([RUNBOOK §4](RUNBOOK.md#memory-and-the-state-file-at-the-bounds)).
+  pinned peer, a state file up to 228 MiB, and at the bound 0.57 s of table lock per state
+  write, past the 0.5 s tick target above about 85 % of every bound (an RC-1 limit, ADR-0031;
+  [RUNBOOK §4](RUNBOOK.md#memory-and-the-state-file-at-the-bounds)).
 - Синхронізація часу (NTP/chrony).
 - Файлова система для `/var/lib/interdict` з `fsync` і атомарним `rename` (ext4, xfs).
 - **Пам'ять і потік подій залежать від кількості CPU** (N03). Вузол друкує на старті

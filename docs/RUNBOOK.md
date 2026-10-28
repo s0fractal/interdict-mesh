@@ -165,12 +165,24 @@ What to plan with:
 - **State file** ≤ **228 MiB** with reasons of plain text (all own claims with 512-byte reasons,
   every record kept), plus 44 B per mesh sender (at most 4 096). A reason the writer must escape
   can make it longer, up to the reader's limit `MAX_STATE_BYTES` (981 MiB).
-- **State write per tick at the bound:** the table is copied and serialized in 0.67 s under the
-  table lock, so for that long the tick, IPC answers and mesh adoption wait; the writer thread
-  then needs 0.36 s to serialize, write, fsync and rename. It happens on every tick in which the
-  table changed. At the bound the copy alone exceeds the 0.5 s tick alarm
-  (`interdict_tick_seconds_max`): a node there is outside its tick target (ADR-0031 S7). The cost
-  grows with the node's own claims and records; peers' claims add only their lease records.
+- **State write per tick:** inside the maintenance tick, `take_persisted` copies the durable
+  part under the table lock, so for that long the tick, IPC answers and mesh adoption wait; the
+  writer thread then serializes, writes, fsyncs and renames. It happens on every tick in which
+  the table changed. Measured with every table at the same share of its bound:
+
+  | Share of every bound | Lock held | Writer thread | State file | RSS growth |
+  |---|---|---|---|---|
+  | 10 % | 0.05 s | 0.04 s | 24 MB | 44 MiB |
+  | 25 % | 0.12 s | 0.08 s | 60 MB | 130 MiB |
+  | 50 % | 0.25 s | 0.17 s | 119 MB | 260 MiB |
+  | 75 % | 0.38 s | 0.25 s | 179 MB | 333 MiB |
+  | 100 % | 0.57 s | 0.37 s | 239 MB | 518 MiB |
+
+  Above about 85 % of every bound this one step alone holds the tick past 0.5 s: the node is
+  then outside its tick target (ADR-0031 S7, a named RC-1 limit). Most of it is the node's own
+  claims and records; the claim bound is reached by detectors reporting more new addresses
+  than about 290/s for the first block's TTL (`--block-ttl` 900 s), or the IPC's 2 000 lines/s
+  for about 2 min. Watch `interdict_tick_seconds_max`.
 
 The RC-1 plateau (ADR-0031 rule 5) checks these ceilings and that a node stays level once its
 event memory is full.

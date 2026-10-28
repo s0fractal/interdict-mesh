@@ -90,6 +90,11 @@ native-NIC і не польовий пілот.
    Обидва дефекти harness злито (PR #58, #59). Четвертий запуск, на `776861e`, обірвав на 6,47 год
    apt-таймер VM. З 2026-10-28 правило 5 для RC-1 — дві стиснуті фази (`--profile rc1`, три
    години), обслуговування VM маскується перед стартом; добова й 72-годинна кампанії — для RC-2.
+0a. **RC-2: the state write at the bounds within S7** (ADR-0031, amendment 2026-10-29; an RC-2
+   admission condition, owner decision 2026-10-29). With every block-table bound full,
+   `take_persisted` holds the table lock 0.57 s inside the tick (S7: 500 ms); RC-1 names it as a
+   limit. Choose by measurement: lower bounds, an incremental state file, or a copy outside the
+   table lock; then `measure_memory_at_all_bounds` at 100 % must stay within S7.
 1. **Native NIC** на цільовому залізі — єдине, що лишилося в P4 з технічного боку:
    pps, затримка, CPU і поведінка `auto` на драйвері карти. Потрібна фізична
    Linux-машина з XDP-native картою (ixgbe, i40e, ice, mlx5) і джерело трафіку.

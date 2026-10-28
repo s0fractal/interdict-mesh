@@ -28,9 +28,16 @@ serialized as the node writes it. Requested bytes, without the allocator's own o
 Every bound at once in one table (262 144 own claims with 512-byte reasons, 262 144 retraction
 and lease records, the event, strike and reason tables full), in a test process of its own:
 
-| Heap | RSS growth | State file | `take_persisted` + serialize (under the table lock) | `save_state` (writer thread: serialize, write, fsync, rename) |
-|---|---|---|---|---|
-| 465 735 812 B (444 MiB) | 530 876 kB (518 MiB), ×1.17 the heap | 238 859 397 B (228 MiB) | 665 ms | 361 ms |
+| Share of every bound | Heap | RSS growth | State file | `take_persisted` (under the table lock, in the tick) | `save_state` (writer thread: serialize, write, fsync, rename) |
+|---|---|---|---|---|---|
+| 10 % | 38 926 158 B | 45 436 kB | 23 862 165 B | 46 ms | 37 ms |
+| 25 % | 116 434 052 B | 133 432 kB | 59 703 045 B | 121 ms | 79 ms |
+| 50 % | 232 867 972 B | 265 908 kB | 119 415 685 B | 246 ms | 168 ms |
+| 75 % | 298 740 868 B | 340 640 kB | 179 137 541 B | 379 ms | 246 ms |
+| 100 % | 465 735 812 B (444 MiB) | 530 876 kB (518 MiB), ×1.17 the heap | 238 859 397 B (228 MiB) | 572 ms | 369 ms |
+
+(`MEASURE_SHARE=<percent>` for the partial rows.) The lock is held about linearly in the share:
+above about 85 % the state write alone keeps the tick past 0.5 s (ADR-0031 S7).
 
 `bounds.json` holds these numbers with the bounds they were taken at; `scripts/campaign.py`
 derives the RC-1 plateau's ceilings from it and `scripts/test_campaign.py` refuses it once a
