@@ -31,8 +31,8 @@ Working on the code as an agent (or a new contributor): [AGENTS.md](AGENTS.md).
 Clone the repository:
 
 ```shell
-git clone https://github.com/ValkyrieSentinel/sokol-core.git
-cd sokol-core
+git clone https://github.com/s0fractal/interdict-mesh.git
+cd interdict-mesh
 ```
 
 The Rust toolchain is pinned in `rust-toolchain.toml` (a dated nightly; the eBPF build needs

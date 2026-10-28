@@ -85,7 +85,7 @@ def sbom(commit):
     created = datetime.fromisoformat(created).astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
     return {'spdxVersion': 'SPDX-2.3', 'dataLicense': 'CC0-1.0', 'SPDXID': 'SPDXRef-DOCUMENT',
             'name': 'interdict-mesh-build-graph',
-            'documentNamespace': 'https://github.com/s0fractal/sokol-core/sbom/' + commit + '/' + arch(),
+            'documentNamespace': 'https://github.com/s0fractal/interdict-mesh/sbom/' + commit + '/' + arch(),
             'creationInfo': {'creators': ['Tool: interdict-candidate'], 'created': created},
             'comment': 'Union of resolved Cargo metadata graphs, not measured symbol-level binary dependencies.',
             'packages': [packages[k] for k in sorted(packages)],

@@ -2,7 +2,7 @@
 
 ## Reporting and support status
 
-Use [private vulnerability reporting](https://github.com/s0fractal/sokol-core/security/advisories/new)
+Use [private vulnerability reporting](https://github.com/s0fractal/interdict-mesh/security/advisories/new)
 for vulnerabilities. It is enabled on this repository. Include the exact commit,
 deployment profile, attacker privileges, reproduction and observed effect. Do not
 publish secrets, customer traffic or a live exploit in a public issue.
