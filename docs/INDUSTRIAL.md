@@ -38,14 +38,18 @@ Native tests, required checks, Kani scope and the base witness gate remain intac
 unknown-base refusal. Actual savings require a new hosted measurement.
 
 On a disposable systemd VM, `scripts/campaign.py --binary ABSOLUTE_BINARY
---monitor ABSOLUTE_MONITOR --output NEW_DIRECTORY` launches 24h and then 72h,
-only if the first phase passes. Invoke with root. Keep the committed source
+--monitor ABSOLUTE_MONITOR --output NEW_DIRECTORY [--profile rc1|long]` first stops
+and masks the VM's apt timers and unattended-upgrades, then runs the profile's phases,
+each only if the previous one passed: `rc1` (default) a 60 min chaos phase and a 120 min
+plateau phase without restarts; `long` 24h and then 72h (ADR-0031 rule 5). Invoke with root. Keep the committed source
 checkout frozen for the entire experiment and put binaries/output outside
 `/tmp` and `/var/tmp`, which PrivateTmp hides. The unit has 4 GiB memory, 4 GiB
-temporary storage, 256 tasks, 200% CPU, 128 MiB per file and a 96.5h wall limit.
+temporary storage, 256 tasks, 200% CPU, 128 MiB per file and a wall limit of the
+profile's phases plus 30 min each.
 These limits change the measured environment. The seeded event trace records
 choices, not a deterministic OS schedule. Existing soak assertions check active
-count convergence, audits and unexpected exits; RSS growth has no accepted SLO.
+count convergence, audits, unexpected exits and that no block is still pending; the
+plateau phase also judges RSS (at most 10 % between the first and last third) and fds.
 LIMITED_PASS is an experiment result, not production admission. A hard unit kill
 may leave RUNNING in the receipt: read the named unit's result with systemctl,
 inspect namespace leftovers, and retain that uncertainty rather than declaring

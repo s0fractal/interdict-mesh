@@ -67,7 +67,7 @@ checked_archive() { # url sha256 name -> prints the path
     mkdir -p "$CACHE/archives"
     if ! { [ -f "$out" ] && echo "$sum  $out" | sha256sum -c --quiet - >/dev/null 2>&1; }; then
         rm -f "$out"
-        curl -sSfL -o "$out.part" "$url"
+        curl --proto =https --tlsv1.2 -sSfL -o "$out.part" "$url"
         echo "$sum  $out.part" | sha256sum -c --quiet - >&2 || { rm -f "$out.part"; return 1; }
         mv "$out.part" "$out"
     fi

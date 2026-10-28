@@ -175,14 +175,14 @@ jobs:
 
       - name: Install bpf-linker
         run: |
-          curl -sSfL -o /tmp/bpf-linker.tar.zst "https://github.com/aya-rs/bpf-linker/releases/download/${BPF_LINKER_VERSION}/bpf-linker-${{ matrix.arch }}-unknown-linux-musl.tar.zst"
+          curl --proto =https --tlsv1.2 -sSfL -o /tmp/bpf-linker.tar.zst "https://github.com/aya-rs/bpf-linker/releases/download/${BPF_LINKER_VERSION}/bpf-linker-${{ matrix.arch }}-unknown-linux-musl.tar.zst"
           echo "${BPF_LINKER_SHA256}  /tmp/bpf-linker.tar.zst" | sha256sum -c -
           tar --zstd -x -C /usr/local/bin -f /tmp/bpf-linker.tar.zst
           bpf-linker --version
 
       - name: Install GoBGP (BGP Flowspec smoke checks)
         run: |
-          curl -sSfL -o /tmp/gobgp.tar.gz "https://github.com/osrg/gobgp/releases/download/v${GOBGP_VERSION}/gobgp_${GOBGP_VERSION}_linux_${{ matrix.gobgp_arch }}.tar.gz"
+          curl --proto =https --tlsv1.2 -sSfL -o /tmp/gobgp.tar.gz "https://github.com/osrg/gobgp/releases/download/v${GOBGP_VERSION}/gobgp_${GOBGP_VERSION}_linux_${{ matrix.gobgp_arch }}.tar.gz"
           echo "${GOBGP_SHA256}  /tmp/gobgp.tar.gz" | sha256sum -c -
           sudo tar -xz -C /usr/local/bin -f /tmp/gobgp.tar.gz gobgp gobgpd
 
@@ -215,7 +215,7 @@ jobs:
       - name: Dependency policy (cargo-deny, deny.toml)
         if: matrix.policy_checks && matrix.part == 'test'
         run: |
-          curl -sSfL -o /tmp/cargo-deny.tar.gz "https://github.com/EmbarkStudios/cargo-deny/releases/download/${CARGO_DENY_VERSION}/cargo-deny-${CARGO_DENY_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          curl --proto =https --tlsv1.2 -sSfL -o /tmp/cargo-deny.tar.gz "https://github.com/EmbarkStudios/cargo-deny/releases/download/${CARGO_DENY_VERSION}/cargo-deny-${CARGO_DENY_VERSION}-x86_64-unknown-linux-musl.tar.gz"
           echo "${CARGO_DENY_SHA256}  /tmp/cargo-deny.tar.gz" | sha256sum -c -
           tar -xzf /tmp/cargo-deny.tar.gz -C /tmp --strip-components=1
           /tmp/cargo-deny check
@@ -330,6 +330,7 @@ jobs:
           python3 scripts/test_pre_push_env.py
           python3 scripts/test_runbook_preflight.py
           python3 scripts/test_mesh_preflight.py
+          python3 scripts/test_campaign.py
           python3 scripts/test_bounded_log.py
           python3 scripts/test_ast_dump_stable.py
           python3 scripts/test_anchor_scripts.py
