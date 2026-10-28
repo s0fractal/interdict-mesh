@@ -36,6 +36,13 @@
   "MESH-N2": "2ca92c41d28fc77f962e195ea3eaca6a5c8214b6724ea14e85ea4ecbad4f6cd9",
   "POLICY-L1": "24fe260335a61e9d161730ccdc25854cfb12c73df3802a83fe19114f4b1a1fbf"
  },
+ "contracts_v2": {
+  "CONTROL-R1": "4741bcde6e034df3336b9b139a3bd30cad8face683dcd05d8846e139e47d7a6b",
+  "IPC-D1": "4480afad8e6f2505f3d41a5aed24ceed8a925f9f1e2c9ce8cb9e6b1469e13f54",
+  "MESH-F1": "7464e7150599affcb5b5bb6c8b7a5f9b50b7f29e3c2d52015bb55caa52cc673d",
+  "MESH-N2": "bb727d7d125c90d2243d9bdeb9973531b449b8ff19220841072f260d061368ea",
+  "POLICY-L1": "28516e18833fda8490848d3332fb27bc7db3d1c78529aad8da04d5a2849b36ba"
+ },
  "rows": {
   "CONTROL-R1": {
    "statement": "86eb9c3991382b6dcaf9c459ee3150e97f93e036c3ebf006636788f3e2e3797d",
@@ -72,6 +79,43 @@
    ]
   }
  },
+ "rows_v2": {
+  "CONTROL-R1": {
+   "statement": "86eb9c3991382b6dcaf9c459ee3150e97f93e036c3ebf006636788f3e2e3797d",
+   "witnesses": [
+    "concurrent_reloads_leave_table_and_registry_on_one_trust_store"
+   ]
+  },
+  "IPC-D1": {
+   "statement": "090e2e6873d7047b40a8cabcf21137beb099374e741e608e527f474c4d5573c9",
+   "witnesses": [
+    "a_lifted_retraction_is_on_disk_before_it_is_answered"
+   ]
+  },
+  "MESH-F1": {
+   "statement": "456d7145f9803303df214af67ddc9e0ed1c2d3fb9ab7f71bdc7ec546a4007822",
+   "witnesses": [
+    "a_flush_of_many_own_claims_is_retracted_in_frames_a_peer_accepts",
+    "a_retraction_is_packed_into_full_frames_within_the_budget"
+   ]
+  },
+  "MESH-N2": {
+   "statement": "ec8449838ce065a5f637d0a584ea33384fb90527a7d9a9c3c586b6d93899c3bb",
+   "witnesses": [
+    "mesh_floors_roundtrip_within_their_bound_and_refuse_past_it",
+    "saved_floors_refuse_what_the_previous_process_accepted_after_the_start"
+   ]
+  },
+  "POLICY-L1": {
+   "statement": "f11fe1682015065a9f37f4cb651def6e6781c97688c0f6697307ee2caf9cff95",
+   "witnesses": [
+    "a_ban_racing_a_protection_change_does_not_block_the_protected_address",
+    "a_detection_racing_a_protection_change_is_refused",
+    "a_peer_claim_racing_a_protection_change_is_not_enforced"
+   ]
+  }
+ },
+ "trust_root_v2": {},
  "witnesses": {
   "a_ban_racing_a_protection_change_does_not_block_the_protected_address": [
    "orchestrator/src/control_exec.rs:f0d34eb7cb474fb4ef1d76e59fd0070703295c6ad71c3c6f95f26d62196d8404"
