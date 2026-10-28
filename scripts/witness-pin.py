@@ -134,8 +134,8 @@ def record_id(record: dict) -> str:
 
 
 def store_records(root: pathlib.Path) -> dict:
-    """{id: record} of .warrant/records.jsonl, read as data with the standard library alone: the base gate and a
-    recipient's checker run without the Warrant package. Authenticity is not decided here: a leaf counts only
+    """{id: record} of .warrant/records.jsonl, read as data with the standard library alone: the base gate runs
+    without the Warrant package. Authenticity is not decided here: a leaf counts only
     as the version a tier's SSH-signed manifest pins by this id (`check`); scripts/contract-store.py
     assesses the store."""
     path = root / '.warrant/records.jsonl'
