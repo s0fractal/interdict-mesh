@@ -88,8 +88,9 @@ jobs:
     steps:
       - run: docker run --entrypoint promtool prom/prometheus@sha256:{"a" * 64} test rules sokol-alerts.test.yml
 ''')
-        # curl -sSfL -o OUT URL: copy the served file named by the URL's last component.
-        self.stub('curl', f'out=$3; url=$4; echo "curl $url" >> {self.calls}; '
+        # curl [OPTIONS] -o OUT URL: copy the served file named by the URL's last component.
+        self.stub('curl', 'while [ "$1" != -o ]; do shift; done; out=$2; url=$3; '
+                          f'echo "curl $url" >> {self.calls}; '
                           f'cp "{self.served}/$(basename "$url")" "$out"')
         return ci
 
