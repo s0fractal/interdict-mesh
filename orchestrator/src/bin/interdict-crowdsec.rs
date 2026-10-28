@@ -756,8 +756,20 @@ mod tests {
         use std::io::{Read, Write};
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let url = format!("http://{}", listener.local_addr().unwrap());
+        // A poll that never connects fails the test at the deadline instead of hanging it.
+        listener.set_nonblocking(true).unwrap();
         let lapi = std::thread::spawn(move || {
-            let (mut stream, _) = listener.accept().unwrap();
+            let deadline = Instant::now() + Duration::from_secs(10);
+            let mut stream = loop {
+                match listener.accept() {
+                    Ok((stream, _)) => break stream,
+                    Err(_) if Instant::now() < deadline => {
+                        std::thread::sleep(Duration::from_millis(10))
+                    }
+                    Err(_) => return String::new(),
+                }
+            };
+            stream.set_nonblocking(false).unwrap();
             let (mut request, mut buf) = (Vec::new(), [0u8; 1024]);
             while !request.windows(4).any(|w| w == b"\r\n\r\n") {
                 let n = stream.read(&mut buf).unwrap();

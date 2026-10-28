@@ -2336,8 +2336,21 @@ mod tests {
         std::env::remove_var("INTERDICT_TELEMETRY_GROUP");
         let restricted = restrict_telemetry_socket(path.to_str().unwrap());
         let mode = std::fs::metadata(&path).unwrap().permissions().mode() & 0o777;
+        // With a group named, the socket is handed to it (here the test's own primary group,
+        // which a non-root user may chown to); a group that does not exist is refused.
+        let own = unsafe { std::ffi::CStr::from_ptr((*libc::getgrgid(libc::getgid())).gr_name) };
+        std::env::set_var("INTERDICT_TELEMETRY_GROUP", own.to_str().unwrap());
+        let grouped = restrict_telemetry_socket(path.to_str().unwrap());
+        std::env::set_var("INTERDICT_TELEMETRY_GROUP", "interdict-no-such-group");
+        let unknown = restrict_telemetry_socket(path.to_str().unwrap());
+        std::env::remove_var("INTERDICT_TELEMETRY_GROUP");
         std::fs::remove_dir_all(dir).unwrap();
         assert_eq!(restricted, Ok(()));
         assert_eq!(mode, 0o660, "the socket mode is {mode:o}");
+        assert_eq!(grouped, Ok(()));
+        assert_eq!(
+            unknown,
+            Err("group interdict-no-such-group does not exist".to_string())
+        );
     }
 }
