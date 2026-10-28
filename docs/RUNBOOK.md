@@ -1,8 +1,8 @@
 # Runbook оператора
 
-Для людини, що встановлює й обслуговує вузол Sokol-Core, без автора поруч. Кожна команда тут
+Для людини, що встановлює й обслуговує вузол interdict-mesh, без автора поруч. Кожна команда тут
 перевіряється в `scripts/xdp-smoke.sh` або береться з `deploy/`. Де поведінку не перевірено, це
-сказано. Шляхи — як у `deploy/sokol-orchestrator.service`.
+сказано. Шляхи — як у `deploy/interdictd.service`.
 
 Весь шлях від встановлення до пакета для підтримки проганяє `scripts/runbook-rehearsal.sh` на
 чистому systemd-хості (див. кінець документа).
@@ -13,7 +13,7 @@
 Скорочення для керуючого сокета (усі команди нижче):
 
 ```shell
-ctl() { printf '%s\n' "$1" | sudo nc -U -q1 /run/sokol/control.sock; }
+ctl() { printf '%s\n' "$1" | sudo nc -U -q1 /run/interdict/control.sock; }
 metric() { curl -s http://127.0.0.1:9469/metrics | grep "^$1"; }
 ```
 
@@ -22,20 +22,20 @@ metric() { curl -s http://127.0.0.1:9469/metrics | grep "^$1"; }
 ```shell
 cd ebpf && cargo build --release --locked && cd ..
 cargo build --release --locked
-sudo useradd --system --no-create-home --shell /usr/sbin/nologin sokol
-sudo groupadd --system sokol-ipc     # детектори: IPC-сокет
-sudo groupadd --system sokol-ops     # оператори й дашборд: керуючий сокет
-sudo install -m 0755 target/release/orchestrator /usr/local/bin/sokol-orchestrator
-sudo install -m 0755 target/release/monitor /usr/local/bin/sokol-monitor
-sudo install -m 0644 deploy/sokol-orchestrator.service /etc/systemd/system/
-sudo install -d -o sokol -g sokol -m 0700 /var/lib/sokol   # як StateDirectory; потрібен уже в §2
-sudo install -d -m 0755 /etc/sokol
+sudo useradd --system --no-create-home --shell /usr/sbin/nologin interdict
+sudo groupadd --system interdict-ipc     # детектори: IPC-сокет
+sudo groupadd --system interdict-ops     # оператори й дашборд: керуючий сокет
+sudo install -m 0755 target/release/orchestrator /usr/local/bin/interdictd
+sudo install -m 0755 target/release/monitor /usr/local/bin/interdict-mon
+sudo install -m 0644 deploy/interdictd.service /etc/systemd/system/
+sudo install -d -o interdict -g interdict -m 0700 /var/lib/interdict   # як StateDirectory; потрібен уже в §2
+sudo install -d -m 0755 /etc/interdict
 ```
 
-`/etc/default/sokol`:
+`/etc/default/interdict`:
 
 ```shell
-SOKOL_ARGS=--interface eth0 --node-id 1 --peers-file /etc/sokol/peers.json \
+INTERDICT_ARGS=--interface eth0 --node-id 1 --peers-file /etc/interdict/peers.json \
   --seed-peer 10.0.0.2:7946 --metrics-bind 127.0.0.1:9469 \
   --never-block 203.0.113.0/24
 ```
@@ -49,17 +49,17 @@ SOKOL_ARGS=--interface eth0 --node-id 1 --peers-file /etc/sokol/peers.json \
 Якщо додаєте `--flowspec-gobgp`, до увімкнення перевірте deployment-передумови
 [ADR-0020](adr/0020-flowspec-profile-and-backend.md): власника community, фактичні
 IDs керованих шляхів і розподіл NLRI між writers або зовнішню серіалізацію з
-урахуванням RPC з невідомим результатом. Це перевірка оператора; Sokol не
+урахуванням RPC з невідомим результатом. Це перевірка оператора; interdict-mesh не
 підтверджує ексклюзивне володіння зі значення health. Діагностика — у §5.7.
 
 ## 2. Ключі й піри
 
 ```shell
-sudo -u sokol /usr/local/bin/sokol-orchestrator --key-file /var/lib/sokol/node.key --print-public-key
+sudo -u interdict /usr/local/bin/interdictd --key-file /var/lib/interdict/node.key --print-public-key
 ```
 
 Виводить `mldsa65:<hex>`; файл ключа створюється при першому запуску (`0600`). Зберіть ключі
-всіх вузлів у `/etc/sokol/peers.json` на **кожному** вузлі (меш має бути повним). Файл
+всіх вузлів у `/etc/interdict/peers.json` на **кожному** вузлі (меш має бути повним). Файл
 потрібен до старту служби; перший вузол, поки інших немає, стартує з `[]`.
 
 ```json
@@ -76,21 +76,21 @@ sudo -u sokol /usr/local/bin/sokol-orchestrator --key-file /var/lib/sokol/node.k
 ## 3. Перший старт і перевірка
 
 ```shell
-sudo systemctl enable --now sokol-orchestrator
-journalctl -u sokol-orchestrator -n 50 --no-pager
+sudo systemctl enable --now interdictd
+journalctl -u interdictd -n 50 --no-pager
 ```
 
 | Що перевірити | Як | Очікується |
 |---|---|---|
-| Версія й збірка | `metric sokol_build_info` | `version=…,build=<commit>` |
-| Здоров'я вузла | `sokol_audit_healthy`, `sokol_state_healthy`, `sokol_state_restore_ok`, `sokol_protected_refresh_ok`; дашборд показує `MODE` з heartbeat | усі чотири присутні й `1`, `MODE=NORMAL`; FlowSpec перевіряється окремо за §5.7 |
+| Версія й збірка | `metric interdict_build_info` | `version=…,build=<commit>` |
+| Здоров'я вузла | `interdict_audit_healthy`, `interdict_state_healthy`, `interdict_state_restore_ok`, `interdict_protected_refresh_ok`; дашборд показує `MODE` з heartbeat | усі чотири присутні й `1`, `MODE=NORMAL`; FlowSpec перевіряється окремо за §5.7 |
 | XDP на інтерфейсі | `ip -d link show eth0` | `prog/xdp` |
-| Піри з'єднані | `metric sokol_p2p_active_peers` | кількість інших вузлів |
+| Піри з'єднані | `metric interdict_p2p_active_peers` | кількість інших вузлів |
 | Бани оператора | `ctl LIST_BANS` | `OK <n> …` |
-| Ланцюжок аудиту | `sudo sokol-monitor --verify /var/lib/sokol/audit.log` | `OK …` |
-| Захищені адреси читаються | `metric sokol_protected_refresh_ok` | `1` |
+| Ланцюжок аудиту | `sudo interdict-mon --verify /var/lib/interdict/audit.log` | `OK …` |
+| Захищені адреси читаються | `metric interdict_protected_refresh_ok` | `1` |
 
-Код виходу `sokol-monitor --verify`: `0` / `OK` — перевірено збережений ланцюжок;
+Код виходу `interdict-mon --verify`: `0` / `OK` — перевірено збережений ланцюжок;
 `1` / `BROKEN` — виявлено порушення; `2` / `UNVERIFIED` — перевірка недоступна
 (каталог, файл, читання чи metadata). Для автоматизації звіряйте і код, і verdict;
 I/O-помилка не доводить пошкодження. `OK` не підтверджує повноти історії:
@@ -104,41 +104,41 @@ I/O-помилка не доводить пошкодження. `OK` не пі�
 
 | Метрика | Тривога, якщо | Значення |
 |---|---|---|
-| `sokol_audit_healthy` | `0` | аудит не пишеться (диск, права); захист працює (ADR-0005) |
-| `sokol_state_healthy` | `0` | файл стану не пишеться або зміна чекає > 5 с (ADR-0004) |
-| `sokol_state_pending_seconds` | росте | диск повільний або завис |
-| `sokol_state_restore_ok` | `0` | стан при старті не відновився, див. §5.4 |
-| `sokol_protected_refresh_ok` | `0` | адреси хоста не читаються; захищено останні відомі |
-| `sokol_blocks_pending` / `…_oldest_seconds` | > 0 довго | карта ядра не приймає записи (переповнена) |
-| `sokol_blocks_active` vs `sokol_blocks_capacity` | > 80 % | наближається ліміт 65 536 |
-| `sokol_p2p_active_peers` | менше очікуваного | див. §5.5 |
-| `sokol_mesh_envelopes_rejected_total{reason="stale_timestamp"}` | росте | годинник піра й цього вузла розійшлися понад 30 с (NTP) |
-| `sokol_mesh_envelopes_rejected_total{reason="before_window"}` | росте поза першими 30 с після старту | конверт старший за вже вичищений від того ж піра або за старт процесу. Перші `MAX_CLOCK_SKEW_MS` (30 с) після старту це норма для піра, чий годинник відстає, і для конвертів у дорозі під час рестарту. Пізніше — повтор старого конверта, або годинник цього вузла крокнув назад (`sokol_clock_steps_total`): тоді частина чесних конвертів відкидається, поки годинник не наздожене |
-| `sokol_clock_steps_total` | зросла | годинник вузла крокував на `sokol_clock_last_step_seconds`. Чинні блоки зберігають тривалість (ADR-0017), але якщо годинник тепер розходиться з пірами понад 30 с, вузол випадає з мешу (див. `stale_timestamp`) |
-| `sokol_claims_waiting` | > 0 довго | пір видав більше рішень, ніж дозволяє його конверт (`--peer-max-active`, 16 384, ADR-0007): решта чекає на слот. Через це кількість блоків на вузлах різниться, хоча меш справний |
-| `sokol_mesh_broadcasts_dropped_total{class="urgent"}` | росте | лінк до піра не встигає за заявками |
-| `sokol_mesh_handshake_timeouts_total` | швидко росте | хтось відкриває з'єднання й мовчить |
-| `sokol_tick_seconds_max` | > 0,5 | обслуговування таблиці сповільнюється |
-| `sokol_xdp_events_lost_total` | росте | orchestrator не встигає читати події ядра: кільце повне, події (не блоки) губляться |
-| `sokol_xdp_stats_read_failures_total` | росте | лічильники XDP не читаються: їх значення — останні прочитані, швидкість і сигнал атаки шторму не оновлюються |
-| `sokol_mesh_handshakes_wrong_address_total` | > 0 | рукостискання закріпленого піра прийшло не з його `"address"`: помилка конфігурації або ключ піра використано деінде (ADR-0027). Алерт `SokolPeerWrongAddress`, див. §5.5 |
-| `sokol_xdp_events_malformed_total` | > 0 | XDP-програма й orchestrator розходяться в розкладці подій (ADR-0015): бінарник зібрано неправильно |
-| `sokol_detections_total{source,result}` | одне джерело різко зросло | детектор (чи пастка) раптом вимагає багато блоків: хибне правило, отруєний фід. Алерт `SokolDetectorSurge`, див. §5.1 |
-| `sokol_mesh_claims_total{issuer,result}` | один пір різко зріс | заявки одного піра (`enforced`, `held`) раптом сплеснули: хибний детектор піра або скомпрометований пір у межах конверта (ADR-0007). Алерт `SokolPeerClaimSurge`; межі піра — `--peer-max-active`, §5.1 |
-| `sokol_block_outcomes_total{effect="none"}` | частка велика | блоки нічого не відкидають: `sudo sokol-monitor --outcomes /var/lib/sokol/audit.log` покаже, які детектори й правила (ADR-0014) |
-| — | джерело часто виправляють | `sudo sokol-monitor --regret /var/lib/sokol/audit.log`: за джерелом — скільки блоків оператор зняв рано (виправлення) чи пізно (прибирання), рецидиви після зняття, холості, відкликані, flush (лише в межах 3 с після нього і лише блоки, які він знімає), зняті через захищену адресу, і скільки пакетів вони відкинули. Пошкоджений чи відсутній аудит — помилка, а не порожній звіт. Нижня межа шкоди: про що не повідомили, того там немає |
+| `interdict_audit_healthy` | `0` | аудит не пишеться (диск, права); захист працює (ADR-0005) |
+| `interdict_state_healthy` | `0` | файл стану не пишеться або зміна чекає > 5 с (ADR-0004) |
+| `interdict_state_pending_seconds` | росте | диск повільний або завис |
+| `interdict_state_restore_ok` | `0` | стан при старті не відновився, див. §5.4 |
+| `interdict_protected_refresh_ok` | `0` | адреси хоста не читаються; захищено останні відомі |
+| `interdict_blocks_pending` / `…_oldest_seconds` | > 0 довго | карта ядра не приймає записи (переповнена) |
+| `interdict_blocks_active` vs `interdict_blocks_capacity` | > 80 % | наближається ліміт 65 536 |
+| `interdict_p2p_active_peers` | менше очікуваного | див. §5.5 |
+| `interdict_mesh_envelopes_rejected_total{reason="stale_timestamp"}` | росте | годинник піра й цього вузла розійшлися понад 30 с (NTP) |
+| `interdict_mesh_envelopes_rejected_total{reason="before_window"}` | росте поза першими 30 с після старту | конверт старший за вже вичищений від того ж піра або за старт процесу. Перші `MAX_CLOCK_SKEW_MS` (30 с) після старту це норма для піра, чий годинник відстає, і для конвертів у дорозі під час рестарту. Пізніше — повтор старого конверта, або годинник цього вузла крокнув назад (`interdict_clock_steps_total`): тоді частина чесних конвертів відкидається, поки годинник не наздожене |
+| `interdict_clock_steps_total` | зросла | годинник вузла крокував на `interdict_clock_last_step_seconds`. Чинні блоки зберігають тривалість (ADR-0017), але якщо годинник тепер розходиться з пірами понад 30 с, вузол випадає з мешу (див. `stale_timestamp`) |
+| `interdict_claims_waiting` | > 0 довго | пір видав більше рішень, ніж дозволяє його конверт (`--peer-max-active`, 16 384, ADR-0007): решта чекає на слот. Через це кількість блоків на вузлах різниться, хоча меш справний |
+| `interdict_mesh_broadcasts_dropped_total{class="urgent"}` | росте | лінк до піра не встигає за заявками |
+| `interdict_mesh_handshake_timeouts_total` | швидко росте | хтось відкриває з'єднання й мовчить |
+| `interdict_tick_seconds_max` | > 0,5 | обслуговування таблиці сповільнюється |
+| `interdict_xdp_events_lost_total` | росте | orchestrator не встигає читати події ядра: кільце повне, події (не блоки) губляться |
+| `interdict_xdp_stats_read_failures_total` | росте | лічильники XDP не читаються: їх значення — останні прочитані, швидкість і сигнал атаки шторму не оновлюються |
+| `interdict_mesh_handshakes_wrong_address_total` | > 0 | рукостискання закріпленого піра прийшло не з його `"address"`: помилка конфігурації або ключ піра використано деінде (ADR-0027). Алерт `InterdictPeerWrongAddress`, див. §5.5 |
+| `interdict_xdp_events_malformed_total` | > 0 | XDP-програма й orchestrator розходяться в розкладці подій (ADR-0015): бінарник зібрано неправильно |
+| `interdict_detections_total{source,result}` | одне джерело різко зросло | детектор (чи пастка) раптом вимагає багато блоків: хибне правило, отруєний фід. Алерт `InterdictDetectorSurge`, див. §5.1 |
+| `interdict_mesh_claims_total{issuer,result}` | один пір різко зріс | заявки одного піра (`enforced`, `held`) раптом сплеснули: хибний детектор піра або скомпрометований пір у межах конверта (ADR-0007). Алерт `InterdictPeerClaimSurge`; межі піра — `--peer-max-active`, §5.1 |
+| `interdict_block_outcomes_total{effect="none"}` | частка велика | блоки нічого не відкидають: `sudo interdict-mon --outcomes /var/lib/interdict/audit.log` покаже, які детектори й правила (ADR-0014) |
+| — | джерело часто виправляють | `sudo interdict-mon --regret /var/lib/interdict/audit.log`: за джерелом — скільки блоків оператор зняв рано (виправлення) чи пізно (прибирання), рецидиви після зняття, холості, відкликані, flush (лише в межах 3 с після нього і лише блоки, які він знімає), зняті через захищену адресу, і скільки пакетів вони відкинули. Пошкоджений чи відсутній аудит — помилка, а не порожній звіт. Нижня межа шкоди: про що не повідомили, того там немає |
 
 Будь-яка з перших п'яти причин переводить вузол у `MODE=DEGRADED`. Захист при цьому працює.
 
 **Готові алерти й дашборд:**
-- `deploy/prometheus/sokol-alerts.yml` — 18 правил за цією таблицею, з тестами
-  `promtool test rules sokol-alerts.test.yml`;
+- `deploy/prometheus/interdict-alerts.yml` — 18 правил за цією таблицею, з тестами
+  `promtool test rules interdict-alerts.test.yml`;
 - `deploy/prometheus/prometheus.yml` — приклад збору. Метрики без автентифікації, тож
   `--metrics-bind` лише на приватну адресу (WireGuard, мережа керування);
-- `deploy/grafana/sokol-dashboard.json` — імпорт у Grafana. Ряди: стан вузлів, фаза 0
+- `deploy/grafana/interdict-dashboard.json` — імпорт у Grafana. Ряди: стан вузлів, фаза 0
   («відкинув би»), рішення й наслідки, меш, ресурси.
 
-### Стан у `sokol-operator`
+### Стан у `interdict-ctl`
 
 Heartbeat і читання банів — різні спостереження. `ban_readback` в `/api/data` повертає
 `UNKNOWN` до першого успішного читання, `FRESH` для чинного читання і `STALE` після
@@ -170,20 +170,20 @@ ctl FLUSH_ALL                     # і бани оператора; --block ли
 - Що зробив знятий блок, видно в аудиті: `BLOCK_OUTCOME|IP:…|Dropped:…|Seconds:…`.
 - Щоб адреса не блокувалась ніколи, додайте її в `--never-block` і перезапустіть службу.
 
-**Сплеск від одного детектора** (`SokolDetectorSurge`: понад 200 рішень за 5 хв і вдесятеро
+**Сплеск від одного детектора** (`InterdictDetectorSurge`: понад 200 рішень за 5 хв і вдесятеро
 більше за його звичний темп). Вузол виконує те, що просить детектор, у межах block policy;
 рішення, чи це атака, за детектором. Тому спершу детектор:
 
-1. Хто і що: `sokol_detections_total` за `source`; в аудиті `SIGNAL|Source:<джерело>|…` —
+1. Хто і що: `interdict_detections_total` за `source`; в аудиті `SIGNAL|Source:<джерело>|…` —
    які правила чи рішення фіду.
-2. Хибне спрацювання — зупиніть процес адаптера (`sokol-suricata`, `sokol-crowdsec` чи ваш),
+2. Хибне спрацювання — зупиніть процес адаптера (`interdict-suricata`, `interdict-crowdsec` чи ваш),
    щоб нових рішень не було.
 3. Зняти вже прийняті:
-   - CrowdSec: видаліть хибні decisions у LAPI (`cscli decisions delete …`); `sokol-crowdsec`
+   - CrowdSec: видаліть хибні decisions у LAPI (`cscli decisions delete …`); `interdict-crowdsec`
      надішле `RETRACT` за кожне (ADR-0019), і блоки, які тримала лише ця подія, знімуться на
      всьому меші;
    - інакше — `ctl FLUSH_BANS` (усі динамічні блоки; бани оператора лишаються).
-4. Справжня атака — нічого не робіть, крім перевірки `sokol_blocks_active` проти місткості.
+4. Справжня атака — нічого не робіть, крім перевірки `interdict_blocks_active` проти місткості.
 
 ### 5.2 Вузол заблокував би себе чи шлюз
 
@@ -196,15 +196,15 @@ ctl FLUSH_ALL                     # і бани оператора; --block ли
 
 | Метрика в `0` | Причина | Дія |
 |---|---|---|
-| `sokol_audit_healthy` | диск заповнений, права, збій запису | звільнити місце або виправити права; відновлюється само; healthy не означає повну історію; втрати — `AUDIT_LOST`/`AUDIT_QUEUE_OVERFLOW`, межі — AUDIT-R1/R2 і REPLAY-R5 |
-| `sokol_state_healthy` | запис стану не вдається або висить > 5 с | див. `sokol_state_pending_seconds` і журнал `[State]`; відновлюється само |
-| `sokol_state_restore_ok` | стан не відновився при старті | §5.4 |
-| `sokol_protected_refresh_ok` | не читаються адреси хоста | журнал `[BlockPolicy]`; відновлюється само |
+| `interdict_audit_healthy` | диск заповнений, права, збій запису | звільнити місце або виправити права; відновлюється само; healthy не означає повну історію; втрати — `AUDIT_LOST`/`AUDIT_QUEUE_OVERFLOW`, межі — AUDIT-R1/R2 і REPLAY-R5 |
+| `interdict_state_healthy` | запис стану не вдається або висить > 5 с | див. `interdict_state_pending_seconds` і журнал `[State]`; відновлюється само |
+| `interdict_state_restore_ok` | стан не відновився при старті | §5.4 |
+| `interdict_protected_refresh_ok` | не читаються адреси хоста | журнал `[BlockPolicy]`; відновлюється само |
 
 Завислий запис не накопичує чергу знімків: очікує один найновіший знімок,
 окремо від того, що вже пишеться або чекає retry. Нові рішення діють локально,
 але `WARNING: not yet durable` залишається невідомим результатом збереження.
-`sokol_state_pending_seconds` не обнуляється від заміни очікуваного стану чи
+`interdict_state_pending_seconds` не обнуляється від заміни очікуваного стану чи
 завершення старішого запису. Захоплення й передача таблиці впорядковані разом,
 тож інший caller не може підтвердити ще не переданий знімок чи пересунути старіший знімок
 після новішого. Очікування диска не тримає mutex таблиці. Відновлення диска
@@ -304,24 +304,24 @@ ctl ACCEPT_STATE_LOSS             # "OK state loss accepted"; вузол вих�
 
 ### 5.7 FlowSpec: кількість правил є, свіжого читання немає
 
-Зчитайте одну HTTP-відповідь `/metrics`: `sokol_flowspec_announced` містить
+Зчитайте одну HTTP-відповідь `/metrics`: `interdict_flowspec_announced` містить
 останню успішно спостережену кількість власних source-prefix правил у локальному RIB.
-`sokol_flowspec_discard_rules` — їхня підмножина з перевіреною canonical discard дією.
+`interdict_flowspec_discard_rules` — їхня підмножина з перевіреною canonical discard дією.
 Різниця означає власні шляхи з непідтвердженою дією; сама рівність чисел не доводить
 збіг prefix із бажаним набором.
 
-- `sokol_flowspec_enabled = 0`: worker вимкнений, у тому числі в observe mode;
+- `interdict_flowspec_enabled = 0`: worker вимкнений, у тому числі в observe mode;
   нульова кількість не є підтвердженням порожнього RIB.
-- `sokol_flowspec_enabled = 1`, `sokol_flowspec_readback_ok = 0`: ще немає
+- `interdict_flowspec_enabled = 1`, `interdict_flowspec_readback_ok = 0`: ще немає
   успішного раунду, раунд триває, читання/запис завершилися помилкою або задачу
   скасовано. Наявна кількість лишається попереднім спостереженням.
-- `sokol_flowspec_readback_age_seconds = -1`: успішного спостереження ще не було.
+- `interdict_flowspec_readback_age_seconds = -1`: успішного спостереження ще не було.
   Інакше це монотонний вік від початку останнього успішного читання обох сімейств;
   він зростає і без нового основного tick, і після помилок.
-- `sokol_flowspec_readback_ok = 1`: останній раунд завершився успішно.
+- `interdict_flowspec_readback_ok = 1`: останній раунд завершився успішно.
   Перевірте також вік за допустимою для вашого споживача межею; універсального
   production-порога немає. Цей стан не доводить збіг бажаних і фактичних правил.
-- `sokol_flowspec_round_converged = 1`: owned і canonical-discard prefix sets
+- `interdict_flowspec_round_converged = 1`: owned і canonical-discard prefix sets
   збіглися з wanted, зчитаним на початку останнього завершеного раунду. Зміна
   intent під час або після цього раунду може ще очікувати обробки; перевіряйте вік.
   `0` означає невідповідність або непідтверджений стан, включно з pending/failure.
@@ -330,7 +330,7 @@ ctl ACCEPT_STATE_LOSS             # "OK state loss accepted"; вузол вих�
   вимкнення worker не доводить наявності розбіжності. Ця ознака не дає додаткових
   прав і не підтверджує latest intent, справжні path IDs чи upstream enforcement.
 
-- `sokol_flowspec_round_progress = 1`: між initial/final reads раунду спостережено
+- `interdict_flowspec_round_progress = 1`: між initial/final reads раунду спостережено
   строге зменшення набору
   невиконаних вимог для свого sampled wanted без нових розбіжностей. `0` — такого
   поступу не спостережено; `-1` — невиміряно, pending, failure або cancellation.
@@ -455,14 +455,14 @@ FLOWSPEC-R13 передає worker початковий `active_ips()` до пе
 відкликається лише через початковий порожній watch-channel. Це snapshot applied
 state: refused/expired і failed kernel additions не є wanted upstream; справді
 порожній набір усе ще чистить owned RIB. Після snapshot зміни доходять звичайною
-публікацією. Перевіряйте `sokol_state_restore_ok`, XDP, FlowSpec health/convergence
+публікацією. Перевіряйте `interdict_state_restore_ok`, XDP, FlowSpec health/convergence
 та RIB окремо; readback не доводить успіх відновлення чи upstream enforcement.
 При failed restore збережені bytes і DEGRADED/`ACCEPT_STATE_LOSS` лишаються чинними.
 
 ## 6. Ключі: ротація, відкликання, компрометація
 
 - **Ротація без простою.**
-  1. Згенеруйте новий ключ: `--key-file /var/lib/sokol/node.key.new --print-public-key`.
+  1. Згенеруйте новий ключ: `--key-file /var/lib/interdict/node.key.new --print-public-key`.
   2. На всіх пірах пропишіть обидва ключі: `"public_keys": ["<старий>", "<новий>"]`, потім
      `ctl RELOAD_PEERS`.
   3. Замініть `node.key` новим і перезапустіть вузол.
@@ -480,7 +480,7 @@ state: refused/expired і failed kernel additions не є wanted upstream; сп�
 Релізу ще немає, тож формати можуть змінюватися без сумісності; кожна зміна описана в ADR.
 
 - Бінарник оновлюється як звичайно: встановити й `systemctl restart`. Перевірте
-  `sokol_build_info`.
+  `interdict_build_info`.
 - **Відкат** — це бінарник, `node.key`, `peers.json` і файл стану **разом**. Файл стану іншої
   схеми не відновлюється (§5.4).
 - Перехід протоколу мешу v1→v2 виконується в одне вікно на всіх вузлах; локальний захист
@@ -489,7 +489,7 @@ state: refused/expired і failed kernel additions не є wanted upstream; сп�
 ## 8. Аварійно зняти фільтр
 
 ```shell
-sudo systemctl stop sokol-orchestrator
+sudo systemctl stop interdictd
 ip -d link show eth0              # prog/xdp зник: трафік іде без фільтра
 ```
 
@@ -499,7 +499,7 @@ Smoke перевіряє, що зупинка служби (і навіть SIGK
 ## 9. Пілот: фаза 0 — тінь
 
 ```shell
-SOKOL_ARGS=… --enforce observe      # у /etc/default/sokol, потім systemctl restart
+INTERDICT_ARGS=… --enforce observe      # у /etc/default/interdict, потім systemctl restart
 ```
 
 - Вузол ухвалює всі рішення й пише аудит, але його рішення **ніде не відкидають
@@ -507,16 +507,16 @@ SOKOL_ARGS=… --enforce observe      # у /etc/default/sokol, потім system
   `--flowspec-gobgp`, телеметрія не заявляє атаку. Заявки пірів вузол приймає, але не
   відкидає за ними.
 - Що він відкинув би, видно тут:
-  - `metric sokol_xdp_observed_packets_total` — за причинами;
-  - `sudo sokol-monitor --outcomes /var/lib/sokol/audit.log` — кожен блок: скільки відкинув
+  - `metric interdict_xdp_observed_packets_total` — за причинами;
+  - `sudo interdict-mon --outcomes /var/lib/interdict/audit.log` — кожен блок: скільки відкинув
     би і чиє рішення. У тіні `Dropped:N` означає «відкинув би N».
-- Режим видно в `metric sokol_enforce_mode` і в аудиті (`ENFORCE_MODE|Mode:observe`).
+- Режим видно в `metric interdict_enforce_mode` і в аудиті (`ENFORCE_MODE|Mode:observe`).
 - Перехід до відкидання: `--enforce drop` і рестарт. Рішення, що діють, зберігаються.
 
 ## 10. Чи випливає рішення з того, що записано
 
 ```shell
-sudo sokol-orchestrator --replay /var/lib/sokol/audit.log
+sudo interdictd --replay /var/lib/interdict/audit.log
 ```
 
 Перевіряє ланцюжок і проганяє рішення детекторів тим самим кодом в одному проході
@@ -571,7 +571,7 @@ INCOMPLETE TAIL повідомляє про неперевірені кінце�
 ## 11. Пакет для підтримки
 
 ```shell
-sudo CONTROL=/run/sokol/control.sock PEERS=/etc/sokol/peers.json scripts/support-bundle.sh
+sudo CONTROL=/run/interdict/control.sock PEERS=/etc/interdict/peers.json scripts/support-bundle.sh
 ```
 
 Створює приватний архів із часовою міткою (`0600`). Усередині:
@@ -590,7 +590,7 @@ sudo CONTROL=/run/sokol/control.sock PEERS=/etc/sokol/peers.json scripts/support
 що всі діагностики пройшли. `/status` несе вік snapshot і розділяє configured,
 desired, applied та observed. Прив'язка до тієї самої приватної адреси, що метрики.
 Журнали й бани можуть містити адреси та текст атакувальника: огляньте архів перед
-передаванням. У поставленому пакеті збирач — `sokol-support-bundle`.
+передаванням. У поставленому пакеті збирач — `interdict-support-bundle`.
 
 ## Репетиція
 

@@ -12,7 +12,7 @@ unless a restart test explicitly says otherwise.
 
 ## Cooldown and admission
 
-Owner: [Gate](../orchestrator/src/bin/sokol-suricata.rs). Time inputs are nondecreasing
+Owner: [Gate](../orchestrator/src/bin/interdict-suricata.rs). Time inputs are nondecreasing
 `Instant`s, supplied by the single-threaded main loop, and cooldown is fixed for a Gate.
 
 | ID | Invariant and reason | Executable evidence |
@@ -93,7 +93,7 @@ acknowledged block TTL, and does not bound write/scheduler/node time after the f
 
 ## CrowdSec configuration and pacing
 
-Owner: [Args and signal_pause](../orchestrator/src/bin/sokol-crowdsec.rs).
+Owner: [Args and signal_pause](../orchestrator/src/bin/interdict-crowdsec.rs).
 
 | ID | Invariant and enforcement point | Executable evidence |
 |---|---|---|
@@ -117,7 +117,7 @@ Stargate's frozen Boolean model claims these integer/configuration properties.
 
 ## Source, queue, acknowledgement and checkpoint
 
-Owners: [Follower and adapter loop](../orchestrator/src/bin/sokol-suricata.rs),
+Owners: [Follower and adapter loop](../orchestrator/src/bin/interdict-suricata.rs),
 [Outbox and Conn](../orchestrator/src/delivery.rs).
 
 | ID | Invariant and enforcement point | Executable evidence |
@@ -339,7 +339,7 @@ Owner: `AuditWriter::record`, `AuditWriter::sync`, `AuditWriter::run` in
 [main.rs](../orchestrator/src/main.rs); [ADR-0005](adr/0005-degraded-modes.md).
 
 An oversize rejection leaves the healthy log handle open, increments `AuditHealth.lost`
-(`sokol_audit_lost_total`) and accumulates a pending `AUDIT_LOST` notice. Both record
+(`interdict_audit_lost_total`) and accumulates a pending `AUDIT_LOST` notice. Both record
 and sync paths emit that notice before continuing, including on a log that never
 needed to reopen. No truncation, split payload or silent successful append is used.
 The notice covers rejected records; it does not turn them into reproduced evidence.
@@ -551,7 +551,7 @@ production authority. No kernel/producer behavior, detector policy or proof-core
 Owner: `round` / `run_worker` in [flowspec.rs](../orchestrator/src/flowspec.rs).
 
 A round that changes rules reads both local RIB families again before returning a
-count to `sokol_flowspec_announced`. Accepted add/delete commands that have no RIB
+count to `interdict_flowspec_announced`. Accepted add/delete commands that have no RIB
 effect cannot manufacture presence/absence. A failed post-write command, even with
 valid partial stdout, or malformed JSON is an error; the worker retains its prior
 successful count. An unchanged round returns its initial observation without two
@@ -643,8 +643,8 @@ Canonical discard means exactly one extended-community attribute containing
 exactly one traffic-rate action (type 128, subtype 6), uint16 AS and numeric rate
 zero, with no type-25 IPv6-specific extended-community attribute. Missing, nonzero,
 unknown, duplicate or combined actions do not satisfy this
-contract. `sokol_flowspec_announced` retains its ownership count;
-`sokol_flowspec_discard_rules` reports the validated subset. Counts, health and time
+contract. `interdict_flowspec_announced` retains its ownership count;
+`interdict_flowspec_discard_rules` reports the validated subset. Counts, health and time
 come from one worker snapshot. Post-write reads, failed-round retention and age
 semantics follow R1/R2. CLI acceptance without an effect cannot increase the
 validated count; a successful read may still observe wrong actions (ok is not
@@ -1317,7 +1317,7 @@ deadline 10 s та cursor; після кожного непорожнього у
 до restart облік. Worker-local паузи не обмежують іншого writer. Shutdown cleanup
 має незалежний дозвіл; припинення child process не відкликає прийнятого RPC.
 
-`sokol_flowspec_round_progress`: `1` — між initial/final reads раунду спостережено
+`interdict_flowspec_round_progress`: `1` — між initial/final reads раунду спостережено
 строге зменшення набору невиконаних вимог до sampled wanted без нових; `0` — такого
 поступу не спостережено; `-1` — немає придатного завершеного виміру. Вимоги
 розрізняють видалення owned prefix поза wanted та встановлення canonical discard

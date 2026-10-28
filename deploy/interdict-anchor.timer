@@ -1,5 +1,5 @@
 [Unit]
-Description=Stamp Sokol audit head statements hourly
+Description=Stamp interdict-mesh audit head statements hourly
 
 [Timer]
 OnBootSec=10min

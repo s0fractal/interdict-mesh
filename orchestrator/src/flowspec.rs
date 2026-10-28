@@ -2066,7 +2066,7 @@ esac
                 &readback
             )
             .contains(&format!(
-                "sokol_flowspec_round_progress {}\n",
+                "interdict_flowspec_round_progress {}\n",
                 progress as u8
             )));
             // Even a completed improvement cannot remain a verified current observation
@@ -2077,7 +2077,7 @@ esac
                 &crate::metrics::Snapshot::default(),
                 &readback
             )
-            .contains("sokol_flowspec_round_progress -1\n"));
+            .contains("interdict_flowspec_round_progress -1\n"));
         }
     }
 
@@ -2583,7 +2583,7 @@ esac
             &crate::metrics::Snapshot::default(),
             &readback
         )
-        .contains("sokol_flowspec_round_converged 0\n"));
+        .contains("interdict_flowspec_round_converged 0\n"));
         assert_eq!(failed.count, old.count);
         assert_eq!(failed.discard_count, old.discard_count);
         assert_eq!(failed.started, old.started);
@@ -2630,7 +2630,7 @@ esac
             &crate::metrics::Snapshot::default(),
             &readback
         )
-        .contains("sokol_flowspec_round_converged 0\n"));
+        .contains("interdict_flowspec_round_converged 0\n"));
         assert_eq!(during.count, old.count);
         assert_eq!(during.started, old.started);
         drop(pending);
@@ -2680,17 +2680,17 @@ esac
             .await
             .unwrap();
         let good = crate::metrics::render_with_flowspec(&old_main_tick, &readback);
-        assert!(good.contains("sokol_flowspec_enabled 1\n"));
-        assert!(good.contains("sokol_flowspec_readback_ok 1\n"));
-        assert!(good.contains("sokol_flowspec_announced 1\n"));
+        assert!(good.contains("interdict_flowspec_enabled 1\n"));
+        assert!(good.contains("interdict_flowspec_readback_ok 1\n"));
+        assert!(good.contains("interdict_flowspec_announced 1\n"));
         std::fs::write(fixture.dir.join("fail"), "").unwrap();
         assert!(checked_round(&fixture.cli, &wanted, &db, &readback)
             .await
             .is_err());
         let failed = crate::metrics::render_with_flowspec(&old_main_tick, &readback);
-        assert!(failed.contains("sokol_flowspec_readback_ok 0\n"));
-        assert!(failed.contains("sokol_flowspec_announced 1\n"));
-        assert!(!failed.contains("sokol_flowspec_readback_age_seconds -1.000\n"));
+        assert!(failed.contains("interdict_flowspec_readback_ok 0\n"));
+        assert!(failed.contains("interdict_flowspec_announced 1\n"));
+        assert!(!failed.contains("interdict_flowspec_readback_age_seconds -1.000\n"));
     }
 
     struct LiveGobgp {
@@ -3186,7 +3186,7 @@ exec "$real" "$@"
                     &crate::metrics::Snapshot::default(),
                     &readback
                 )
-                .contains("sokol_flowspec_round_progress 0\n"));
+                .contains("interdict_flowspec_round_progress 0\n"));
                 let completed = Instant::now();
                 if stop == "none" {
                     // Genuine target churn and false stop notifications cannot buy more work.
@@ -4747,8 +4747,8 @@ exec "$real" "$@"
                     &crate::metrics::Snapshot::default(),
                     &readback,
                 );
-                assert!(text.contains("sokol_flowspec_readback_ok 1\n"));
-                assert!(text.contains("sokol_flowspec_round_converged 0\n"));
+                assert!(text.contains("interdict_flowspec_readback_ok 1\n"));
+                assert!(text.contains("interdict_flowspec_round_converged 0\n"));
                 // Restore actual writes: the same sampled target can now converge.
                 checked_round(&live.fixture.cli, &target, &db, &readback)
                     .await
@@ -4761,7 +4761,7 @@ exec "$real" "$@"
                 assert_eq!(live.raw(net).await, foreign);
             }
             writeln!(std::io::stdout(), "PASS live convergence {}: read success does not certify no-effect add/delete or equal-count wrong prefixes; recovery converges", family(&net)).unwrap();
-            // Fixture owner cleanup, not an action of the Sokol reconciliation round.
+            // Fixture owner cleanup, not an action of the node reconciliation round.
             live.fixture.cli.apply(false, net).await.unwrap();
             // Direct stdout keeps the positive execution marker visible in CI even
             // when libtest captures successful test output. An unset env is no proof.
@@ -4811,8 +4811,8 @@ exec "$real" "$@"
         );
         let text =
             crate::metrics::render_with_flowspec(&crate::metrics::Snapshot::default(), &readback);
-        assert!(text.contains("sokol_flowspec_discard_rules 0\n"));
-        assert!(text.contains("sokol_flowspec_announced 1\n"));
+        assert!(text.contains("interdict_flowspec_discard_rules 0\n"));
+        assert!(text.contains("interdict_flowspec_announced 1\n"));
     }
 
     #[tokio::test]
@@ -5091,7 +5091,7 @@ exec "$real" "$@"
             };
             let text = crate::metrics::render_with_flowspec(&stale_main, &readback);
             assert!(
-                text.contains("sokol_flowspec_round_converged 0\n"),
+                text.contains("interdict_flowspec_round_converged 0\n"),
                 "a completed read certified an unachieved target"
             );
         }
@@ -5131,7 +5131,7 @@ exec "$real" "$@"
                 &crate::metrics::Snapshot::default(),
                 &readback,
             );
-            assert!(text.contains(&format!("sokol_flowspec_round_converged {expected}\n")));
+            assert!(text.contains(&format!("interdict_flowspec_round_converged {expected}\n")));
         }
     }
 

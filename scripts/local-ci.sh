@@ -111,7 +111,7 @@ monitoring() {
     # The client alone is not docker: a host may have it without a running daemon.
     if command -v docker >/dev/null && docker info >/dev/null 2>&1; then
         docker run --rm -v "$PWD/deploy/prometheus:/w" -w /w --entrypoint promtool \
-            "$(pin prometheus_image)" test rules sokol-alerts.test.yml
+            "$(pin prometheus_image)" test rules interdict-alerts.test.yml
     else
         echo "promtool skipped: no docker daemon (CI runs it)"
     fi
@@ -224,8 +224,8 @@ step "portable counterexample and public Warrant integration"
 cargo install --locked --version "$(pin WARRANT_VERIFY_VERSION)" --root "$CACHE/warrant" warrant-verify
 SOKOL_WARRANT_BIN="$CACHE/warrant/bin/warrant-rs" python3 scripts/test_counterexample_task.py
 SOKOL_WARRANT_BIN="$CACHE/warrant/bin/warrant-rs" python3 scripts/test_counterexample_hostile_pack.py
-timeout 120 python3 scripts/test_crowdsec_stream.py target/release/sokol-crowdsec
-timeout 120 python3 scripts/test_suricata_recovery.py target/release/sokol-suricata
+timeout 120 python3 scripts/test_crowdsec_stream.py target/release/interdict-crowdsec
+timeout 120 python3 scripts/test_suricata_recovery.py target/release/interdict-suricata
 # CI's kani job proves when something the proofs read changed (scripts/kani-scope.sh).
 if base=$(git merge-base HEAD origin/main 2>/dev/null) && [ "$(scripts/kani-scope.sh "$base")" = skip ]; then
     step "kani: nothing the proofs read changed since origin/main, proofs not rerun"

@@ -31,7 +31,7 @@ use tokio::time::{sleep, timeout, Duration};
 mod delivery;
 
 fn ipc_socket_path() -> String {
-    std::env::var("SOKOL_IPC_SOCKET").unwrap_or_else(|_| "/run/sokol.sock".to_string())
+    std::env::var("INTERDICT_IPC_SOCKET").unwrap_or_else(|_| "/run/interdict.sock".to_string())
 }
 
 /// Lines waiting for the delivery thread, and signals the node has not answered yet.
@@ -190,11 +190,11 @@ pub struct TrapConfig {
 }
 
 impl TrapConfig {
-    /// SOKOL_TRAP_PORTS="22,80,3306" and SOKOL_JAIL_ADDR="127.0.0.1:2022".
+    /// INTERDICT_TRAP_PORTS="22,80,3306" and INTERDICT_JAIL_ADDR="127.0.0.1:2022".
     pub fn from_env() -> Result<Self, String> {
         Self::parse(
-            std::env::var("SOKOL_TRAP_PORTS").ok().as_deref(),
-            std::env::var("SOKOL_JAIL_ADDR").ok().as_deref(),
+            std::env::var("INTERDICT_TRAP_PORTS").ok().as_deref(),
+            std::env::var("INTERDICT_JAIL_ADDR").ok().as_deref(),
         )
     }
 
@@ -221,12 +221,12 @@ impl TrapConfig {
             Some(raw) => {
                 let addr: SocketAddr = raw
                     .parse()
-                    .map_err(|_| format!("invalid SOKOL_JAIL_ADDR '{}'", raw))?;
+                    .map_err(|_| format!("invalid INTERDICT_JAIL_ADDR '{}'", raw))?;
                 // Proxying into the real sshd would hand attackers a login prompt that
                 // appears to come from localhost.
                 if addr.port() == ADMIN_SSH_PORT {
                     return Err(format!(
-                        "SOKOL_JAIL_ADDR must not point at the operator SSH port {}",
+                        "INTERDICT_JAIL_ADDR must not point at the operator SSH port {}",
                         ADMIN_SSH_PORT
                     ));
                 }
@@ -293,7 +293,7 @@ impl UltimateTridentOrchestrator {
     }
 
     pub async fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
-        println!("[*] Sokol-Core Trident Node initializing (Single-Writer via Unix Socket)...");
+        println!("[*] interdict-mesh Trident Node initializing (Single-Writer via Unix Socket)...");
         match self.config.jail_addr {
             Some(addr) => println!("[*] Tier-3 attackers are proxied to external jail {}", addr),
             None => println!("[*] Tier-3 attackers are handled by the embedded mock jail"),
@@ -310,7 +310,7 @@ impl UltimateTridentOrchestrator {
             let handle = tokio::spawn(async move {
                 let listener = match TcpListener::bind(&addr).await {
                     Ok(l) => {
-                        println!("[*] Sokol-Core Trident Node armed on port {}", port);
+                        println!("[*] interdict-mesh Trident Node armed on port {}", port);
                         l
                     }
                     Err(e) => {
@@ -758,7 +758,7 @@ fn trigger_xdp_drop(ip: &str, reason: &str) -> bool {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("======================================================");
-    println!("        SOKOL-CORE: MULTI-PORT DECOY TRAP (trident)    ");
+    println!("      INTERDICT-MESH: MULTI-PORT DECOY TRAP (trident)  ");
     println!("======================================================");
 
     let config = match TrapConfig::from_env() {
@@ -860,7 +860,7 @@ mod tests {
         let mut reports = Vec::new();
         run_delivery(
             rx,
-            delivery::Outbox::new(std::path::Path::new("/nonexistent/sokol.sock"), 4),
+            delivery::Outbox::new(std::path::Path::new("/nonexistent/interdict.sock"), 4),
             |r| reports.push(r),
         );
         assert!(

@@ -1,12 +1,12 @@
-//! CrowdSec → Sokol adapter (a CrowdSec "bouncer").
+//! CrowdSec → interdict-mesh adapter (a CrowdSec "bouncer").
 //!
 //! Polls the CrowdSec Local API decision stream and turns `ban` decisions on single addresses
-//! into `SIGNAL:` lines on the orchestrator's IPC socket. Sokol then drops the address in XDP on
+//! into `SIGNAL:` lines on the orchestrator's IPC socket. The node then drops the address in XDP on
 //! this node and, through the mesh, on every other node.
 //!
 //! ```text
-//! cscli bouncers add sokol            # prints the API key
-//! SOKOL_CROWDSEC_KEY=<key> sokol-crowdsec --lapi-url http://127.0.0.1:8080 --ipc-socket /run/sokol/sokol.sock
+//! cscli bouncers add interdict            # prints the API key
+//! INTERDICT_CROWDSEC_KEY=<key> interdict-crowdsec --lapi-url http://127.0.0.1:8080 --ipc-socket /run/interdict/interdict.sock
 //! ```
 //!
 //! By default only local decisions are forwarded (origins `crowdsec` and `cscli`). Community
@@ -48,18 +48,22 @@ use clap::Parser;
 mod delivery;
 
 #[derive(Parser, Debug)]
-#[command(about = "Forward CrowdSec ban decisions to Sokol-Core as block signals")]
+#[command(about = "Forward CrowdSec ban decisions to interdictd as block signals")]
 struct Args {
     /// CrowdSec Local API.
     #[arg(long, default_value = "http://127.0.0.1:8080")]
     lapi_url: String,
 
     /// Bouncer API key (`cscli bouncers add <name>`).
-    #[arg(long, env = "SOKOL_CROWDSEC_KEY", hide_env_values = true)]
+    #[arg(long, env = "INTERDICT_CROWDSEC_KEY", hide_env_values = true)]
     api_key: String,
 
     /// Orchestrator IPC socket (its --ipc-socket).
-    #[arg(long, env = "SOKOL_IPC_SOCKET", default_value = "/run/sokol.sock")]
+    #[arg(
+        long,
+        env = "INTERDICT_IPC_SOCKET",
+        default_value = "/run/interdict.sock"
+    )]
     ipc_socket: PathBuf,
 
     /// Decision origins to forward, comma-separated.
@@ -273,7 +277,7 @@ fn stream_url(base: &str, startup: bool) -> String {
 fn poll(args: &Args, startup: bool) -> Result<String, String> {
     ureq::get(&stream_url(&args.lapi_url, startup))
         .set("X-Api-Key", &args.api_key)
-        .set("User-Agent", "sokol-crowdsec")
+        .set("User-Agent", "interdict-crowdsec")
         .timeout(Duration::from_secs(10))
         .call()
         .map_err(|e| e.to_string())?
@@ -312,18 +316,26 @@ fn deliver(
         for (line, outcome) in done {
             match outcome {
                 delivery::Outcome::Refused(why) => {
-                    log::warn!("[sokol-crowdsec] {}: refused by the node: {}", line, why)
+                    log::warn!(
+                        "[interdict-crowdsec] {}: refused by the node: {}",
+                        line,
+                        why
+                    )
                 }
                 delivery::Outcome::Rejected(why) => {
-                    log::error!("[sokol-crowdsec] {}: rejected by the node: {}", line, why)
+                    log::error!(
+                        "[interdict-crowdsec] {}: rejected by the node: {}",
+                        line,
+                        why
+                    )
                 }
-                ok => log::info!("[sokol-crowdsec] {} ({:?})", line, ok),
+                ok => log::info!("[interdict-crowdsec] {} ({:?})", line, ok),
             }
         }
         if let Some(e) = err {
             if !was_failing {
                 log::error!(
-                    "[sokol-crowdsec] cannot deliver to {}: {}; {} decisions queued, retrying",
+                    "[interdict-crowdsec] cannot deliver to {}: {}; {} decisions queued, retrying",
                     socket.display(),
                     e,
                     outbox.pending()
@@ -349,7 +361,7 @@ fn main() {
     let mut startup = true;
     let pause = signal_pause(args.max_signals_per_sec);
     log::info!(
-        "[sokol-crowdsec] polling {} every {} s (origins: {}), signalling {}",
+        "[interdict-crowdsec] polling {} every {} s (origins: {}), signalling {}",
         args.lapi_url,
         args.poll_secs,
         args.origins.join(","),
@@ -368,7 +380,7 @@ fn main() {
                     startup = false;
                     if batch.skipped_origin + batch.skipped_not_ban + batch.skipped_scope > 0 {
                         log::info!(
-                            "[sokol-crowdsec] skipped {} other-origin, {} non-ban, {} non-address decisions",
+                            "[interdict-crowdsec] skipped {} other-origin, {} non-ban, {} non-address decisions",
                             batch.skipped_origin,
                             batch.skipped_not_ban,
                             batch.skipped_scope
@@ -376,7 +388,7 @@ fn main() {
                     }
                     if batch.deleted + batch.deleted_skipped > 0 {
                         log::info!(
-                            "[sokol-crowdsec] {} deleted decisions parsed as retractions, {} not forwarded ones skipped",
+                            "[interdict-crowdsec] {} deleted decisions parsed as retractions, {} not forwarded ones skipped",
                             batch.deleted,
                             batch.deleted_skipped
                         );
@@ -384,7 +396,7 @@ fn main() {
                     // Queued, not yet delivered: the outbox keeps them until the node answers, so a
                     // batch fetched while the node is down is not lost.
                     if batch.skipped_duration > 0 {
-                        log::warn!("[sokol-crowdsec] skipped {} invalid/expired or unidentifiable timed decisions", batch.skipped_duration);
+                        log::warn!("[interdict-crowdsec] skipped {} invalid/expired or unidentifiable timed decisions", batch.skipped_duration);
                     }
                     let lost = outbox.lost;
                     for (index, line) in batch.signals.iter().enumerate() {
@@ -402,14 +414,14 @@ fn main() {
                         };
                         if let Err(error) = queued {
                             log::warn!(
-                                "[sokol-crowdsec] decision rejected before queueing: {}",
+                                "[interdict-crowdsec] decision rejected before queueing: {}",
                                 error
                             );
                         }
                     }
                     if outbox.lost > lost {
                         log::error!(
-                            "[sokol-crowdsec] outbox full: {} oldest decisions dropped",
+                            "[interdict-crowdsec] outbox full: {} oldest decisions dropped",
                             outbox.lost - lost
                         );
                     }
@@ -419,7 +431,7 @@ fn main() {
                     // not obtain a usable batch. Ask for retained full state next time.
                     startup = true;
                     log::warn!(
-                        "[sokol-crowdsec] LAPI poll failed: {}; requesting full stream on next poll",
+                        "[interdict-crowdsec] LAPI poll failed: {}; requesting full stream on next poll",
                         e
                     );
                 }

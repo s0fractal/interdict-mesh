@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sokol-Core demo: three nodes in a mesh, an attacker, a rogue node, Suricata on node 1 and the
+# interdict-mesh demo: three nodes in a mesh, an attacker, a rogue node, Suricata on node 1 and the
 # operator dashboard — on one Linux machine, in network namespaces. Every step checks its own
 # outcome, so the demo is also a test.
 #
@@ -90,19 +90,19 @@ start_node() {   # start_node <name> <id> [extra args...]
     PIDS+=($!)
 }
 
-bold "Setup: three Sokol nodes, fully meshed with pinned keys"
+bold "Setup: three interdict-mesh nodes, fully meshed with pinned keys"
 start_node n1 1
 start_node n2 2 --seed-peer 10.250.0.1:7946
 start_node n3 3 --seed-peer 10.250.0.1:7946 --seed-peer 10.250.0.2:7946
 for _ in $(seq 1 60); do
-    [ "$(metric n1 sokol_p2p_active_peers)" = 2 ] && [ "$(metric n2 sokol_p2p_active_peers)" = 2 ] \
-        && [ "$(metric n3 sokol_p2p_active_peers)" = 2 ] && break
+    [ "$(metric n1 interdict_p2p_active_peers)" = 2 ] && [ "$(metric n2 interdict_p2p_active_peers)" = 2 ] \
+        && [ "$(metric n3 interdict_p2p_active_peers)" = 2 ] && break
     sleep 0.5
 done
-expect "each node is connected to the other two" test "$(metric n3 sokol_p2p_active_peers)" = 2
+expect "each node is connected to the other two" test "$(metric n3 interdict_p2p_active_peers)" = 2
 
 OP_TOKEN=demo-operator-token-0123
-SOKOL_OPERATOR_TOKEN=$OP_TOKEN SOKOL_OPERATOR_BIND=127.0.0.1:3000 "$BIN_DIR/sokol-operator" >"$WORK/operator.log" 2>&1 </dev/null &
+INTERDICT_OPERATOR_TOKEN=$OP_TOKEN INTERDICT_OPERATOR_BIND=127.0.0.1:3000 "$BIN_DIR/interdict-ctl" >"$WORK/operator.log" 2>&1 </dev/null &
 PIDS+=($!)
 say "Operator dashboard: http://127.0.0.1:3000  (token: $OP_TOKEN)"
 
@@ -113,9 +113,9 @@ ip netns exec sd-n1 suricata -c /etc/suricata/suricata.yaml -S "$WORK/demo.rules
 PIDS+=($!)
 for _ in $(seq 1 120); do grep -qi "engine started" "$WORK/suricata/suricata.log" 2>/dev/null && break; sleep 0.5; done
 touch "$WORK/suricata/eve.json"
-"$BIN_DIR/sokol-suricata" --eve "$WORK/suricata/eve.json" --ipc-socket "$WORK/n1/ipc.sock" >"$WORK/adapter.log" 2>&1 </dev/null &
+"$BIN_DIR/interdict-suricata" --eve "$WORK/suricata/eve.json" --ipc-socket "$WORK/n1/ipc.sock" >"$WORK/adapter.log" 2>&1 </dev/null &
 PIDS+=($!)
-say "Suricata watches node 1 with a rule for telnet scans; sokol-suricata forwards its alerts."
+say "Suricata watches node 1 with a rule for telnet scans; interdict-suricata forwards its alerts."
 expect "the attacker can reach all three nodes" bash -c "$(declare -f in_ns reaches); reaches attacker 10.250.0.1 && reaches attacker 10.250.0.2 && reaches attacker 10.250.0.3"
 pause
 
@@ -149,10 +149,10 @@ pause
 # ---------------------------------------------------------------- step 3
 bold "3. A flood hits node 2. XDP drops it; node 1 sees a distributed storm."
 in_ns attacker timeout 8 ping -f -I "$ATTACKER" 10.250.0.2 >/dev/null 2>&1 || true
-for _ in $(seq 1 30); do [ "$(metric n1 sokol_cluster_status)" = 3 ] && break; sleep 0.5; done
-say "node 2 dropped $(metric n2 'sokol_xdp_dropped_packets_total{reason="blocklist"}') packets from the blocked attacker"
-say "cluster as seen by node 1: $(metric n1 sokol_cluster_nodes_under_attack) of $(metric n1 sokol_cluster_nodes) nodes under attack, status $(metric n1 sokol_cluster_status) (3 = storm)"
-expect "node 1 reports a distributed storm" test "$(metric n1 sokol_cluster_status)" = 3
+for _ in $(seq 1 30); do [ "$(metric n1 interdict_cluster_status)" = 3 ] && break; sleep 0.5; done
+say "node 2 dropped $(metric n2 'interdict_xdp_dropped_packets_total{reason="blocklist"}') packets from the blocked attacker"
+say "cluster as seen by node 1: $(metric n1 interdict_cluster_nodes_under_attack) of $(metric n1 interdict_cluster_nodes) nodes under attack, status $(metric n1 interdict_cluster_status) (3 = storm)"
+expect "node 1 reports a distributed storm" test "$(metric n1 interdict_cluster_status)" = 3
 pause
 
 # ---------------------------------------------------------------- step 4

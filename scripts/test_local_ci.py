@@ -86,7 +86,7 @@ jobs:
             bpf_linker_sha256: {bpf_sum}
             gobgp_sha256: {gobgp_sum}
     steps:
-      - run: docker run --entrypoint promtool prom/prometheus@sha256:{"a" * 64} test rules sokol-alerts.test.yml
+      - run: docker run --entrypoint promtool prom/prometheus@sha256:{"a" * 64} test rules interdict-alerts.test.yml
 ''')
         # curl [OPTIONS] -o OUT URL: copy the served file named by the URL's last component.
         self.stub('curl', 'while [ "$1" != -o ]; do shift; done; out=$2; url=$3; '
@@ -164,7 +164,7 @@ jobs:
         call = [l for l in self.calls.read_text().splitlines() if l.startswith('docker ')][-1]
         self.assertIn('prom/prometheus@sha256:' + 'a' * 64, call)
         self.assertIn('promtool', call)
-        self.assertIn('test rules sokol-alerts.test.yml', call)
+        self.assertIn('test rules interdict-alerts.test.yml', call)
         os.environ['DOCKER_STATUS'] = '17'
         try:
             failed = self.run_step('monitoring', ci)

@@ -218,7 +218,7 @@ jobs:
           scripts/check-monitoring.sh
           docker run --rm -v "$PWD/deploy/prometheus:/w" -w /w --entrypoint promtool \
             prom/prometheus@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e \
-            test rules sokol-alerts.test.yml
+            test rules interdict-alerts.test.yml
 
       - name: Dependency policy (cargo-deny, deny.toml)
         if: matrix.policy_checks && matrix.part == 'test'
@@ -384,12 +384,12 @@ jobs:
       - name: CrowdSec stream recovery regression
         if: matrix.part == 'test'
         timeout-minutes: 2
-        run: python3 scripts/test_crowdsec_stream.py target/release/sokol-crowdsec
+        run: python3 scripts/test_crowdsec_stream.py target/release/interdict-crowdsec
 
       - name: Suricata process recovery regression
         if: matrix.part == 'test'
         timeout-minutes: 2
-        run: python3 scripts/test_suricata_recovery.py target/release/sokol-suricata
+        run: python3 scripts/test_suricata_recovery.py target/release/interdict-suricata
 
       - name: Smoke and demo packages
         if: matrix.part != 'test'
@@ -423,7 +423,7 @@ jobs:
         if: always() && matrix.part == 'test'
         run: |
           mkdir -p dist
-          for b in orchestrator monitor sokol-operator sokol-suricata sokol-crowdsec sokol-fastnetmon-notify trident_trap; do
+          for b in orchestrator monitor interdict-ctl interdict-suricata interdict-crowdsec interdict-fastnetmon-notify trident_trap; do
             if [ -x "target/release/$b" ]; then cp "target/release/$b" dist/; fi
           done
           cp target/bpfel-unknown-none/release/ebpf-probe dist/ebpf-probe.o 2>/dev/null || true
@@ -445,7 +445,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always() && matrix.part == 'test'
         with:
-          name: sokol-${{ github.sha }}-${{ matrix.arch }}
+          name: interdict-mesh-${{ github.sha }}-${{ matrix.arch }}
           path: dist/
           if-no-files-found: warn
 

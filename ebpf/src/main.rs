@@ -541,7 +541,7 @@ fn record_rx(packet_len: u64) {
 }
 
 #[inline(always)]
-/// The verdict for a packet Sokol would drop: dropped, or in observe mode (`OBSERVE_ONLY`,
+/// The verdict for a packet the node would drop: dropped, or in observe mode (`OBSERVE_ONLY`,
 /// pilot phase 0) passed and counted as observed, so no packet is dropped while every decision
 /// and its would-be effect are still measured.
 fn drop_verdict(packet_len: u64, reason: u16) -> u32 {

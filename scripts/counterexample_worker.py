@@ -11,7 +11,7 @@ import time
 
 OUTPUT_BYTES = 1_048_576
 COMMAND_SECONDS = 900
-CASE_FILE = 'orchestrator/src/bin/sokol-operator.rs'
+CASE_FILE = 'orchestrator/src/bin/interdict-ctl.rs'
 BEFORE = 'Err(error) if attempted_write => ControlOutcome::Unknown(error),'
 AFTER = 'Err(error) if attempted_write => ControlOutcome::NotSent(error),'
 FOCUS = 'a_command_applied_without_a_reply_has_an_unknown_outcome'
@@ -87,7 +87,7 @@ def command(argv, cwd='/source'):
 
 def build(root):
     code, log = command(['/toolchain/bin/cargo', 'test', '--offline', '--locked',
-                         '-p', 'orchestrator', '--bin', 'sokol-operator', '--no-run',
+                         '-p', 'orchestrator', '--bin', 'interdict-ctl', '--no-run',
                          '--message-format=json'], cwd=root)
     paths = []
     for line in log.splitlines():
@@ -97,7 +97,7 @@ def build(root):
             continue
         if row.get('reason') == 'compiler-artifact' and row.get('profile', {}).get('test'):
             exe = row.get('executable')
-            if exe and row.get('target', {}).get('name') == 'sokol-operator':
+            if exe and row.get('target', {}).get('name') == 'interdict-ctl':
                 paths.append(exe)
     if code or len(paths) != 1:
         return None, {'status': 'BUILD_ERROR', 'returncode': code, 'output': log}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check LAPI startup, expiry and failed-delta recovery through the actual adapter.
 
-Usage: python3 scripts/test_crowdsec_stream.py target/release/sokol-crowdsec
+Usage: python3 scripts/test_crowdsec_stream.py target/release/interdict-crowdsec
 Local fake HTTP/IPC peers check requests and commands, not production-node effects.
 """
 import argparse

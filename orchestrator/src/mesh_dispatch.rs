@@ -640,7 +640,7 @@ mod tests {
     }
 
     /// Every peer claim is counted under its issuer and what this node did with it, by both
-    /// ways a claim arrives (`sokol_mesh_claims_total`, `SokolPeerClaimSurge`).
+    /// ways a claim arrives (`interdict_mesh_claims_total`, `InterdictPeerClaimSurge`).
     #[tokio::test]
     async fn peer_claims_are_counted_under_their_issuer() {
         // The counters are process-wide: an issuer no other test uses.

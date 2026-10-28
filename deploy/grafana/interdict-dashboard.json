@@ -1,11 +1,11 @@
 {
-  "title": "Sokol-Core",
-  "uid": "sokol-core",
+  "title": "interdict-mesh",
+  "uid": "interdict-mesh",
   "schemaVersion": 39,
   "version": 1,
   "editable": true,
   "tags": [
-    "sokol"
+    "interdict"
   ],
   "time": {
     "from": "now-24h",
@@ -28,10 +28,10 @@
           "uid": "${datasource}"
         },
         "query": {
-          "query": "label_values(sokol_build_info, instance)",
+          "query": "label_values(interdict_build_info, instance)",
           "refId": "i"
         },
-        "definition": "label_values(sokol_build_info, instance)",
+        "definition": "label_values(interdict_build_info, instance)",
         "includeAll": true,
         "multi": true,
         "current": {
@@ -68,7 +68,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "max by (instance) (up{job=\"sokol\",instance=~\"$instance\"})",
+          "expr": "max by (instance) (up{job=\"interdict\",instance=~\"$instance\"})",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -79,7 +79,7 @@
         },
         {
           "refId": "B",
-          "expr": "max by (instance, enforce) (label_replace(sokol_enforce_mode{instance=~\"$instance\"} == 1, \"enforce\", \"$1\", \"mode\", \"(.*)\"))",
+          "expr": "max by (instance, enforce) (label_replace(interdict_enforce_mode{instance=~\"$instance\"} == 1, \"enforce\", \"$1\", \"mode\", \"(.*)\"))",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -90,7 +90,7 @@
         },
         {
           "refId": "C",
-          "expr": "max by (instance, xdp) (label_replace(sokol_xdp_mode{instance=~\"$instance\"} == 1, \"xdp\", \"$1\", \"mode\", \"(.*)\"))",
+          "expr": "max by (instance, xdp) (label_replace(interdict_xdp_mode{instance=~\"$instance\"} == 1, \"xdp\", \"$1\", \"mode\", \"(.*)\"))",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -101,7 +101,7 @@
         },
         {
           "refId": "D",
-          "expr": "max by (instance) (sokol_p2p_active_peers{instance=~\"$instance\"})",
+          "expr": "max by (instance) (interdict_p2p_active_peers{instance=~\"$instance\"})",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -112,7 +112,7 @@
         },
         {
           "refId": "E",
-          "expr": "min by (instance) ({__name__=~\"sokol_(audit_healthy|state_healthy|state_restore_ok|protected_refresh_ok)\",instance=~\"$instance\"})",
+          "expr": "min by (instance) ({__name__=~\"interdict_(audit_healthy|state_healthy|state_restore_ok|protected_refresh_ok)\",instance=~\"$instance\"})",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -191,7 +191,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (instance, reason) (rate(sokol_xdp_observed_packets_total{instance=~\"$instance\"}[5m])) > 0",
+          "expr": "sum by (instance, reason) (rate(interdict_xdp_observed_packets_total{instance=~\"$instance\"}[5m])) > 0",
           "legendFormat": "{{instance}} {{reason}}",
           "datasource": {
             "type": "prometheus",
@@ -225,7 +225,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (instance) (increase(sokol_xdp_observed_packets_total{instance=~\"$instance\"}[24h]))",
+          "expr": "sum by (instance) (increase(interdict_xdp_observed_packets_total{instance=~\"$instance\"}[24h]))",
           "legendFormat": "{{instance}}",
           "datasource": {
             "type": "prometheus",
@@ -281,7 +281,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (instance) (increase(sokol_xdp_dropped_packets_total{instance=~\"$instance\"}[24h]))",
+          "expr": "sum by (instance) (increase(interdict_xdp_dropped_packets_total{instance=~\"$instance\"}[24h]))",
           "legendFormat": "{{instance}}",
           "datasource": {
             "type": "prometheus",
@@ -350,7 +350,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (instance) (increase(sokol_block_outcomes_total{effect=\"none\",instance=~\"$instance\"}[24h])) / sum by (instance) (increase(sokol_block_outcomes_total{instance=~\"$instance\"}[24h]))",
+          "expr": "sum by (instance) (increase(interdict_block_outcomes_total{effect=\"none\",instance=~\"$instance\"}[24h])) / sum by (instance) (increase(interdict_block_outcomes_total{instance=~\"$instance\"}[24h]))",
           "legendFormat": "{{instance}}",
           "datasource": {
             "type": "prometheus",
@@ -395,7 +395,7 @@
         "graphMode": "none",
         "textMode": "auto"
       },
-      "description": "Знятий блок, що за весь час не відкинув (у тіні — не відкинув би) жодного пакета: зайвий, запізнілий або помилковий. Хто вирішував — sokol-monitor --outcomes (RUNBOOK §9)."
+      "description": "Знятий блок, що за весь час не відкинув (у тіні — не відкинув би) жодного пакета: зайвий, запізнілий або помилковий. Хто вирішував — interdict-mon --outcomes (RUNBOOK §9)."
     },
     {
       "id": 9,
@@ -408,7 +408,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (instance, effect) (rate(sokol_block_outcomes_total{instance=~\"$instance\"}[15m]))",
+          "expr": "sum by (instance, effect) (rate(interdict_block_outcomes_total{instance=~\"$instance\"}[15m]))",
           "legendFormat": "{{instance}} {{effect}}",
           "datasource": {
             "type": "prometheus",
@@ -441,7 +441,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sokol_blocks_active{instance=~\"$instance\"} / on (instance) group_left sokol_blocks_capacity",
+          "expr": "interdict_blocks_active{instance=~\"$instance\"} / on (instance) group_left interdict_blocks_capacity",
           "legendFormat": "{{instance}} {{family}}",
           "datasource": {
             "type": "prometheus",
@@ -476,7 +476,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sokol_blocks_pending{instance=~\"$instance\"}",
+          "expr": "interdict_blocks_pending{instance=~\"$instance\"}",
           "legendFormat": "{{instance}}",
           "datasource": {
             "type": "prometheus",
@@ -507,7 +507,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sokol_claims_waiting{instance=~\"$instance\"}",
+          "expr": "interdict_claims_waiting{instance=~\"$instance\"}",
           "legendFormat": "{{instance}}",
           "datasource": {
             "type": "prometheus",
@@ -552,7 +552,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sokol_p2p_active_peers{instance=~\"$instance\"}",
+          "expr": "interdict_p2p_active_peers{instance=~\"$instance\"}",
           "legendFormat": "{{instance}}",
           "datasource": {
             "type": "prometheus",
@@ -583,7 +583,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (instance, reason) (rate(sokol_mesh_envelopes_rejected_total{instance=~\"$instance\"}[5m]))",
+          "expr": "sum by (instance, reason) (rate(interdict_mesh_envelopes_rejected_total{instance=~\"$instance\"}[5m]))",
           "legendFormat": "{{instance}} {{reason}}",
           "datasource": {
             "type": "prometheus",
@@ -617,7 +617,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (instance, class) (rate(sokol_mesh_broadcasts_dropped_total{instance=~\"$instance\"}[5m]))",
+          "expr": "sum by (instance, class) (rate(interdict_mesh_broadcasts_dropped_total{instance=~\"$instance\"}[5m]))",
           "legendFormat": "{{instance}} {{class}}",
           "datasource": {
             "type": "prometheus",
@@ -650,7 +650,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "increase(sokol_clock_steps_total{instance=~\"$instance\"}[1h])",
+          "expr": "increase(interdict_clock_steps_total{instance=~\"$instance\"}[1h])",
           "legendFormat": "{{instance}} кроків/год",
           "datasource": {
             "type": "prometheus",
@@ -659,7 +659,7 @@
         },
         {
           "refId": "B",
-          "expr": "sokol_clock_last_step_seconds{instance=~\"$instance\"}",
+          "expr": "interdict_clock_last_step_seconds{instance=~\"$instance\"}",
           "legendFormat": "{{instance}} останній, с",
           "datasource": {
             "type": "prometheus",
@@ -690,7 +690,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sokol_cluster_storm_engaged{instance=~\"$instance\"}",
+          "expr": "interdict_cluster_storm_engaged{instance=~\"$instance\"}",
           "legendFormat": "{{instance}}",
           "datasource": {
             "type": "prometheus",
@@ -734,7 +734,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sokol_tick_seconds{instance=~\"$instance\"}",
+          "expr": "interdict_tick_seconds{instance=~\"$instance\"}",
           "legendFormat": "{{instance}}",
           "datasource": {
             "type": "prometheus",
@@ -767,7 +767,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "rate(sokol_xdp_rx_packets_total{instance=~\"$instance\"}[5m])",
+          "expr": "rate(interdict_xdp_rx_packets_total{instance=~\"$instance\"}[5m])",
           "legendFormat": "{{instance}}",
           "datasource": {
             "type": "prometheus",
@@ -800,7 +800,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "rate(sokol_xdp_events_suppressed_total{instance=~\"$instance\"}[5m])",
+          "expr": "rate(interdict_xdp_events_suppressed_total{instance=~\"$instance\"}[5m])",
           "legendFormat": "{{instance}} притримано",
           "datasource": {
             "type": "prometheus",
@@ -809,7 +809,7 @@
         },
         {
           "refId": "B",
-          "expr": "rate(sokol_xdp_events_lost_total{instance=~\"$instance\"}[5m])",
+          "expr": "rate(interdict_xdp_events_lost_total{instance=~\"$instance\"}[5m])",
           "legendFormat": "{{instance}} втрачено",
           "datasource": {
             "type": "prometheus",

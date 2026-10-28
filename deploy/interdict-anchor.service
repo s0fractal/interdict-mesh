@@ -1,0 +1,18 @@
+# Stamps interdict-mesh audit head statements with OpenTimestamps (ADR-0022, opt-in). Runs as its own
+# user with network access; the node unit is unchanged and contacts nothing. Setup:
+# docs/INTEGRATIONS.md, "Audit log".
+[Unit]
+Description=interdict-mesh audit head stamps (OpenTimestamps)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=interdict-anchor
+Group=interdict-anchor
+ExecStart=/usr/local/bin/interdict-anchor-ots /var/lib/interdict-anchors
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/interdict-anchors
+ProtectHome=read-only
+PrivateTmp=yes

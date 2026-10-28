@@ -255,7 +255,7 @@ fn parse_record_header(header: &[u8; HEADER_LEN]) -> Result<(usize, u64, u64), &
         return Err("short record header");
     };
     if magic != MAGIC {
-        return Err("bad record magic (not a sokol audit log v2?)");
+        return Err("bad record magic (not an interdict-mesh audit log v2?)");
     }
     let len =
         usize::try_from(u32::from_le_bytes(len)).map_err(|_| "record length exceeds maximum")?;

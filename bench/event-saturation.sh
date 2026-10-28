@@ -26,9 +26,9 @@ echo "t_s,rss_kb,remembered,evicted,blocks_active,state_bytes"
 ( awk -v n=$COUNT 'BEGIN { for (i = 0; i < n; i++) printf "SIGNAL#sat-%d:sat|100.%d.%d.%d|-|sat\n", i, 64 + int(i/65536)%64, int(i/256)%256, i%256 }' | nc -U -q1 $W/ipc.sock >/dev/null ) & S=$!
 t0=$SECONDS
 while kill -0 $S 2>/dev/null || [ $((SECONDS - t0)) -lt 5 ]; do
-  echo "$((SECONDS-t0)),$(awk '/VmRSS/{print $2}' /proc/$P/status),$(m sokol_event_ids_remembered),$(m sokol_event_ids_evicted_total),$(m 'sokol_blocks_active{family="ipv4"}'),$(stat -c %s $W/audit.log.blocks.json 2>/dev/null || echo 0)"
+  echo "$((SECONDS-t0)),$(awk '/VmRSS/{print $2}' /proc/$P/status),$(m interdict_event_ids_remembered),$(m interdict_event_ids_evicted_total),$(m 'interdict_blocks_active{family="ipv4"}'),$(stat -c %s $W/audit.log.blocks.json 2>/dev/null || echo 0)"
   sleep 10
 done
 sleep 20
-echo "$((SECONDS-t0)),$(awk '/VmRSS/{print $2}' /proc/$P/status),$(m sokol_event_ids_remembered),$(m sokol_event_ids_evicted_total),$(m 'sokol_blocks_active{family="ipv4"}'),$(stat -c %s $W/audit.log.blocks.json 2>/dev/null || echo 0)"
+echo "$((SECONDS-t0)),$(awk '/VmRSS/{print $2}' /proc/$P/status),$(m interdict_event_ids_remembered),$(m interdict_event_ids_evicted_total),$(m 'interdict_blocks_active{family="ipv4"}'),$(stat -c %s $W/audit.log.blocks.json 2>/dev/null || echo 0)"
 echo "# panics: $(grep -c panicked $W/node.log || true)"

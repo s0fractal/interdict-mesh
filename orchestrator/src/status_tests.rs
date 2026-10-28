@@ -76,16 +76,16 @@ fn configured_peers_and_worker_failure_are_exported_with_snapshot_age() {
         ..Default::default()
     };
     let unknown = metrics::render(&snapshot);
-    assert!(unknown.contains("sokol_p2p_expected_peers 3\n"));
-    assert!(unknown.contains("sokol_p2p_active_peers 1\n"));
-    assert!(unknown.contains("sokol_worker_state{worker=\"mesh_listener\"} 2\n"));
-    assert!(unknown.contains("sokol_worker_state{worker=\"kernel_events\"} 1\n"));
-    assert!(unknown.contains("sokol_snapshot_age_seconds -1\n"));
+    assert!(unknown.contains("interdict_p2p_expected_peers 3\n"));
+    assert!(unknown.contains("interdict_p2p_active_peers 1\n"));
+    assert!(unknown.contains("interdict_worker_state{worker=\"mesh_listener\"} 2\n"));
+    assert!(unknown.contains("interdict_worker_state{worker=\"kernel_events\"} 1\n"));
+    assert!(unknown.contains("interdict_snapshot_age_seconds -1\n"));
     snapshot.sampled_at = Some(Instant::now() - Duration::from_secs(10));
     let text = metrics::render(&snapshot);
     let age: f64 = text
         .lines()
-        .find_map(|line| line.strip_prefix("sokol_snapshot_age_seconds "))
+        .find_map(|line| line.strip_prefix("interdict_snapshot_age_seconds "))
         .unwrap()
         .parse()
         .unwrap();

@@ -26,11 +26,11 @@
 
 - `ClockWatch` на кожному тіку порівнює, наскільки зрушили реальний і монотонний час.
   Розбіжність від 5 с — це крок:
-  - `sokol_clock_steps_total`;
-  - `sokol_clock_last_step_seconds` — зі знаком: + блоки скінчились раніше, − тримаються довше;
+  - `interdict_clock_steps_total`;
+  - `interdict_clock_last_step_seconds` — зі знаком: + блоки скінчились раніше, − тримаються довше;
   - запис аудиту `CLOCK_STEP|By:<ms>|At:<ms>`;
   - попередження в журналі.
-- `sokol_mesh_envelopes_rejected_total{reason}` — кожен відхилений конверт за причиною
+- `interdict_mesh_envelopes_rejected_total{reason}` — кожен відхилений конверт за причиною
   (`unknown_sender`, `bad_signature`, `stale_timestamp`, `replay`, `malformed_payload`).
   Зростання `stale_timestamp` означає, що годинник піра і цього вузла розійшлися більше,
   ніж на 30 с.
@@ -96,7 +96,7 @@
 - `refused_envelopes_are_counted_by_reason`: застарілий, повторений і чужий конверти —
   кожен у своєму лічильнику.
 - Наживо (`bench/mesh.sh clock`):
-  - вузол 3 після +40 і −60 с — `sokol_clock_steps_total 2`, останній крок −60 с;
+  - вузол 3 після +40 і −60 с — `interdict_clock_steps_total 2`, останній крок −60 с;
   - вузол 2 після ±3600 с — 3 кроки (четвертий припав на останню секунду прогону);
   - на кожному вузлі понад 10 `stale_timestamp`.
 - **Частина 2:**

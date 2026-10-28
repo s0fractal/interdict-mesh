@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class OfflineOperator(unittest.TestCase):
     def test_no_remote_assets_and_state_readback_survives_a_missing_canvas(self):
-        source = (ROOT / 'orchestrator/src/bin/sokol-operator.rs').read_text()
+        source = (ROOT / 'orchestrator/src/bin/interdict-ctl.rs').read_text()
         html = source.split('const HTML_DASHBOARD: &str = r###"', 1)[1].split('"###;', 1)[0]
         self.assertNotRegex(html, r'<script[^>]+src=|<link[^>]+href="https?://')
         script = re.search(r'<script>(.*?)</script>', html, re.S).group(1)

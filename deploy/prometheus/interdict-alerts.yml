@@ -1,65 +1,65 @@
-# Alert rules for Sokol-Core nodes (docs/RUNBOOK.md §4). Every expression uses metrics a node
-# exports; thresholds are the runbook's. Checked by `promtool test rules sokol-alerts.test.yml`.
+# Alert rules for interdict-mesh nodes (docs/RUNBOOK.md §4). Every expression uses metrics a node
+# exports; thresholds are the runbook's. Checked by `promtool test rules interdict-alerts.test.yml`.
 groups:
-  - name: sokol-health
+  - name: interdict-health
     rules:
-      - alert: SokolNodeDown
-        expr: up{job="sokol"} == 0
+      - alert: InterdictNodeDown
+        expr: up{job="interdict"} == 0
         for: 1m
         labels: { severity: critical }
         annotations:
           summary: "{{ $labels.instance }}: metrics unreachable"
-          runbook: "RUNBOOK §3: systemctl status sokol-orchestrator; journalctl -u sokol-orchestrator"
-      - alert: SokolDegraded
-        expr: min without (__name__) ({__name__=~"sokol_(audit_healthy|state_healthy|state_restore_ok|protected_refresh_ok)", job="sokol"}) == 0
+          runbook: "RUNBOOK §3: systemctl status interdictd; journalctl -u interdictd"
+      - alert: InterdictDegraded
+        expr: min without (__name__) ({__name__=~"interdict_(audit_healthy|state_healthy|state_restore_ok|protected_refresh_ok)", job="interdict"}) == 0
         for: 1m
         labels: { severity: critical }
         annotations:
           summary: "{{ $labels.instance }}: node DEGRADED (audit, state, restore or protected set); protection still runs"
           runbook: "RUNBOOK §5.3"
-      - alert: SokolAuditRecordsLost
-        expr: increase(sokol_audit_lost_total[10m]) > 0 or increase(sokol_audit_queue_overflow_total[10m]) > 0
+      - alert: InterdictAuditRecordsLost
+        expr: increase(interdict_audit_lost_total[10m]) > 0 or increase(interdict_audit_queue_overflow_total[10m]) > 0
         labels: { severity: warning }
         annotations:
           summary: "{{ $labels.instance }}: audit records lost (disk, rights or queue overflow)"
           runbook: "RUNBOOK §5.3"
-      - alert: SokolTickSlow
-        expr: max_over_time(sokol_tick_seconds[5m]) > 0.5
+      - alert: InterdictTickSlow
+        expr: max_over_time(interdict_tick_seconds[5m]) > 0.5
         labels: { severity: warning }
         annotations:
           summary: "{{ $labels.instance }}: a maintenance tick took over 0.5 s"
           runbook: "RUNBOOK §4"
-      - alert: SokolClockStepped
-        expr: increase(sokol_clock_steps_total[15m]) > 0
+      - alert: InterdictClockStepped
+        expr: increase(interdict_clock_steps_total[15m]) > 0
         labels: { severity: warning }
         annotations:
-          summary: "{{ $labels.instance }}: wall clock stepped {{ with printf `sokol_clock_last_step_seconds{instance='%s'}` $labels.instance | query }}{{ . | first | value }}{{ end }} s"
+          summary: "{{ $labels.instance }}: wall clock stepped {{ with printf `interdict_clock_last_step_seconds{instance='%s'}` $labels.instance | query }}{{ . | first | value }}{{ end }} s"
           runbook: "ADR-0017: blocks in force keep their length; check NTP/chrony"
-      - alert: SokolNotDropping
-        expr: sokol_enforce_mode{mode="observe"} == 1
+      - alert: InterdictNotDropping
+        expr: interdict_enforce_mode{mode="observe"} == 1
         labels: { severity: info }
         annotations:
           summary: "{{ $labels.instance }}: observe mode, decisions are recorded but nothing is dropped"
           runbook: "RUNBOOK §9 (pilot phase 0)"
-      - alert: SokolXdpGeneric
-        expr: sokol_xdp_mode{mode="generic"} == 1
+      - alert: InterdictXdpGeneric
+        expr: interdict_xdp_mode{mode="generic"} == 1
         for: 10m
         labels: { severity: info }
         annotations:
           summary: "{{ $labels.instance }}: XDP runs in generic (slower) mode; the NIC driver refused native"
           runbook: "SUPPORT.md §2"
 
-  - name: sokol-enforcement
+  - name: interdict-enforcement
     rules:
-      - alert: SokolBlocksPending
-        expr: sokol_blocks_pending > 0
+      - alert: InterdictBlocksPending
+        expr: interdict_blocks_pending > 0
         for: 5m
         labels: { severity: warning }
         annotations:
           summary: "{{ $labels.instance }}: {{ $value }} blocks wait for the kernel map for 5 min"
           runbook: "RUNBOOK §4: the map refuses entries (full?)"
-      - alert: SokolBlocklistNearCapacity
-        expr: sokol_blocks_active / on (instance) group_left sokol_blocks_capacity > 0.8
+      - alert: InterdictBlocklistNearCapacity
+        expr: interdict_blocks_active / on (instance) group_left interdict_blocks_capacity > 0.8
         for: 5m
         labels: { severity: warning }
         annotations:
@@ -72,124 +72,124 @@ groups:
       # - a series under 5 min old already over 200 (the burst came before the first scrape,
       #   which increase() cannot see) fires on its total. After metrics were unreachable for
       #   over 5 min, a source above 200 in total is reported once this way.
-      - alert: SokolDetectorSurge
+      - alert: InterdictDetectorSurge
         expr: |
           (
-            sum by (instance, source) (increase(sokol_detections_total{result=~"enforced|pending"}[5m])) > 200
+            sum by (instance, source) (increase(interdict_detections_total{result=~"enforced|pending"}[5m])) > 200
             and
             (
-              sum by (instance, source) (increase(sokol_detections_total{result=~"enforced|pending"}[5m]))
-                > 10 * sum by (instance, source) (increase(sokol_detections_total{result=~"enforced|pending"}[1h] offset 5m)) / 12
+              sum by (instance, source) (increase(interdict_detections_total{result=~"enforced|pending"}[5m]))
+                > 10 * sum by (instance, source) (increase(interdict_detections_total{result=~"enforced|pending"}[1h] offset 5m)) / 12
               or
-              sum by (instance, source) (increase(sokol_detections_total{result=~"enforced|pending"}[5m]))
-                unless sum by (instance, source) (increase(sokol_detections_total{result=~"enforced|pending"}[1h] offset 5m))
+              sum by (instance, source) (increase(interdict_detections_total{result=~"enforced|pending"}[5m]))
+                unless sum by (instance, source) (increase(interdict_detections_total{result=~"enforced|pending"}[1h] offset 5m))
             )
           )
           or
           (
-            sum by (instance, source) (sokol_detections_total{result=~"enforced|pending"}) > 200
-              unless sum by (instance, source) (sokol_detections_total{result=~"enforced|pending"} offset 5m)
+            sum by (instance, source) (interdict_detections_total{result=~"enforced|pending"}) > 200
+              unless sum by (instance, source) (interdict_detections_total{result=~"enforced|pending"} offset 5m)
           )
         labels: { severity: warning }
         annotations:
           summary: "{{ $labels.instance }}: {{ $labels.source }} asked for {{ $value | humanize }} blocks within 5 min, over ten times its usual pace or with no history"
           runbook: "RUNBOOK §5.1: check the detector before its blocks spread"
-      # One peer's claims surge, on the same terms as SokolDetectorSurge: a peer whose detector
+      # One peer's claims surge, on the same terms as InterdictDetectorSurge: a peer whose detector
       # misfires, or a compromised peer within its envelope (ADR-7), spreads its blocks to every
       # node that takes them. Enforced and held both count: held claims wait for a slot.
-      - alert: SokolPeerClaimSurge
+      - alert: InterdictPeerClaimSurge
         expr: |
           (
-            sum by (instance, issuer) (increase(sokol_mesh_claims_total{result=~"enforced|held"}[5m])) > 200
+            sum by (instance, issuer) (increase(interdict_mesh_claims_total{result=~"enforced|held"}[5m])) > 200
             and
             (
-              sum by (instance, issuer) (increase(sokol_mesh_claims_total{result=~"enforced|held"}[5m]))
-                > 10 * sum by (instance, issuer) (increase(sokol_mesh_claims_total{result=~"enforced|held"}[1h] offset 5m)) / 12
+              sum by (instance, issuer) (increase(interdict_mesh_claims_total{result=~"enforced|held"}[5m]))
+                > 10 * sum by (instance, issuer) (increase(interdict_mesh_claims_total{result=~"enforced|held"}[1h] offset 5m)) / 12
               or
-              sum by (instance, issuer) (increase(sokol_mesh_claims_total{result=~"enforced|held"}[5m]))
-                unless sum by (instance, issuer) (increase(sokol_mesh_claims_total{result=~"enforced|held"}[1h] offset 5m))
+              sum by (instance, issuer) (increase(interdict_mesh_claims_total{result=~"enforced|held"}[5m]))
+                unless sum by (instance, issuer) (increase(interdict_mesh_claims_total{result=~"enforced|held"}[1h] offset 5m))
             )
           )
           or
           (
-            sum by (instance, issuer) (sokol_mesh_claims_total{result=~"enforced|held"}) > 200
-              unless sum by (instance, issuer) (sokol_mesh_claims_total{result=~"enforced|held"} offset 5m)
+            sum by (instance, issuer) (interdict_mesh_claims_total{result=~"enforced|held"}) > 200
+              unless sum by (instance, issuer) (interdict_mesh_claims_total{result=~"enforced|held"} offset 5m)
           )
         labels: { severity: warning }
         annotations:
           summary: "{{ $labels.instance }}: node {{ $labels.issuer }} sent {{ $value | humanize }} claims within 5 min, over ten times its usual pace or with no history"
           runbook: "RUNBOOK §5.1: check the peer's detector; its envelope bounds what this node enforces"
-      - alert: SokolKernelEventsLost
-        expr: increase(sokol_xdp_events_lost_total[10m]) > 0
+      - alert: InterdictKernelEventsLost
+        expr: increase(interdict_xdp_events_lost_total[10m]) > 0
         labels: { severity: warning }
         annotations:
           summary: "{{ $labels.instance }}: the ring buffer was full, kernel events (not blocks) were lost"
           runbook: "RUNBOOK §4"
-      - alert: SokolKernelAbiMismatch
-        expr: sokol_xdp_events_malformed_total > 0
+      - alert: InterdictKernelAbiMismatch
+        expr: interdict_xdp_events_malformed_total > 0
         labels: { severity: critical }
         annotations:
           summary: "{{ $labels.instance }}: XDP program and orchestrator disagree on the event layout: wrong build"
           runbook: "ADR-0015"
 
-  - name: sokol-mesh
+  - name: interdict-mesh
     rules:
-      - alert: SokolPeersLost
-        expr: sokol_p2p_active_peers{job="sokol"} < on (instance, job) sokol_p2p_expected_peers{job="sokol"}
+      - alert: InterdictPeersLost
+        expr: interdict_p2p_active_peers{job="interdict"} < on (instance, job) interdict_p2p_expected_peers{job="interdict"}
         for: 5m
         labels: { severity: warning }
         annotations:
           summary: "{{ $labels.instance }}: {{ $value }} connected peers, below configured mesh size"
           runbook: "RUNBOOK §5.5"
-      - alert: SokolMeshObservationMissing
-        expr: up{job="sokol"} == 1 unless on (instance, job) (sokol_p2p_expected_peers{job="sokol"} and on (instance, job) sokol_p2p_active_peers{job="sokol"})
+      - alert: InterdictMeshObservationMissing
+        expr: up{job="interdict"} == 1 unless on (instance, job) (interdict_p2p_expected_peers{job="interdict"} and on (instance, job) interdict_p2p_active_peers{job="interdict"})
         for: 5m
         labels: { severity: warning }
         annotations:
           summary: "{{ $labels.instance }}: mesh observations missing from a reachable exporter"
           runbook: "RUNBOOK §5.5"
-      - alert: SokolSnapshotStale
-        expr: sokol_snapshot_age_seconds > 5 or sokol_snapshot_age_seconds < 0
+      - alert: InterdictSnapshotStale
+        expr: interdict_snapshot_age_seconds > 5 or interdict_snapshot_age_seconds < 0
         for: 1m
         labels: { severity: critical }
         annotations:
           summary: "{{ $labels.instance }}: main-loop observations are stale or not sampled"
           runbook: "RUNBOOK §4"
-      - alert: SokolWorkerStopped
-        expr: sokol_worker_state != 1
+      - alert: InterdictWorkerStopped
+        expr: interdict_worker_state != 1
         for: 1m
         labels: { severity: critical }
         annotations:
           summary: "{{ $labels.instance }}: {{ $labels.worker }} is not running (state {{ $value }})"
           runbook: "RUNBOOK §4"
-      - alert: SokolPeerWrongAddress
-        expr: increase(sokol_mesh_handshakes_wrong_address_total[10m]) > 0
+      - alert: InterdictPeerWrongAddress
+        expr: increase(interdict_mesh_handshakes_wrong_address_total[10m]) > 0
         labels: { severity: critical }
         annotations:
           summary: "{{ $labels.instance }}: a pinned peer's handshake came from an address its peers-file entry does not bind"
           runbook: "RUNBOOK §5.5"
-      - alert: SokolPeerClockSkew
-        expr: increase(sokol_mesh_envelopes_rejected_total{reason="stale_timestamp"}[10m]) > 0
+      - alert: InterdictPeerClockSkew
+        expr: increase(interdict_mesh_envelopes_rejected_total{reason="stale_timestamp"}[10m]) > 0
         for: 10m
         labels: { severity: warning }
         annotations:
           summary: "{{ $labels.instance }}: envelopes refused as stale: a peer's clock is over 30 s off"
           runbook: "RUNBOOK §5.5"
-      - alert: SokolUrgentBroadcastsDropped
-        expr: increase(sokol_mesh_broadcasts_dropped_total{class="urgent"}[10m]) > 0
+      - alert: InterdictUrgentBroadcastsDropped
+        expr: increase(interdict_mesh_broadcasts_dropped_total{class="urgent"}[10m]) > 0
         labels: { severity: warning }
         annotations:
           summary: "{{ $labels.instance }}: block decisions not queued to a peer (its link is behind); repair follows"
           runbook: "RUNBOOK §4"
-      - alert: SokolClaimsWaiting
-        expr: sokol_claims_waiting > 0
+      - alert: InterdictClaimsWaiting
+        expr: interdict_claims_waiting > 0
         for: 30m
         labels: { severity: info }
         annotations:
           summary: "{{ $labels.instance }}: {{ $value }} peer claims wait for a slot in their issuer's envelope"
           runbook: "RUNBOOK §4 (ADR-0007): the mesh is fine, a peer issued more than --peer-max-active"
-      - alert: SokolStormEngaged
-        expr: sokol_cluster_storm_engaged == 1
+      - alert: InterdictStormEngaged
+        expr: interdict_cluster_storm_engaged == 1
         labels: { severity: warning }
         annotations:
           summary: "{{ $labels.instance }}: distributed storm engaged (strict parsing and fragment drops)"

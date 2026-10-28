@@ -1,4 +1,4 @@
-//! Suricata → Sokol adapter.
+//! Suricata → interdict-mesh adapter.
 //!
 //! Follows Suricata's EVE log (`eve.json`), turns alerts into `SIGNAL:` lines on the
 //! orchestrator's IPC socket, and lets the orchestrator block the offender on this node and,
@@ -6,7 +6,7 @@
 //! write access to the IPC socket, nothing else.
 //!
 //! ```text
-//! sokol-suricata --eve /var/log/suricata/eve.json --ipc-socket /run/sokol/sokol.sock --max-severity 2
+//! interdict-suricata --eve /var/log/suricata/eve.json --ipc-socket /run/interdict/interdict.sock --max-severity 2
 //! ```
 
 // Release builds abort on panic (panic = "abort"), so a panic reachable from input (a peer's
@@ -40,14 +40,18 @@ use clap::Parser;
 mod delivery;
 
 #[derive(Parser, Debug)]
-#[command(about = "Forward Suricata alerts to Sokol-Core as block signals")]
+#[command(about = "Forward Suricata alerts to interdictd as block signals")]
 struct Args {
     /// Suricata EVE JSON log to follow. Records above 1 MiB including LF are skipped.
     #[arg(long, default_value = "/var/log/suricata/eve.json")]
     eve: PathBuf,
 
     /// Orchestrator IPC socket (its --ipc-socket).
-    #[arg(long, env = "SOKOL_IPC_SOCKET", default_value = "/run/sokol.sock")]
+    #[arg(
+        long,
+        env = "INTERDICT_IPC_SOCKET",
+        default_value = "/run/interdict.sock"
+    )]
     ipc_socket: PathBuf,
 
     /// Forward alerts with this Suricata severity or more serious (1 = highest, 3 = lowest).
@@ -576,7 +580,7 @@ impl Follower {
             Ok(_) if self.reader.is_none() => {
                 if let Some(cursor) = self.pending_resume {
                     let how = self.open_saved(cursor)?;
-                    log::info!("[sokol-suricata] {} ({:?})", how, cursor);
+                    log::info!("[interdict-suricata] {} ({:?})", how, cursor);
                 } else {
                     self.open(false)?;
                 }
@@ -633,7 +637,7 @@ impl Follower {
                     self.partial.clear();
                     self.discarding = true;
                     log::warn!(
-                        "[sokol-suricata] EVE line at byte {} exceeds {} bytes; skipping to LF",
+                        "[interdict-suricata] EVE line at byte {} exceeds {} bytes; skipping to LF",
                         self.line_start,
                         MAX_EVE_LINE_BYTES
                     );
@@ -649,7 +653,7 @@ impl Follower {
                     match String::from_utf8(std::mem::take(&mut self.partial)) {
                         Ok(line) => lines.push((self.line_start, line)),
                         Err(_) => log::warn!(
-                            "[sokol-suricata] invalid UTF-8 EVE line at byte {} skipped",
+                            "[interdict-suricata] invalid UTF-8 EVE line at byte {} skipped",
                             self.line_start
                         ),
                     }
@@ -675,7 +679,7 @@ fn deliver(outbox: &mut delivery::Outbox, socket: &Path) {
     let skipped = outbox.expired.saturating_sub(expired);
     if skipped > 0 {
         log::warn!(
-            "[sokol-suricata] {} queued alerts expired before forwarding; local policy loss",
+            "[interdict-suricata] {} queued alerts expired before forwarding; local policy loss",
             skipped
         );
     }
@@ -685,26 +689,34 @@ fn deliver(outbox: &mut delivery::Outbox, socket: &Path) {
             | delivery::Outcome::Pending
             | delivery::Outcome::Recorded
             | delivery::Outcome::Duplicate => {
-                log::info!("[sokol-suricata] {} ({:?})", line, outcome)
+                log::info!("[interdict-suricata] {} ({:?})", line, outcome)
             }
             delivery::Outcome::Refused(why) => {
-                log::warn!("[sokol-suricata] {}: refused by the node: {}", line, why)
+                log::warn!(
+                    "[interdict-suricata] {}: refused by the node: {}",
+                    line,
+                    why
+                )
             }
             delivery::Outcome::Rejected(why) => {
-                log::error!("[sokol-suricata] {}: rejected by the node: {}", line, why)
+                log::error!(
+                    "[interdict-suricata] {}: rejected by the node: {}",
+                    line,
+                    why
+                )
             }
         }
     }
     match err {
         Some(e) if !was_failing => log::error!(
-            "[sokol-suricata] cannot deliver to {}: {}; {} alerts queued, retrying",
+            "[interdict-suricata] cannot deliver to {}: {}; {} alerts queued, retrying",
             socket.display(),
             e,
             outbox.pending()
         ),
         None if was_failing && !outbox.failing => {
             log::warn!(
-                "[sokol-suricata] node reachable again; queue drained to {}",
+                "[interdict-suricata] node reachable again; queue drained to {}",
                 outbox.pending()
             )
         }
@@ -727,9 +739,9 @@ fn main() {
     let (mut follower, how, damaged) =
         initial_follower(&args.eve, args.cursor_file.as_deref(), args.from_start);
     if damaged {
-        log::error!("[sokol-suricata] {}", how);
+        log::error!("[interdict-suricata] {}", how);
     } else {
-        log::info!("[sokol-suricata] {}", how);
+        log::info!("[interdict-suricata] {}", how);
     }
     // File-content identity and offset for each queued alert, oldest first.
     // Neither rotation nor detected copytruncate may transplant an old offset.
@@ -738,7 +750,7 @@ fn main() {
     let mut last_save = Instant::now();
     let mut outbox = delivery::Outbox::new(&args.ipc_socket, OUTBOX_CAP);
     log::info!(
-        "[sokol-suricata] following {} (severity <= {}), signalling {}",
+        "[interdict-suricata] following {} (severity <= {}), signalling {}",
         args.eve.display(),
         args.max_severity,
         args.ipc_socket.display()
@@ -748,7 +760,11 @@ fn main() {
         match follower.poll() {
             Ok(batch) => {
                 if let Some(error) = batch.error {
-                    log::error!("[sokol-suricata] reading {}: {}", args.eve.display(), error);
+                    log::error!(
+                        "[interdict-suricata] reading {}: {}",
+                        args.eve.display(),
+                        error
+                    );
                 }
                 let observed = Instant::now();
                 let now_ms = chrono::Utc::now().timestamp_millis();
@@ -767,12 +783,12 @@ fn main() {
                             Err(error) => {
                                 if error.kind() == io::ErrorKind::TimedOut {
                                     log::debug!(
-                                        "[sokol-suricata] stale alert from {} skipped",
+                                        "[interdict-suricata] stale alert from {} skipped",
                                         alert.src
                                     );
                                 } else {
                                     log::warn!(
-                                        "[sokol-suricata] alert from {} skipped: {}",
+                                        "[interdict-suricata] alert from {} skipped: {}",
                                         alert.src,
                                         error
                                     );
@@ -792,35 +808,38 @@ fn main() {
                         None => outbox.push(&line),
                     };
                     if let Err(error) = queued {
-                        log::warn!("[sokol-suricata] alert rejected before queueing: {}", error);
+                        log::warn!(
+                            "[interdict-suricata] alert rejected before queueing: {}",
+                            error
+                        );
                         continue; // no queued cursor entry for a rejected alert
                     }
                     queued_at.push_back(follower.queued_at(start));
                     if outbox.lost > lost {
                         queued_at.pop_front();
                         log::error!(
-                            "[sokol-suricata] outbox full ({} queued): oldest alert dropped",
+                            "[interdict-suricata] outbox full ({} queued): oldest alert dropped",
                             OUTBOX_CAP
                         );
                     }
                 }
             }
-            Err(e) => log::error!("[sokol-suricata] reading {}: {}", args.eve.display(), e),
+            Err(e) => log::error!("[interdict-suricata] reading {}: {}", args.eve.display(), e),
         }
         if let Some(refused) = diagnostics.take(Instant::now(), gate.refusals) {
             if refused.cooldown > 0 {
-                log::warn!("[sokol-suricata] {} alerts skipped: source cooldown active (policy admission, not delivery)", refused.cooldown);
+                log::warn!("[interdict-suricata] {} alerts skipped: source cooldown active (policy admission, not delivery)", refused.cooldown);
             }
             if refused.rate > 0 {
                 log::warn!(
-                    "[sokol-suricata] {} alerts skipped: policy rate limit reached ({} admissions per fixed one-second window)",
+                    "[interdict-suricata] {} alerts skipped: policy rate limit reached ({} admissions per fixed one-second window)",
                     refused.rate,
                     args.max_signals_per_sec
                 );
             }
             if refused.capacity > 0 {
                 log::warn!(
-                    "[sokol-suricata] {} alerts skipped: cooldown memory full ({} addresses)",
+                    "[interdict-suricata] {} alerts skipped: cooldown memory full ({} addresses)",
                     refused.capacity,
                     COOLDOWN_CAP
                 );
@@ -838,7 +857,7 @@ fn main() {
                     match cursor.save(path) {
                         Ok(()) => saved = Some(cursor),
                         Err(e) => log::warn!(
-                            "[sokol-suricata] cannot save the cursor to {}: {}",
+                            "[interdict-suricata] cannot save the cursor to {}: {}",
                             path.display(),
                             e
                         ),

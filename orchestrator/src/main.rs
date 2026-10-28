@@ -408,7 +408,7 @@ unsafe impl Pod for BpfPacketStats {}
 #[command(
     author,
     version = env!("SOKOL_VERSION"),
-    about = "Sokol-Core Sovereign Orchestrator - Production Node"
+    about = "interdictd: the interdict-mesh node (XDP enforcement, signed mesh of claims)"
 )]
 struct Args {
     #[arg(short, long, default_value = "eth0")]
@@ -420,7 +420,7 @@ struct Args {
     #[arg(long, value_name = "PORT")]
     trap_port: Vec<u16>,
 
-    #[arg(long, default_value = "/var/lib/sokol/audit.log")]
+    #[arg(long, default_value = "/var/lib/interdict/audit.log")]
     db_path: String,
 
     /// This node's own block decisions and operator lifts, restored on start
@@ -478,7 +478,7 @@ struct Args {
     ipv6_prefix: String,
 
     /// Node identity key (ML-DSA/Dilithium3). Created with mode 0600 on first start.
-    #[arg(long, default_value = "/var/lib/sokol/node.key")]
+    #[arg(long, default_value = "/var/lib/interdict/node.key")]
     key_file: std::path::PathBuf,
 
     /// JSON list of pinned mesh peers: [{"node_id": 2, "public_key": "<hex>"}].
@@ -545,9 +545,9 @@ struct Args {
     #[arg(long)]
     drop_ipv4_fragments: bool,
 
-    /// Control socket for local tools (trident_trap uses SOKOL_IPC_SOCKET to find it).
-    /// Under systemd use a RuntimeDirectory, e.g. /run/sokol/sokol.sock.
-    #[arg(long, default_value = "/run/sokol.sock")]
+    /// Control socket for local tools (trident_trap uses INTERDICT_IPC_SOCKET to find it).
+    /// Under systemd use a RuntimeDirectory, e.g. /run/interdict/interdict.sock.
+    #[arg(long, default_value = "/run/interdict.sock")]
     ipc_socket: String,
 
     /// Lifetime of a first dynamic block (trap, IPC, mesh) in seconds; repeats within 24 h
@@ -562,9 +562,9 @@ struct Args {
     #[arg(long, value_name = "ADDR")]
     metrics_bind: Option<std::net::SocketAddr>,
 
-    /// Operator control socket (BAN_IP, UNBAN_IP, FLUSH_BANS) used by sokol-operator.
+    /// Operator control socket (BAN_IP, UNBAN_IP, FLUSH_BANS) used by interdict-ctl.
     /// Kept apart from --ipc-socket so traps cannot lift bans.
-    #[arg(long, default_value = "/run/sokol-control.sock")]
+    #[arg(long, default_value = "/run/interdict-control.sock")]
     control_socket: String,
 
     /// Group allowed to use the control socket (0660); without it root-only (0600).
@@ -577,7 +577,7 @@ struct Args {
     xdp_mode: XdpMode,
 
     /// `drop` enforces decisions. `observe` (pilot phase 0) makes every decision, writes the
-    /// audit and counts what XDP would drop (`sokol_xdp_observed_packets_total`, and each
+    /// audit and counts what XDP would drop (`interdict_xdp_observed_packets_total`, and each
     /// block's outcome), but drops nothing.
     #[arg(long, value_enum, default_value = "drop")]
     enforce: Enforce,
@@ -829,7 +829,7 @@ async fn persist_now<B: block_table::Blocklist>(
 }
 
 async fn push_telemetry(msg: &str) {
-    let telemetry_socket = "/run/sokol_telemetry.sock";
+    let telemetry_socket = "/run/interdict_telemetry.sock";
     if let Ok(mut stream) = tokio::net::UnixStream::connect(telemetry_socket).await {
         let _ = stream.write_all(msg.as_bytes()).await;
         let _ = stream.flush().await;
@@ -917,7 +917,7 @@ fn log_inbound_budget(peers: usize) {
 /// What a detector said about its decision, beyond the target (ADR-0009, ADR-0019).
 #[derive(Clone, Copy, Default)]
 struct Detection<'a> {
-    /// Who asked, for `sokol_detections_total` (a detector's name, `trap`, `telemetry`).
+    /// Who asked, for `interdict_detections_total` (a detector's name, `trap`, `telemetry`).
     source: &'a str,
     /// (source, event id): acted on once; the source can take it back.
     event: Option<(&'a str, &'a str)>,
@@ -1103,7 +1103,7 @@ fn flowspec_channel<B: block_table::Blocklist>(
 async fn main() -> Result<(), anyhow::Error> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
     let args = Args::parse();
-    log::info!("Sokol-Core {}", env!("SOKOL_VERSION"));
+    log::info!("interdictd {}", env!("SOKOL_VERSION"));
 
     if let Some(path) = &args.replay {
         std::process::exit(replay::print_report(path, env!("SOKOL_BUILD_ID")));
@@ -1170,7 +1170,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .transpose()?;
 
     log::info!(
-        "Initializing Sokol-Core Production Daemon on interface: {} [Node ID: {}]",
+        "Initializing interdictd on interface: {} [Node ID: {}]",
         args.interface,
         args.node_id
     );
@@ -1222,7 +1222,7 @@ async fn main() -> Result<(), anyhow::Error> {
         config_flags |= common::config_flags::OBSERVE_ONLY;
         log::warn!(
             "[Enforce] OBSERVE mode: decisions are made and recorded, nothing is dropped; \
-             sokol_xdp_observed_packets_total counts what would have been"
+             interdict_xdp_observed_packets_total counts what would have been"
         );
     }
     sntl_db.append(format!(
@@ -1976,7 +1976,7 @@ async fn main() -> Result<(), anyhow::Error> {
         });
     }
 
-    log::info!("Sokol-Core running.");
+    log::info!("interdictd running.");
 
     // The protected set follows the host: addresses and default gateways are re-read every
     // PROTECTED_REFRESH; a change replaces the policy and re-checks every claim, so a target that
@@ -2228,7 +2228,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 } else {
                     "DEGRADED"
                 };
-                let hb_msg = format!("HEARTBEAT:ID={}|NAME=Sokol-Node-{}|EP={}|MODE={}|CTL={}\n", node_id_hb, node_id_hb, p2p_bind_hb, mode, control_socket_hb);
+                let hb_msg = format!("HEARTBEAT:ID={}|NAME=interdict-node-{}|EP={}|MODE={}|CTL={}\n", node_id_hb, node_id_hb, p2p_bind_hb, mode, control_socket_hb);
                 push_telemetry(&hb_msg).await;
 
 
@@ -2427,7 +2427,7 @@ async fn main() -> Result<(), anyhow::Error> {
         }
     }
 
-    log::info!("Sokol-Core main loop terminated gracefully. Cleaning up resources...");
+    log::info!("interdictd main loop terminated gracefully. Cleaning up resources...");
     // Stop decision/audit producers and accepted local handlers before taking the final
     // snapshot. No socket reader, trap, mesh consumer or host refresh can mutate it later.
     producers.quiesce().await;
@@ -2750,7 +2750,7 @@ mod tests {
     /// ADR-0018: a node that does not share its own claims (observe mode) sends a peer nothing
     /// for its detections; a sharing node sends the new claim. `shares_own` could return either
     /// value unnoticed (mutation sweep 2026-10-07).
-    /// Every decision is counted under its source and result (`sokol_detections_total`): a
+    /// Every decision is counted under its source and result (`interdict_detections_total`): a
     /// detector that misfires shows as a surge of its own, before the map fills.
     /// A local decision that read the policy before a protection change took the table lock
     /// is refused once the address is protected (the host refresh rechecks only what the

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Stamps the node's audit head statements with OpenTimestamps (ADR-0022). The node only writes
 # the statements (--anchor-dir); this runs elsewhere, as another user, with network access
-# (deploy/sokol-anchor.timer), using the official client:  pip install opentimestamps-client
+# (deploy/interdict-anchor.timer), using the official client:  pip install opentimestamps-client
 #
 #   scripts/anchor-ots.sh <anchor dir>
 #

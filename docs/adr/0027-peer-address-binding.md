@@ -29,8 +29,8 @@ WireGuard пускає пакет із цієї адреси лише від в�
 тож адреса автентифікована тим самим ключем, що й тунель.
 
 - Рукостискання вузла, прив'язаного до адреси, з будь-якої іншої адреси відкидається:
-  `sokol_mesh_handshakes_wrong_address_total`, журнал `[SECURITY ALERT]`, alert
-  `SokolPeerWrongAddress`.
+  `interdict_mesh_handshakes_wrong_address_total`, журнал `[SECURITY ALERT]`, alert
+  `InterdictPeerWrongAddress`.
 - `RELOAD_PEERS`, що прив'язує вузол до іншої адреси, закриває його з'єднання на
   наступному ж повідомленні (як відкликання ключа).
 - Одна адреса для двох вузлів — помилка файла; IPv4-mapped IPv6 читається як IPv4.

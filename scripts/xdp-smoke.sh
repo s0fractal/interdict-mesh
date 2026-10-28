@@ -31,7 +31,7 @@ ORCH_PID=""
 OPERATOR_PID=""
 FAILED=0
 # Logged after XDP/TC attach, IPC socket and P2P setup all succeeded.
-READY="Sokol-Core running"
+READY="interdictd running"
 
 cleanup() {
     report_abort
@@ -45,7 +45,7 @@ cleanup() {
     [ -n "${CROWDSEC_PID:-}" ] && kill "$CROWDSEC_PID" 2>/dev/null || true
     pkill -f "gobgpd -f $WORK" 2>/dev/null || true
     [ -n "${NODE2_PID:-}" ] && kill "$NODE2_PID" 2>/dev/null || true
-    ip link del sokol-wg0 2>/dev/null || true
+    ip link del interdict-wg0 2>/dev/null || true
     ip link del "$HOST_IF" 2>/dev/null || true
     ip netns del "$NS" 2>/dev/null || true
     rm -rf "$WORK"
@@ -164,8 +164,8 @@ flowspec_metrics() {  # state, count, minimum age; all sampled in one HTTP respo
 check "Flowspec metrics: disabled is explicitly unverified" flowspec_metrics disabled 0 0
 sleep 1.2
 check "metrics: static block counted in the IPv4 blocklist gauge" \
-    test "$(metric 'sokol_blocks_active{family="ipv4"}')" -ge 1
-check "metrics: blocklist drops are counted" bash -c "test \"\$(curl -s http://127.0.0.1:9469/metrics | awk '\$1 == \"sokol_xdp_dropped_packets_total{reason=\\\"blocklist\\\"}\" { print \$2 }')\" -ge 2"
+    test "$(metric 'interdict_blocks_active{family="ipv4"}')" -ge 1
+check "metrics: blocklist drops are counted" bash -c "test \"\$(curl -s http://127.0.0.1:9469/metrics | awk '\$1 == \"interdict_xdp_dropped_packets_total{reason=\\\"blocklist\\\"}\" { print \$2 }')\" -ge 2"
 
 # Scanner probes with impossible TCP flag combinations are dropped in XDP.
 send_tcp_flags() {
@@ -187,16 +187,16 @@ for i, flags in enumerate(flag_list):
     sock.sendto(hdr, (dst, 0))
 PY
 }
-BEFORE=$(metric 'sokol_xdp_dropped_packets_total{reason="invalid_tcp_flags"}')
+BEFORE=$(metric 'interdict_xdp_dropped_packets_total{reason="invalid_tcp_flags"}')
 # NULL, XMAS (FIN|PSH|URG), SYN|FIN, FIN alone, SYN|RST — five of each
 send_tcp_flags $(for _ in 1 2 3 4 5; do printf '0x00 0x29 0x03 0x01 0x06 '; done)
 sleep 1.2
-AFTER=$(metric 'sokol_xdp_dropped_packets_total{reason="invalid_tcp_flags"}')
+AFTER=$(metric 'interdict_xdp_dropped_packets_total{reason="invalid_tcp_flags"}')
 check "NULL/XMAS/SYN-FIN/FIN/SYN-RST probes are dropped in XDP ($BEFORE -> $AFTER)" test $((AFTER - BEFORE)) -eq 25
 send_tcp_flags 0x02 0x10 0x14
 sleep 1.2
 check "SYN, ACK and RST|ACK segments are not counted as invalid" \
-    test "$(metric 'sokol_xdp_dropped_packets_total{reason="invalid_tcp_flags"}')" -eq "$AFTER"
+    test "$(metric 'interdict_xdp_dropped_packets_total{reason="invalid_tcp_flags"}')" -eq "$AFTER"
 
 # A blocked IPv6 source is dropped even when its extension headers do not parse: a truncated
 # Hop-by-Hop header used to end the program with XDP_PASS before the blocklist hit was acted on.
@@ -216,23 +216,23 @@ for _ in range(count):
     s.send(eth + ip6)
 PY
 }
-BEFORE=$(metric 'sokol_xdp_dropped_packets_total{reason="blocklist"}')
+BEFORE=$(metric 'interdict_xdp_dropped_packets_total{reason="blocklist"}')
 send_v6 59 10   # 59 = no next header: parses cleanly
 sleep 1.2
-MID=$(metric 'sokol_xdp_dropped_packets_total{reason="blocklist"}')
+MID=$(metric 'interdict_xdp_dropped_packets_total{reason="blocklist"}')
 check "blocked IPv6 source is dropped ($BEFORE -> $MID)" test $((MID - BEFORE)) -eq 10
 send_v6 0 10
 sleep 1.2
-AFTER=$(metric 'sokol_xdp_dropped_packets_total{reason="blocklist"}')
+AFTER=$(metric 'interdict_xdp_dropped_packets_total{reason="blocklist"}')
 check "blocked IPv6 source with a truncated extension header is dropped ($MID -> $AFTER)" \
     test $((AFTER - MID)) -eq 10
 printf 'UNBAN_IP:%s\n' "$BLOCKED_V6" | nc -U -q1 "$WORK/control.sock" >/dev/null
 # Headers that do not parse are passed to the stack and still seen: they count in
-# sokol_xdp_rx_packets_total like any other passed packet (ROADMAP item 10).
-RX_BEFORE=$(metric sokol_xdp_rx_packets_total)
+# interdict_xdp_rx_packets_total like any other passed packet (ROADMAP item 10).
+RX_BEFORE=$(metric interdict_xdp_rx_packets_total)
 send_v6 0 10   # the source is no longer blocked: a parse failure, passed
 sleep 1.2
-RX_AFTER=$(metric sokol_xdp_rx_packets_total)
+RX_AFTER=$(metric interdict_xdp_rx_packets_total)
 check "passed packets whose headers do not parse are counted ($RX_BEFORE -> $RX_AFTER)" \
     test $((RX_AFTER - RX_BEFORE)) -ge 10
 
@@ -244,8 +244,8 @@ FLOOD_SECONDS=$((SECONDS - FLOOD_START + 1))
 sleep 1.5
 TRAP_EVENTS=$( (grep -a -o "KERNEL_DROP_NOTIFY|IP:[^|]*|Reason:6|" "$WORK/events.sntl" || true) | wc -l)
 CPUS=$(nproc)
-echo "      trap events recorded: $TRAP_EVENTS for 3000 SYNs; suppressed: $(metric sokol_xdp_events_suppressed_total); cpus: $CPUS"
-check "trap SYN flood: excess events are suppressed" test "$(metric sokol_xdp_events_suppressed_total)" -gt 0
+echo "      trap events recorded: $TRAP_EVENTS for 3000 SYNs; suppressed: $(metric interdict_xdp_events_suppressed_total); cpus: $CPUS"
+check "trap SYN flood: excess events are suppressed" test "$(metric interdict_xdp_events_suppressed_total)" -gt 0
 # 64 events per CPU per started second of flood (+1 window for the boundary).
 check "trap SYN flood: recorded events stay within the per-CPU budget" \
     test "$TRAP_EVENTS" -le $((64 * CPUS * (FLOOD_SECONDS + 1)))
@@ -261,7 +261,7 @@ check "kernel events read back field by field: IP $ALLOWED_IP, TCP, IPv4, SYN-si
     '$(dirname "$BIN")/monitor' --dump '$WORK/events.sntl' | cut -f3 | grep '^KERNEL_DROP_NOTIFY|IP:[^|]*|Reason:6|' >'$WORK/trap-events' &&
     test -s '$WORK/trap-events' &&
     ! grep -v -E '^KERNEL_DROP_NOTIFY\|IP:$ALLOWED_IP\|Reason:6\|Proto:6\|Version:4\|PktLen:([5-9][0-9]|1[01][0-9])\$' '$WORK/trap-events'"
-check "no ring-buffer record of the wrong size" test "$(metric sokol_xdp_events_malformed_total)" = 0
+check "no ring-buffer record of the wrong size" test "$(metric interdict_xdp_events_malformed_total)" = 0
 
 # N03: an event the ring buffer cannot take is counted, not lost silently. With the reader
 # stopped (SIGSTOP; the XDP program keeps running in the kernel) exactly N trap SYNs are sent
@@ -269,7 +269,7 @@ check "no ring-buffer record of the wrong size" test "$(metric sokol_xdp_events_
 # them must be accounted for: recorded in the audit, suppressed by the rate limit, or lost.
 trap_recorded() { (grep -a -o "KERNEL_DROP_NOTIFY|IP:[^|]*|Reason:6|" "$WORK/events.sntl" || true) | wc -l; }
 LOSS_N=20000
-R0=$(trap_recorded); S0=$(metric sokol_xdp_events_suppressed_total); L0=$(metric sokol_xdp_events_lost_total)
+R0=$(trap_recorded); S0=$(metric interdict_xdp_events_suppressed_total); L0=$(metric interdict_xdp_events_lost_total)
 kill -STOP "$ORCH_PID"
 ip netns exec "$NS" python3 - "$ALLOWED_IP" "$HOST_IP" "$LOSS_N" <<'PY'
 import socket, struct, sys, time
@@ -291,7 +291,7 @@ for i in range(n):
 PY
 kill -CONT "$ORCH_PID"
 accounted() {
-    R1=$(trap_recorded); S1=$(metric sokol_xdp_events_suppressed_total); L1=$(metric sokol_xdp_events_lost_total)
+    R1=$(trap_recorded); S1=$(metric interdict_xdp_events_suppressed_total); L1=$(metric interdict_xdp_events_lost_total)
     [ $(( (R1 - R0) + (S1 - S0) + (${L1:-0} - ${L0:-0}) )) = "$LOSS_N" ]
 }
 for _ in $(seq 1 50); do accounted && break; sleep 0.2; done
@@ -300,12 +300,12 @@ check "a full ring buffer is counted: events were lost while the reader was stop
 check "every trap SYN is recorded, suppressed or counted lost ($LOSS_N)" accounted
 
 ipc() {
-    printf '%s\n' "$1" | nc -U -q1 /run/sokol.sock
+    printf '%s\n' "$1" | nc -U -q1 /run/interdict.sock
 }
 
-check "control socket is root-only (0600)" test "$(stat -c %a /run/sokol.sock)" = 600
+check "control socket is root-only (0600)" test "$(stat -c %a /run/interdict.sock)" = 600
 check "unprivileged user cannot write to the control socket" \
-    bash -c "! su nobody -s /bin/bash -c 'printf \"DROP_IMMEDIATE:$ALLOWED_IP\\n\" | nc -U -q1 /run/sokol.sock' 2>/dev/null"
+    bash -c "! su nobody -s /bin/bash -c 'printf \"DROP_IMMEDIATE:$ALLOWED_IP\\n\" | nc -U -q1 /run/interdict.sock' 2>/dev/null"
 sleep 0.5
 check "traffic from $ALLOWED_IP still passes after the unprivileged attempt" ping_from "$ALLOWED_IP"
 
@@ -332,7 +332,7 @@ ip addr del "$MOVED_IP/32" dev "$HOST_IF"
 for _ in $(seq 1 30); do grep -q "Protected host addresses changed: +\[\] -\[$MOVED_IP\]" "$LOG" && break; sleep 0.2; done
 check "once the address leaves the node it is no longer protected" \
     bash -c "printf 'BAN_IP:$MOVED_IP\\n' | nc -U -q1 '$WORK/control.sock' | grep -q '^OK'"
-check "host addresses are being re-read" test "$(metric sokol_protected_refresh_ok)" = 1
+check "host addresses are being re-read" test "$(metric interdict_protected_refresh_ok)" = 1
 # Outcomes: each block counts the packets it drops in the kernel; its removal records that.
 OUT_BUSY=10.231.0.17; OUT_IDLE=10.231.0.18
 ip netns exec "$NS" ip addr add "$OUT_BUSY/24" dev "$PEER_IF"
@@ -351,13 +351,13 @@ check "an outcome names the decision behind the block" \
 check "monitor --outcomes summarises outcomes by cause" bash -c \
     "'$(dirname "$BIN")/monitor' --outcomes '$WORK/events.sntl' | grep -Eq '^ +[0-9]+ +[0-9]+% +[0-9]+ +[0-9]+  operator: '"
 check "outcomes are in the audit log and the metrics" bash -c \
-    "grep -aq 'BLOCK_OUTCOME|IP:$OUT_BUSY|Dropped:' '$WORK/events.sntl' && test \"\$(curl -s http://127.0.0.1:9469/metrics | awk '\$1 == \"sokol_block_outcomes_total{effect=\\\"none\\\"}\" { print \$2 }')\" -ge 1"
+    "grep -aq 'BLOCK_OUTCOME|IP:$OUT_BUSY|Dropped:' '$WORK/events.sntl' && test \"\$(curl -s http://127.0.0.1:9469/metrics | awk '\$1 == \"interdict_block_outcomes_total{effect=\\\"none\\\"}\" { print \$2 }')\" -ge 1"
 check "the maintenance tick is measured and takes well under its period" \
-    awk -v t="$(metric sokol_tick_seconds_max)" 'BEGIN { exit !(t != "" && t < 0.5) }'
+    awk -v t="$(metric interdict_tick_seconds_max)" 'BEGIN { exit !(t != "" && t < 0.5) }'
 # A detector connection past its line budget is slowed, not cut: every line is answered.
 python3 - <<'PY' >"$WORK/ipc-flood.txt"
 import socket
-s = socket.socket(socket.AF_UNIX); s.settimeout(30); s.connect("/run/sokol.sock")
+s = socket.socket(socket.AF_UNIX); s.settimeout(30); s.connect("/run/interdict.sock")
 f = s.makefile("rw")
 f.write("ACK\n"); f.flush(); f.readline()
 n = 6000
@@ -365,32 +365,32 @@ f.write("NOT_A_COMMAND\n" * n); f.flush()
 print(sum(1 for _ in range(n) if f.readline().startswith("ERR")))
 PY
 check "a flooding IPC client gets an answer to every line" test "$(cat "$WORK/ipc-flood.txt")" = 6000
-check "and it was paced past its burst" bash -c "sleep 1.2; test \"\$(curl -s http://127.0.0.1:9469/metrics | awk '\$1 == \"sokol_ipc_lines_delayed_total\" { print \$2 }')\" -gt 0"
+check "and it was paced past its burst" bash -c "sleep 1.2; test \"\$(curl -s http://127.0.0.1:9469/metrics | awk '\$1 == \"interdict_ipc_lines_delayed_total\" { print \$2 }')\" -gt 0"
 check "the binary names its build" bash -c "'$BIN' --version | grep -q '(build '"
 check "--xdp-mode auto runs in native mode where the driver takes it (veth)" \
-    bash -c "curl -s http://127.0.0.1:9469/metrics | grep -q '^sokol_xdp_mode{mode=\"native\"} 1'"
+    bash -c "curl -s http://127.0.0.1:9469/metrics | grep -q '^interdict_xdp_mode{mode=\"native\"} 1'"
 check "the running build is in the metrics" \
-    bash -c "curl -s http://127.0.0.1:9469/metrics | grep -q '^sokol_build_info{version=.*,build=.*} 1'"
+    bash -c "curl -s http://127.0.0.1:9469/metrics | grep -q '^interdict_build_info{version=.*,build=.*} 1'"
 # A support bundle has what a remote diagnosis needs and never the node key.
 BUNDLE=$(CONTROL="$WORK/control.sock" METRICS=http://127.0.0.1:9469/metrics AUDIT="$WORK/events.sntl" \
     PEERS="$WORK/peers.json" BIN="$BIN" MONITOR="$(dirname "$BIN")/monitor" OUT="$WORK" \
     "$(dirname "$0")/support-bundle.sh" 2>/dev/null | tail -1)
 mkdir -p "$WORK/bundle" && tar -xzf "$BUNDLE" -C "$WORK/bundle"
 check "a support bundle holds version, metrics, bans and the audit verification" bash -c \
-    "d=\$(ls -d '$WORK'/bundle/sokol-support-*); grep -q '(build ' \$d/version.txt && grep -q '^sokol_blocks_active' \$d/metrics.txt && grep -q '^OK' \$d/bans.txt && grep -q '^OK' \$d/audit-verify.txt"
+    "d=\$(ls -d '$WORK'/bundle/interdict-support-*); grep -q '(build ' \$d/version.txt && grep -q '^interdict_blocks_active' \$d/metrics.txt && grep -q '^OK' \$d/bans.txt && grep -q '^OK' \$d/audit-verify.txt"
 check "the support bundle does not contain the node key" python3 -c "
 import pathlib, sys
 key = pathlib.Path('$WORK/node.key').read_bytes()[4:]
 sys.exit(any(key in p.read_bytes() for p in pathlib.Path('$WORK/bundle').rglob('*') if p.is_file()))"
 check "mesh admission counters are exported" \
-    bash -c "curl -s http://127.0.0.1:9469/metrics | grep -q '^sokol_mesh_handshake_timeouts_total '"
+    bash -c "curl -s http://127.0.0.1:9469/metrics | grep -q '^interdict_mesh_handshake_timeouts_total '"
 printf 'UNBAN_IP:%s\n' "$MOVED_IP" | nc -U -q1 "$WORK/control.sock" >/dev/null
 
 # Event ids: a detector event is acted on once; a resend (lost ACK) gets OK duplicate.
 ipc_ack() {   # ipc_ack <line>...: one ACK-mode connection, prints one reply per line
     python3 - "$@" <<'PY'
 import socket, sys
-s = socket.socket(socket.AF_UNIX); s.settimeout(3); s.connect("/run/sokol.sock")
+s = socket.socket(socket.AF_UNIX); s.settimeout(3); s.connect("/run/interdict.sock")
 f = s.makefile("rw")
 for line in ["ACK"] + sys.argv[1:]:
     f.write(line + "\n"); f.flush(); print(f.readline().strip())
@@ -425,17 +425,17 @@ check "the resend added no claim" test "$(grep -c "Dynamic block enforced in XDP
 printf 'UNBAN_IP:%s\n' "$EV_IP" | nc -U -q1 "$WORK/control.sock" >/dev/null
 
 # FastNetMon hook: an attack report marks the node under attack without blocking the victim.
-FNM="$(dirname "$BIN")/sokol-fastnetmon-notify"
+FNM="$(dirname "$BIN")/interdict-fastnetmon-notify"
 wait_metric() {   # wait_metric <name> <value>: up to 8 s for the next metrics refresh
     for _ in $(seq 1 40); do [ "$(metric "$1")" = "$2" ] && return 0; sleep 0.2; done
     return 1
 }
 echo "attack details from fastnetmon" | "$FNM" "$HOST_IP" incoming 35000 ban 2>/dev/null
-check "FastNetMon ban report is active on the node" wait_metric sokol_external_attacks_active 1
-check "the report marks this node under attack in the cluster view" wait_metric sokol_cluster_nodes_under_attack 1
+check "FastNetMon ban report is active on the node" wait_metric interdict_external_attacks_active 1
+check "the report marks this node under attack in the cluster view" wait_metric interdict_cluster_nodes_under_attack 1
 check "the reported victim (this node) is not blocked" ping_from "$ALLOWED_IP"
 "$FNM" "$HOST_IP" incoming 0 unban </dev/null 2>/dev/null
-check "FastNetMon unban clears the report" wait_metric sokol_external_attacks_active 0
+check "FastNetMon unban clears the report" wait_metric interdict_external_attacks_active 0
 
 # CIDR blocks through the control socket, under the prefix rules.
 CIDR_IP=10.231.0.130
@@ -475,9 +475,9 @@ check "RELOAD_PEERS refuses a mistyped key prefix instead of revoking the peer" 
     bash -c "printf 'RELOAD_PEERS\\n' | nc -U -q1 '$WORK/control.sock' | grep -q '^ERR .*neither .mldsa65:<hex>. nor a legacy'"
 printf 'not json' >"$WORK/peers.json"
 check "RELOAD_PEERS keeps the current trust when the file is broken" bash -c "printf 'RELOAD_PEERS\\n' | nc -U -q1 '$WORK/control.sock' | grep -q 'previous trust store kept'"
-OPERATOR_BIN="$(dirname "$BIN")/sokol-operator"
+OPERATOR_BIN="$(dirname "$BIN")/interdict-ctl"
 OP_TOKEN=smoke-operator-token-0123
-SOKOL_OPERATOR_TOKEN=$OP_TOKEN SOKOL_OPERATOR_BIND=127.0.0.1:3900 "$OPERATOR_BIN" >"$WORK/operator.log" 2>&1 &
+INTERDICT_OPERATOR_TOKEN=$OP_TOKEN INTERDICT_OPERATOR_BIND=127.0.0.1:3900 "$OPERATOR_BIN" >"$WORK/operator.log" 2>&1 &
 OPERATOR_PID=$!
 op() {
     curl -s -X POST -H "Authorization: Bearer $OP_TOKEN" -H 'Content-Type: application/json' -d "$2" "http://127.0.0.1:3900$1"
@@ -498,7 +498,7 @@ check "operator unban lifts the block" ping_from "$ALLOWED_IP"
 DIRECT_BAN=10.231.0.12
 printf 'BAN_IP:%s\n' "$DIRECT_BAN" | nc -U -q1 "$WORK/control.sock" >/dev/null
 kill "$OPERATOR_PID" 2>/dev/null || true; wait "$OPERATOR_PID" 2>/dev/null || true
-SOKOL_OPERATOR_TOKEN=$OP_TOKEN SOKOL_OPERATOR_BIND=127.0.0.1:3900 "$OPERATOR_BIN" >"$WORK/operator2.log" 2>&1 &
+INTERDICT_OPERATOR_TOKEN=$OP_TOKEN INTERDICT_OPERATOR_BIND=127.0.0.1:3900 "$OPERATOR_BIN" >"$WORK/operator2.log" 2>&1 &
 OPERATOR_PID=$!
 for _ in $(seq 1 40); do
     curl -s -H "Authorization: Bearer $OP_TOKEN" http://127.0.0.1:3900/api/data | grep -q "$DIRECT_BAN" && break
@@ -511,7 +511,7 @@ check "dashboard flush lifts operator bans it did not make" \
 kill "$OPERATOR_PID" 2>/dev/null || true
 OPERATOR_PID=""
 
-# Suricata -> sokol-suricata -> orchestrator -> XDP, with the time from probe to block.
+# Suricata -> interdict-suricata -> orchestrator -> XDP, with the time from probe to block.
 if command -v suricata >/dev/null; then
     PROBE_IP=10.231.0.5
     ip netns exec "$NS" ip addr add "$PROBE_IP/24" dev "$PEER_IF"
@@ -525,7 +525,7 @@ if command -v suricata >/dev/null; then
         sleep 0.5
     done
     touch "$WORK/suricata/eve.json"
-    "$(dirname "$BIN")/sokol-suricata" --eve "$WORK/suricata/eve.json" --cursor-file "$WORK/suricata.cursor" \
+    "$(dirname "$BIN")/interdict-suricata" --eve "$WORK/suricata/eve.json" --cursor-file "$WORK/suricata.cursor" \
         >"$WORK/adapter.log" 2>&1 &
     ADAPTER_PID=$!
     sleep 1
@@ -556,7 +556,7 @@ if command -v suricata >/dev/null; then
         ip netns exec "$NS" ping -c 1 -W 1 -I "$PROBE2_IP" "$HOST_IP"
     ip netns exec "$NS" nc -z -w 1 -s "$PROBE2_IP" "$HOST_IP" 23 2>/dev/null || true
     for _ in $(seq 1 30); do grep -q "\"src_ip\":\"$PROBE2_IP\"" "$WORK/suricata/eve.json" && break; sleep 0.2; done
-    "$(dirname "$BIN")/sokol-suricata" --eve "$WORK/suricata/eve.json" --cursor-file "$WORK/suricata.cursor" \
+    "$(dirname "$BIN")/interdict-suricata" --eve "$WORK/suricata/eve.json" --cursor-file "$WORK/suricata.cursor" \
         >>"$WORK/adapter.log" 2>&1 &
     ADAPTER_PID=$!
     for _ in $(seq 1 30); do grep -q "Dynamic block enforced in XDP: $PROBE2_IP" "$LOG" && break; sleep 0.2; done
@@ -569,7 +569,7 @@ else
     skip suricata "Suricata checks (suricata not installed)"
 fi
 
-# CrowdSec decision -> sokol-crowdsec -> orchestrator -> XDP.
+# CrowdSec decision -> interdict-crowdsec -> orchestrator -> XDP.
 if command -v cscli >/dev/null && command -v crowdsec >/dev/null; then
     if ! cscli lapi status >/dev/null 2>&1; then
         crowdsec -c /etc/crowdsec/config.yaml >"$WORK/crowdsec.log" 2>&1 </dev/null &
@@ -582,7 +582,7 @@ if command -v cscli >/dev/null && command -v crowdsec >/dev/null; then
     ip netns exec "$NS" ip addr add "$CS_IP/24" dev "$PEER_IF"
     check "the CrowdSec test address reaches the node before the decision" \
         ip netns exec "$NS" ping -c 1 -W 1 -I "$CS_IP" "$HOST_IP"
-    SOKOL_CROWDSEC_KEY="$CS_KEY" "$(dirname "$BIN")/sokol-crowdsec" --poll-secs 1 >"$WORK/crowdsec-adapter.log" 2>&1 </dev/null &
+    INTERDICT_CROWDSEC_KEY="$CS_KEY" "$(dirname "$BIN")/interdict-crowdsec" --poll-secs 1 >"$WORK/crowdsec-adapter.log" 2>&1 </dev/null &
     CS_ADAPTER_PID=$!
     cscli decisions add --ip "$CS_IP" --reason "sokol smoke ban" --duration 5m >/dev/null 2>&1
     for _ in $(seq 1 50); do
@@ -606,7 +606,7 @@ if command -v cscli >/dev/null && command -v crowdsec >/dev/null; then
     # decision id and adds no strike.
     kill "$CS_ADAPTER_PID" 2>/dev/null || true
     wait "$CS_ADAPTER_PID" 2>/dev/null || true
-    SOKOL_CROWDSEC_KEY="$CS_KEY" "$(dirname "$BIN")/sokol-crowdsec" --poll-secs 1 >>"$WORK/crowdsec-adapter.log" 2>&1 </dev/null &
+    INTERDICT_CROWDSEC_KEY="$CS_KEY" "$(dirname "$BIN")/interdict-crowdsec" --poll-secs 1 >>"$WORK/crowdsec-adapter.log" 2>&1 </dev/null &
     CS_ADAPTER_PID=$!
     for _ in $(seq 1 50); do
         grep -q "crowdsec event [0-9]* for $CS_IP already handled" "$LOG" && break
@@ -642,7 +642,7 @@ if command -v cscli >/dev/null && command -v crowdsec >/dev/null; then
     STATE_FILE=$LAST_STATE start_orchestrator
     kill "$CS_ADAPTER_PID" 2>/dev/null || true
     wait "$CS_ADAPTER_PID" 2>/dev/null || true
-    SOKOL_CROWDSEC_KEY="$CS_KEY" "$(dirname "$BIN")/sokol-crowdsec" --poll-secs 1 >>"$WORK/crowdsec-adapter.log" 2>&1 </dev/null &
+    INTERDICT_CROWDSEC_KEY="$CS_KEY" "$(dirname "$BIN")/interdict-crowdsec" --poll-secs 1 >>"$WORK/crowdsec-adapter.log" 2>&1 </dev/null &
     CS_ADAPTER_PID=$!
     for _ in $(seq 1 50); do
         grep -q "crowdsec event [0-9]* for $CS_IP2 already handled" "$LOG" && break
@@ -667,7 +667,7 @@ if command -v cscli >/dev/null && command -v crowdsec >/dev/null; then
     kill "$CS_ADAPTER_PID" 2>/dev/null || true
     wait "$CS_ADAPTER_PID" 2>/dev/null || true
     cscli decisions delete --ip "$CS_IP2" >/dev/null 2>&1 || true
-    SOKOL_CROWDSEC_KEY="$CS_KEY" "$(dirname "$BIN")/sokol-crowdsec" --poll-secs 1 >>"$WORK/crowdsec-adapter.log" 2>&1 </dev/null &
+    INTERDICT_CROWDSEC_KEY="$CS_KEY" "$(dirname "$BIN")/interdict-crowdsec" --poll-secs 1 >>"$WORK/crowdsec-adapter.log" 2>&1 </dev/null &
     CS_ADAPTER_PID=$!
     for _ in $(seq 1 25); do
         grep -Eq "RETRACT#[0-9]+:crowdsec\|$CS_IP2" "$WORK/crowdsec-adapter.log" && break
@@ -685,7 +685,7 @@ fi
 # Decoy trap: a connection that sends nothing is blocked after 5 s, with the trap's reason.
 TRAP_IP=10.231.0.7
 ip netns exec "$NS" ip addr add "$TRAP_IP/24" dev "$PEER_IF"
-SOKOL_TRAP_PORTS=2323 "$(dirname "$BIN")/trident_trap" >"$WORK/trap.log" 2>&1 </dev/null &
+INTERDICT_TRAP_PORTS=2323 "$(dirname "$BIN")/trident_trap" >"$WORK/trap.log" 2>&1 </dev/null &
 TRAP_PID=$!
 sleep 1
 ip netns exec "$NS" nc -w 7 -s "$TRAP_IP" "$HOST_IP" 2323 </dev/null >/dev/null 2>&1 || true
@@ -702,16 +702,16 @@ check "root IPC DROP_IMMEDIATE blocks $ALLOWED_IP" xdp_drop "$ALLOWED_IP" 2
 # F11: a local producer cannot make the node hold connections (and tasks) without bound.
 HOLDERS=()
 for _ in $(seq 1 70); do
-    (sleep 15 | nc -U /run/sokol.sock >/dev/null 2>&1) &
+    (sleep 15 | nc -U /run/interdict.sock >/dev/null 2>&1) &
     HOLDERS+=($!)
 done
 sleep 1.5
 check "IPC: connections beyond the limit are refused" grep -q "connections open; refusing another" "$LOG"
 for p in "${HOLDERS[@]}"; do kill "$p" 2>/dev/null || true; done
-pkill -f "nc -U /run/sokol.sock" 2>/dev/null || true
+pkill -f "nc -U /run/interdict.sock" 2>/dev/null || true
 sleep 0.5
 check "IPC: the socket serves again once they close" \
-    bash -c "printf 'DB_LOG:after the limit\\n' | nc -U -q1 /run/sokol.sock; sleep 1.5; grep -aq 'after the limit' '$WORK/events.sntl'"
+    bash -c "printf 'DB_LOG:after the limit\\n' | nc -U -q1 /run/interdict.sock; sleep 1.5; grep -aq 'after the limit' '$WORK/events.sntl'"
 
 # ADR-4: an operator ban survives a restart; --block is lifted only by the configuration.
 PERSIST_IP=10.231.0.11
@@ -796,8 +796,8 @@ check "a ban is answered within the durable wait while the disk hangs, and says 
     bash -c "echo '$HUNG_REPLY' | grep -q '^OK .*WARNING: not yet durable' && awk -v a=$T_BAN -v b=$T_REPLY 'BEGIN { exit !(b - a < 4) }'"
 check "the ban is enforced although not yet durable" \
     xdp_drop "$HUNG_IP" 2
-check "a hung state write makes the node DEGRADED" wait_metric sokol_state_healthy 0
-PENDING1=$(metric sokol_state_pending_seconds); sleep 2.5; PENDING2=$(metric sokol_state_pending_seconds)
+check "a hung state write makes the node DEGRADED" wait_metric interdict_state_healthy 0
+PENDING1=$(metric interdict_state_pending_seconds); sleep 2.5; PENDING2=$(metric interdict_state_pending_seconds)
 check "the maintenance tick keeps running while the write hangs" \
     awk -v a="$PENDING1" -v b="$PENDING2" 'BEGIN { exit !(b > a + 1) }'
 # Several authoritative snapshots must supersede while the first write is held.
@@ -815,7 +815,7 @@ check "State handoff: superseded decision is lifted while the writer is blocked"
     rm -f "$STATE_TMP"
     timeout 5 cat <&3 >/dev/null
 ) &
-check "health returns once the disk answers" wait_metric sokol_state_healthy 1
+check "health returns once the disk answers" wait_metric interdict_state_healthy 1
 
 check "State handoff: recovery persisted the latest decision rather than the held predecessor" state_handoff_matches "$HANDOFF_NEW_IP" "$HANDOFF_OLD_IP"
 # No graceful final persist may repair the recovered file before the restore check.
@@ -830,10 +830,10 @@ stop_orchestrator
 # stays DEGRADED until the operator accepts the loss.
 printf '{ not a state file' >"$LAST_STATE"
 STATE_FILE=$LAST_STATE start_orchestrator
-check "a corrupt state file keeps the node DEGRADED" wait_metric sokol_state_restore_ok 0
+check "a corrupt state file keeps the node DEGRADED" wait_metric interdict_state_restore_ok 0
 check "the corrupt state bytes are kept aside" test "$(cat "$LAST_STATE.corrupt")" = "{ not a state file"
 check "ACCEPT_STATE_LOSS is answered" bash -c "printf 'ACCEPT_STATE_LOSS\\n' | nc -U -q1 '$WORK/control.sock' | grep -q '^OK state loss accepted'"
-check "after ACCEPT_STATE_LOSS the node is healthy again" wait_metric sokol_state_healthy 1
+check "after ACCEPT_STATE_LOSS the node is healthy again" wait_metric interdict_state_healthy 1
 stop_orchestrator
 check "a stopped node leaves no XDP program on the interface (traffic passes unfiltered)" \
     bash -c "! ip -d link show $HOST_IF | grep -q 'prog/xdp'"
@@ -861,9 +861,9 @@ check "--home-net: an inside source's alert is applied to its remote destination
 check "--home-net: the inside host is never blocked, inside to inside nothing is" bash -c \
     "! grep -q 'Dynamic block enforced in XDP: 10.250.0.' '$LOG' && sed -n 3p '$WORK/home-net.txt' | grep -q '^OK refused'"
 check "trap decisions are counted under source trap: one enforced" \
-    wait_metric 'sokol_detections_total{source="trap",result="enforced"}' 1
+    wait_metric 'interdict_detections_total{source="trap",result="enforced"}' 1
 check "trap decisions are counted under source trap: one refused (protected)" \
-    wait_metric 'sokol_detections_total{source="trap",result="refused"}' 1
+    wait_metric 'interdict_detections_total{source="trap",result="refused"}' 1
 MONITOR_BIN="$(dirname "$BIN")/monitor"
 check "monitor --verify accepts the audit chain" audit_verdict intact "$WORK/events.sntl"
 # Regret by source (ROADMAP: measured, not optimized): the smoke's own
@@ -885,15 +885,15 @@ check "native mode: blocked source is dropped" xdp_drop "$BLOCKED_IP" 1
 # Pilot phase 0 (--enforce observe): every decision is made and counted, nothing is dropped.
 stop_orchestrator
 start_orchestrator --xdp-mode native --enforce observe --drop-ipv4-fragments
-check "observe mode is reported" test "$(metric 'sokol_enforce_mode{mode="observe"}')" = 1
+check "observe mode is reported" test "$(metric 'interdict_enforce_mode{mode="observe"}')" = 1
 check "observe mode is recorded in the audit" grep -aq 'ENFORCE_MODE|Mode:observe' "$WORK/events.sntl"
 check "observe mode: the --block address $BLOCKED_IP is not dropped" ping_from "$BLOCKED_IP"
 check "observe mode: fragmented IPv4 passes although fragments are to be dropped" \
     bash -c "ip netns exec $NS ping -c 2 -W 1 -s 3000 -I $ALLOWED_IP $HOST_IP >/dev/null 2>&1"
 sleep 1.2
 check "observe mode: what would have been dropped is counted, nothing is dropped" bash -c "
-    obs=\$(curl -s http://127.0.0.1:9469/metrics | awk '\$1 ~ /^sokol_xdp_observed_packets_total/ {s += \$2} END {print s + 0}')
-    drop=\$(curl -s http://127.0.0.1:9469/metrics | awk '\$1 ~ /^sokol_xdp_dropped_packets_total/ {s += \$2} END {print s + 0}')
+    obs=\$(curl -s http://127.0.0.1:9469/metrics | awk '\$1 ~ /^interdict_xdp_observed_packets_total/ {s += \$2} END {print s + 0}')
+    drop=\$(curl -s http://127.0.0.1:9469/metrics | awk '\$1 ~ /^interdict_xdp_dropped_packets_total/ {s += \$2} END {print s + 0}')
     echo \"      observed \$obs, dropped \$drop\"; test \"\$obs\" -ge 2 && test \"\$drop\" = 0"
 stop_orchestrator
 start_orchestrator --xdp-mode native
@@ -961,7 +961,7 @@ SH
     FLOWSPEC_ARGS=(--flowspec-gobgp /bin/sh --flowspec-gobgp-arg="$WORK/gobgp-wrapper.sh"
         --flowspec-gobgp-arg="$WORK" --flowspec-gobgp-arg="$GOBGP_REAL"
         --flowspec-gobgp-arg=-p --flowspec-gobgp-arg=50051 --flowspec-community=65001:6666)
-    # Another system's rule on the same gobgpd (no Sokol community): Sokol must never touch it.
+    # Another system's rule on the same gobgpd (no interdict-mesh community): the node must never touch it.
     FOREIGN_RULE=192.0.2.99/32
     gobgp -p 50051 global rib -a ipv4-flowspec add match source "$FOREIGN_RULE" then discard
 else
@@ -1017,7 +1017,7 @@ if [ ${#FLOWSPEC_ARGS[@]} -gt 0 ]; then
     ipc "DROP_IMMEDIATE:$ALLOWED_IP"
     # main publishes wanted before its block-count metrics snapshot; this is an
     # observed caller witness, not an assumed delay across the one-second tick.
-    check "Flowspec worker: main publishes changed intent while the read is held" wait_metric 'sokol_blocks_active{family="ipv4"}' 2
+    check "Flowspec worker: main publishes changed intent while the read is held" wait_metric 'interdict_blocks_active{family="ipv4"}' 2
     check "Flowspec worker: changing read has not completed before release" test ! -f "$WORK/readback-changing-completed"
     rm "$WORK/readback-changing-slow"
     check "Flowspec worker: changed main intent lets the original read complete" bash -c "
@@ -1106,7 +1106,7 @@ start_orchestrator --block-ttl 3600
 shutdown_connections() {
     python3 - "$ORCH_PID" "$WORK/control.sock" <<'SHUTDOWN_PY'
 import os, signal, socket, sys, threading
-active = socket.socket(socket.AF_UNIX); active.settimeout(4); active.connect("/run/sokol.sock")
+active = socket.socket(socket.AF_UNIX); active.settimeout(4); active.connect("/run/interdict.sock")
 f = active.makefile("r")
 for line, wanted in [("ACK", "OK ack"), ("DROP_IMMEDIATE:198.51.100.199", "OK applied")]:
     active.sendall((line + "\n").encode()); assert f.readline().strip() == wanted
@@ -1172,7 +1172,7 @@ run_nonroot() {
         --inh-caps "$caps" --ambient-caps "$caps" --bounding-set "$caps" \
         "$BIN" --interface "$HOST_IF" \
         --db-path "$NONROOT/events.log" --key-file "$NONROOT/node.key" \
-        --p2p-bind "127.0.0.1:0" --ipc-socket "$NONROOT/sokol.sock" \
+        --p2p-bind "127.0.0.1:0" --ipc-socket "$NONROOT/interdict.sock" \
         --control-socket "$NONROOT/control.sock" \
         >"$LOG" 2>&1 &
     ORCH_PID=$!
@@ -1195,15 +1195,15 @@ if command -v wg >/dev/null && ip link add sokol-wgprobe type wireguard 2>/dev/n
     ip link del sokol-wgprobe
     WG1_KEY=$(wg genkey); WG2_KEY=$(wg genkey)
     WG1_PUB=$(echo "$WG1_KEY" | wg pubkey); WG2_PUB=$(echo "$WG2_KEY" | wg pubkey)
-    ip link add sokol-wg0 type wireguard
-    wg set sokol-wg0 private-key <(echo "$WG1_KEY") listen-port 51820 \
+    ip link add interdict-wg0 type wireguard
+    wg set interdict-wg0 private-key <(echo "$WG1_KEY") listen-port 51820 \
         peer "$WG2_PUB" allowed-ips 10.99.0.2/32 endpoint "$ALLOWED_IP:51821"
-    ip addr add 10.99.0.1/24 dev sokol-wg0 && ip link set sokol-wg0 up
-    ip netns exec "$NS" ip link add sokol-wg1 type wireguard
-    ip netns exec "$NS" wg set sokol-wg1 private-key <(echo "$WG2_KEY") listen-port 51821 \
+    ip addr add 10.99.0.1/24 dev interdict-wg0 && ip link set interdict-wg0 up
+    ip netns exec "$NS" ip link add interdict-wg1 type wireguard
+    ip netns exec "$NS" wg set interdict-wg1 private-key <(echo "$WG2_KEY") listen-port 51821 \
         peer "$WG1_PUB" allowed-ips 10.99.0.1/32 endpoint "$HOST_IP:51820"
-    ip netns exec "$NS" ip addr add 10.99.0.2/24 dev sokol-wg1
-    ip netns exec "$NS" ip link set sokol-wg1 up
+    ip netns exec "$NS" ip addr add 10.99.0.2/24 dev interdict-wg1
+    ip netns exec "$NS" ip link set interdict-wg1 up
     check "WireGuard tunnel between the nodes is up" ping -c 2 -W 1 10.99.0.2
 
     mkdir -p "$WORK/n2"
@@ -1228,21 +1228,21 @@ if command -v wg >/dev/null && ip link add sokol-wgprobe type wireguard 2>/dev/n
         ip netns exec "$NS" curl -s http://127.0.0.1:9470/metrics | awk -v m="$1" '$1 == m { print $2 }'
     }
     for _ in $(seq 1 40); do
-        [ "$(metric sokol_cluster_nodes)" = "2" ] && break
+        [ "$(metric interdict_cluster_nodes)" = "2" ] && break
         sleep 0.5
     done
     check "mesh over WireGuard: both nodes authenticated each other" \
-        bash -c "test \"\$(curl -s http://127.0.0.1:9469/metrics | awk '\$1==\"sokol_p2p_active_peers\"{print \$2}')\" = 1"
-    check "telemetry: node 1 sees both nodes in the cluster" test "$(metric sokol_cluster_nodes)" = 2
+        bash -c "test \"\$(curl -s http://127.0.0.1:9469/metrics | awk '\$1==\"interdict_p2p_active_peers\"{print \$2}')\" = 1"
+    check "telemetry: node 1 sees both nodes in the cluster" test "$(metric interdict_cluster_nodes)" = 2
     check "node 2's WireGuard endpoint $ALLOWED_IP is protected on node 1 without --never-block" \
         bash -c "printf 'BAN_IP:$ALLOWED_IP\\n' | nc -U -q1 '$WORK/control.sock' | grep -q '^ERR $ALLOWED_IP is protected (WireGuard peer endpoint)'"
     # A WireGuard peer added while the node runs is protected within the refresh period.
     WG_NEW=10.231.0.21
-    wg set sokol-wg0 peer "$(wg genkey | wg pubkey)" allowed-ips 10.99.0.9/32 endpoint "$WG_NEW:51900"
+    wg set interdict-wg0 peer "$(wg genkey | wg pubkey)" allowed-ips 10.99.0.9/32 endpoint "$WG_NEW:51900"
     for _ in $(seq 1 30); do grep -q "Protected host addresses changed: +\[$WG_NEW\]" "$LOG" && break; sleep 0.2; done
     check "a WireGuard peer added at run time gets its endpoint protected" \
         bash -c "printf 'BAN_IP:$WG_NEW\\n' | nc -U -q1 '$WORK/control.sock' | grep -q '^ERR $WG_NEW is protected (WireGuard peer endpoint)'"
-    check "telemetry: cluster is stable before the attack" test "$(metric sokol_cluster_status)" = 1
+    check "telemetry: cluster is stable before the attack" test "$(metric interdict_cluster_status)" = 1
 
     ipc "DROP_IMMEDIATE:203.0.113.77"
     sleep 1.5
@@ -1257,15 +1257,15 @@ if command -v wg >/dev/null && ip link add sokol-wgprobe type wireguard 2>/dev/n
 
     timeout 8 ping -f -I "$ATTACK_SRC" "$ALLOWED_IP" >/dev/null 2>&1 || true
     for _ in $(seq 1 30); do
-        [ "$(metric sokol_cluster_nodes_under_attack)" = "1" ] && break
+        [ "$(metric interdict_cluster_nodes_under_attack)" = "1" ] && break
         sleep 0.5
     done
-    echo "      node 2 drops by blocklist: $(n2_metric 'sokol_xdp_dropped_packets_total{reason="blocklist"}')"
-    check "telemetry: node 1 learns that node 2 is under attack" test "$(metric sokol_cluster_nodes_under_attack)" = 1
-    check "cluster: 1 of 2 nodes over a 0.4 threshold is a distributed storm" test "$(metric sokol_cluster_status)" = 3
+    echo "      node 2 drops by blocklist: $(n2_metric 'interdict_xdp_dropped_packets_total{reason="blocklist"}')"
+    check "telemetry: node 1 learns that node 2 is under attack" test "$(metric interdict_cluster_nodes_under_attack)" = 1
+    check "cluster: 1 of 2 nodes over a 0.4 threshold is a distributed storm" test "$(metric interdict_cluster_status)" = 3
     check "cluster: storm latch engaged and audited" bash -c "grep -q 'Distributed storm: 1/2 nodes under attack' '$LOG'"
     check "node 2 (threshold 0.5) counts itself under attack: local incident, not a storm" \
-        test "$(n2_metric sokol_cluster_status)" = 2
+        test "$(n2_metric interdict_cluster_status)" = 2
     # ADR-6: while the storm is engaged node 1's XDP drops packets whose headers do not parse.
     # A bare IPv6 header whose Hop-by-Hop header is missing, from an address nobody blocks: in
     # normal mode XDP cannot parse it and passes it to the stack; in strict mode it is dropped.
@@ -1284,10 +1284,10 @@ PY
     }
     # Strict-parse drops have their own reason (ADR-0015): MALFORMED_HEADER is for outer headers
     # dropped in every mode, and it keeps counting towards the attack signal (ADR-6).
-    strict_parse() { metric 'sokol_xdp_dropped_packets_total{reason="strict_parse"}'; }
-    malformed() { metric 'sokol_xdp_dropped_packets_total{reason="malformed_header"}'; }
+    strict_parse() { metric 'interdict_xdp_dropped_packets_total{reason="strict_parse"}'; }
+    malformed() { metric 'interdict_xdp_dropped_packets_total{reason="malformed_header"}'; }
     check "storm: node 1 switched XDP to strict mode" grep -aq "DEFENSE_MODE|Strict" "$WORK/events.sntl"
-    check "storm: strict mode is reported" wait_metric sokol_defense_strict 1
+    check "storm: strict mode is reported" wait_metric interdict_defense_strict 1
     BEFORE=$(strict_parse); MALFORMED_BEFORE=$(malformed); send_truncated_v6 10; sleep 1.2
     check "storm: unparsable headers from an unblocked source are dropped in strict mode ($BEFORE -> $(strict_parse))" \
         test $(( $(strict_parse) - BEFORE )) -eq 10
@@ -1299,7 +1299,7 @@ PY
     check "normal mode: unparsable headers pass to the stack again" test "$(strict_parse)" -eq "$BEFORE"
     # ADR-0021: each node keeps the other's fsynced audit head in its own log.
     check "audit witnesses: node 1 recorded node 2's heads" \
-        bash -c "test \"\$(curl -s http://127.0.0.1:9469/metrics | awk '\$1==\"sokol_audit_witnesses_recorded_total\"{print \$2}')\" -gt 0"
+        bash -c "test \"\$(curl -s http://127.0.0.1:9469/metrics | awk '\$1==\"interdict_audit_witnesses_recorded_total\"{print \$2}')\" -gt 0"
     check "audit witnesses: node 2 keeps node 1's head in its own log" grep -aq "AUDIT_WITNESS|Issuer:1|" "$WORK/n2/events.log"
     kill "$NODE2_PID" 2>/dev/null || true
     wait "$NODE2_PID" 2>/dev/null || true

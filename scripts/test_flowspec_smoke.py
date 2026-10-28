@@ -75,8 +75,8 @@ class FlowSpecMetrics(unittest.TestCase):
                      self.samples(ok=1, progress=2), self.samples(ok=1, progress=-2),
                      self.samples(ok=1, progress=-1),
                      self.samples(ok=1, progress="nan"), self.samples(ok=1, progress=0.5),
-                     self.samples().replace("sokol_flowspec_round_progress -1\n", ""),
-                     self.samples() + "sokol_flowspec_round_progress -1\n",
+                     self.samples().replace("interdict_flowspec_round_progress -1\n", ""),
+                     self.samples() + "interdict_flowspec_round_progress -1\n",
                      self.samples(enabled=0, ok=0, count=0, age=-1, progress=0)):
             with self.assertRaises(ValueError):
                 self.helper.matches(text, "ok", 1, 0)
@@ -89,8 +89,8 @@ class FlowSpecMetrics(unittest.TestCase):
         self.assertTrue(self.helper.matches(self.samples(ok=1, converged=1), "converged", 1, 0))
         for text in (self.samples(ok=0, converged=1), self.samples(ok=1, converged=2),
                      self.samples(ok=1, converged="nan"), self.samples(ok=1, discard=0, converged=1),
-                     self.samples(ok=1).replace("sokol_flowspec_round_converged 0\n", ""),
-                     self.samples(ok=1) + "sokol_flowspec_round_converged 1\n"):
+                     self.samples(ok=1).replace("interdict_flowspec_round_converged 0\n", ""),
+                     self.samples(ok=1) + "interdict_flowspec_round_converged 1\n"):
             with self.assertRaises(ValueError):
                 self.helper.matches(text, "converged", 1, 0)
 
@@ -106,8 +106,8 @@ class FlowSpecMetrics(unittest.TestCase):
         self.assertTrue(self.helper.matches(self.samples(1, 1, 0, 0), "ok", 0, 0))
 
     def test_missing_duplicate_and_nonfinite_samples_are_unverified(self):
-        for text in (self.samples().replace("sokol_flowspec_readback_ok 0\n", ""),
-                     self.samples() + "sokol_flowspec_announced 1\n",
+        for text in (self.samples().replace("interdict_flowspec_readback_ok 0\n", ""),
+                     self.samples() + "interdict_flowspec_announced 1\n",
                      self.samples(age="nan"), self.samples(age="inf"),
                      self.samples(ok=2), self.samples(count=1.5), self.samples(discard=2), self.samples(discard="nan")):
             with self.assertRaises(ValueError):
@@ -117,8 +117,8 @@ class FlowSpecMetrics(unittest.TestCase):
 class RunbookHealth(unittest.TestCase):
     # Exercise the actual consumer; the old wildcard rejected correctly disabled
     # FlowSpec. Missing mandatory health and HTTP failures must still fail.
-    REQUIRED = ("sokol_audit_healthy", "sokol_state_healthy",
-                "sokol_state_restore_ok", "sokol_protected_refresh_ok")
+    REQUIRED = ("interdict_audit_healthy", "interdict_state_healthy",
+                "interdict_state_restore_ok", "interdict_protected_refresh_ok")
 
     def run_health(self, text, status=0):
         source = (ROOT / "scripts/runbook-rehearsal.sh").read_text()
@@ -136,7 +136,7 @@ class RunbookHealth(unittest.TestCase):
 
     def test_disabled_or_pending_optional_readback_is_not_node_failure(self):
         for enabled in (0, 1):
-            result = self.run_health(self.healthy() + f"sokol_flowspec_enabled {enabled}\nsokol_flowspec_readback_ok 0\n")
+            result = self.run_health(self.healthy() + f"interdict_flowspec_enabled {enabled}\ninterdict_flowspec_readback_ok 0\n")
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_every_required_health_sample_must_exist_and_succeed(self):

@@ -27,11 +27,11 @@ OpenTimestamps робить саме це. Клієнт надсилає кал�
   Файл записується атомарно й стійко і ніколи не переписується: позначка могла вже його покрити.
   Кожне твердження фіксується в аудиті вузла: `AUDIT_ANCHOR|Records:<n>|Head:<hex>|File:<name>`.
   Запис іде поза тіком, і одночасно в польоті не більше одного. Лічильники:
-  `sokol_audit_anchors_written_total`, `sokol_audit_anchor_failures_total`.
+  `interdict_audit_anchors_written_total`, `interdict_audit_anchor_failures_total`.
 - **Вузол нікуди не звертається.** Мережі, TLS і нових залежностей у вузлі немає. Позначки ставить
   окремий процес під окремим користувачем із мережею: `scripts/anchor-ots.sh` через офіційний
   клієнт OpenTimestamps (`ots stamp`, `ots upgrade`), за таймером
-  (`deploy/sokol-anchor.service`, `.timer`). Формат `.ots` — стандартний, бо його пише сам клієнт.
+  (`deploy/interdict-anchor.service`, `.timer`). Формат `.ots` — стандартний, бо його пише сам клієнт.
 - **Перевірка:** `--verify-anchors <dir>` звіряє журнал вузла з його твердженнями (ті самі вердикти,
   що й у ADR-0021: `confirmed`, `CONTRADICTED`, `MISSING`, `unknown`). Файл із назвою твердження,
   що твердженням не є, рахується як провал. Біткоїн-атестацію кожного доказу перевіряє
