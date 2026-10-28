@@ -1,0 +1,15 @@
+[2026-10-20T20:41:21Z INFO  orchestrator] Sokol-Core 0.1.0 (build 776861e3d0ce)
+[2026-10-20T20:41:21Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.P09nryTSjM/n1/node.key
+[2026-10-20T20:41:21Z INFO  orchestrator] Sokol-Core 0.1.0 (build 776861e3d0ce)
+[2026-10-20T20:41:21Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.P09nryTSjM/n2/node.key
+[2026-10-20T20:41:21Z INFO  orchestrator] Sokol-Core 0.1.0 (build 776861e3d0ce)
+[2026-10-20T20:41:21Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.P09nryTSjM/n3/node.key
+# nodes=3 netem='none' host=aarch64 cpus=10 kernel=6.8.0-147-generic
+# full mesh after 2s: 3/3 nodes see 2 peers
+# restart: 3 rounds, node 1 SIGKILLed with a detector block on disk; X1<=10000 X2<=10000 X3<=30000 ms
+round 1: control 134 ms, attacker last reply 2139 ms, peers 139 ms
+FAIL X2 round 1 (the attacker still got replies)
+round 2: control 136 ms, attacker last reply 2133 ms, peers 141 ms
+FAIL X2 round 2 (the attacker still got replies)
+round 3: control 134 ms, attacker last reply 2138 ms, peers 139 ms
+FAIL X2 round 3 (the attacker still got replies)
