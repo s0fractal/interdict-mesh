@@ -636,6 +636,28 @@ class StoreContracts(WitnessPin):
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("names its reason", r.stderr)
 
+    def test_a_later_version_naming_another_replaced_statement_is_refused(self):
+        pid, prev = self.roots["T-1"]
+        decision = {"because": "a counterexample", "proposal_sha256": None,
+                    "previous_statement_sha256": hashlib.sha256(b"Some other statement.").hexdigest()}
+        self.records.append(version("T-1", "A refusal creates no cooldown, on any path.", prev["body"]["witnesses"][0],
+                                    lineage=pid, decision=decision))
+        self.write_store()
+        r = self.regenerate()
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("names its reason and the statement it replaces", r.stderr)
+
+    def test_a_contract_moved_to_the_agent_tier_is_refused_without_the_owner_signature(self):
+        self.assertEqual(self.pin(self.key).returncode, 0)
+        pid, prev = self.roots["T-1"]
+        decision = {"because": "demoted", "proposal_sha256": None,
+                    "previous_statement_sha256": hashlib.sha256(prev["body"]["statement"].encode()).hexdigest()}
+        self.records.append(version("T-1", prev["body"]["statement"], prev["body"]["witnesses"][0], lineage=pid,
+                                    state="provisional", decision=decision))
+        self.write_store()
+        self.assertEqual(self.regenerate().returncode, 0)
+        self.assert_refused("T-1: pinned contract was removed or left this tier")
+
     def test_a_retired_contract_drops_its_row_only_with_the_owner_signature(self):
         pid, prev = self.roots["H-3"]
         decision = {"because": "withdrawn", "proposal_sha256": None,
