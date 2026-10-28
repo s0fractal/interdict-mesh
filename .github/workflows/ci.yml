@@ -51,7 +51,10 @@ jobs:
           echo "Mutation scope: $result (native tests and required witness gate remain independent)"
       - name: Install the pinned Rust toolchain (rust-toolchain.toml)
         if: steps.mutation-scope.outputs.result == 'mutate'
-        run: rustup show active-toolchain || rustup toolchain install
+        # The same retry as the suite's step: an unowned cargo-clippy on the runner.
+        run: |
+          toolchain() { rustup show active-toolchain || rustup toolchain install; }
+          toolchain || { rustup toolchain uninstall "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"; toolchain; }
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         if: steps.mutation-scope.outputs.result == 'mutate'
         with:
@@ -177,8 +180,12 @@ jobs:
           echo "$RUNNER_TEMP/warrant/bin" >> "$GITHUB_PATH"
 
       - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        # An aarch64 runner can hold a cargo-clippy that no rustup component owns, and the install
+        # then fails with "detected conflict: 'bin/cargo-clippy'" (#71, #72, #73): remove the
+        # toolchain and install it once more.
         run: |
-          rustup show active-toolchain || rustup toolchain install
+          toolchain() { rustup show active-toolchain || rustup toolchain install; }
+          toolchain || { rustup toolchain uninstall "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"; toolchain; }
           (cd ebpf && (rustup show active-toolchain || rustup toolchain install))
 
       - name: Install bpf-linker
