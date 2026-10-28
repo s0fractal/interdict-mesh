@@ -2,7 +2,11 @@
 """Launch a bounded mesh campaign on a disposable systemd VM only (ADR-0031 rule 5).
 
 --profile rc1 (default): a 60 min chaos phase (a restart every 60 s, a cut every 90 s, 180 s
-TTL, so blocks outlive the settle and the final agreement is on a non-empty table) and a 120 min plateau phase without restarts (SOAK_PLATEAU=1: RSS and fds must level).
+TTL, so blocks outlive the settle and the final agreement is on a non-empty table) and a 120 min
+plateau phase without restarts. The plateau first drives each node's per-event memories past
+their bounds (SOAK_SATURATE), keeps every claim's life short (TTL_MAX), and then judges RSS,
+state file and fds level, within ceilings derived from the bounds and the measured cost of an
+entry (MEMORY, docs/RUNBOOK.md §4).
 --profile long: the 24 h and 72 h phases RC-2 needs.
 
 The VM's own maintenance is stopped first: apt's timers and unattended-upgrades restarted
@@ -19,10 +23,30 @@ import sys
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
+# What one entry of each bounded table costs and what all of them cost at their bounds, measured
+# by measure_memory_at_bounds and measure_memory_at_all_bounds (block_table.rs). test_campaign.py
+# refuses it when a bound in the code no longer matches the one it was measured at.
+MEMORY = json.loads((ROOT / 'docs/measurements/2026-10-29-memory-at-bounds/bounds.json').read_text())
+NODES = 3
+
+
+def plateau_env():
+    """The plateau phase's knobs, derived from the bounds: past the event memory's bound by one
+    eviction batch, and ceilings of the table at every bound plus the replay memory of each peer.
+    The strike memory's bound is not driven here: that takes 65 536 new addresses, a claim each,
+    and the heap they free stays resident and would hide later growth (bench/mesh.sh)."""
+    bounds, at_all = MEMORY['bounds'], MEMORY['all_bounds']
+    saturate = bounds['MAX_EVENTS'] + MEMORY['eviction_margin']
+    rss_kb = at_all['rss_kb'] + -(-(NODES - 1) * MEMORY['replay_guard_bytes_per_peer'] // 1024)
+    state = at_all['state_bytes'] + bounds['MAX_MESH_FLOORS'] * MEMORY['state_bytes_per_entry']['mesh floor']
+    return {'RESTART_EVERY': '86400', 'CUT_EVERY': '300', 'TTL': '180', 'TTL_MAX': '720',
+            'SOAK_DISTINCT': '256', 'SOAK_SATURATE': str(saturate), 'SOAK_PLATEAU': '1',
+            'SOAK_RSS_BOUND_KB': str(rss_kb), 'SOAK_STATE_CEILING_BYTES': str(state)}
+
+
 PROFILES = {
     'rc1': [{'name': 'chaos', 'minutes': 60, 'env': {'RESTART_EVERY': '60', 'CUT_EVERY': '90', 'TTL': '180'}},
-            {'name': 'plateau', 'minutes': 120,
-             'env': {'RESTART_EVERY': '86400', 'CUT_EVERY': '300', 'TTL': '180', 'SOAK_PLATEAU': '1'}}],
+            {'name': 'plateau', 'minutes': 120, 'env': plateau_env()}],
     'long': [{'name': '24h', 'minutes': 24 * 60, 'env': {}}, {'name': '72h', 'minutes': 72 * 60, 'env': {}}],
 }
 # Host maintenance that restarts services under test; stopped and masked before a campaign.
@@ -101,7 +125,8 @@ def main():
                               'tmp_bytes': 4294967296, 'file_bytes': 134217728,
                               'runtime_seconds': runtime},
                    'admission': 'NOT_ADMITTED', 'hardware': 'NOT_QUALIFIED',
-                   'scope': 'mesh soak assertions; the plateau phase judges RSS and fds per node',
+                   'scope': 'mesh soak assertions; the plateau phase saturates the per-event memories and '
+                            'judges RSS, state file and fds per node against level and the derived ceilings',
                    'phases': []}
         write(args.output / 'report.json', receipt)
         command = ['systemd-run', '--unit=' + unit, '--collect',
@@ -135,7 +160,7 @@ def main():
         receipt['phases'].append(phase); receipt['status'] = 'RUNNING'; write(path, receipt)
         with (out / 'console.log').open('wb') as log:
             result = subprocess.run(['bash', str(ROOT / 'bench/mesh.sh'), 'soak',
-                                     str(args.binary), str(args.monitor), '3', str(step['minutes'])],
+                                     str(args.binary), str(args.monitor), str(NODES), str(step['minutes'])],
                                     cwd=ROOT, env={**os.environ, **step['env'], 'BENCH_OUT': str(out), 'BENCH_SEED': '1729'},
                                     stdout=log, stderr=subprocess.STDOUT)
         phase.update(status='LIMITED_PASS' if result.returncode == 0 else 'FAILED',

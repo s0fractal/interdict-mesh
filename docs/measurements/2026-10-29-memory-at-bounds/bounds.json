@@ -1,0 +1,50 @@
+{
+  "measured": "2026-10-29, sokol-lab (Lima vz, aarch64, Ubuntu 24.04, glibc 2.39), release build of this change",
+  "by": ["block_table::tests::measure_memory_at_bounds", "block_table::tests::measure_memory_at_all_bounds"],
+  "bounds": {
+    "MAX_EVENTS": 65536,
+    "MAX_STRIKES": 65536,
+    "MAX_SUPPORT_TARGETS": 65536,
+    "MAX_SUPPORT_PER_TARGET": 8,
+    "MAX_KNOWN_CLAIMS": 262144,
+    "MAX_REASON_BYTES": 512,
+    "MAX_MESH_FLOORS": 4096,
+    "FORGET_GRACE_SECS": 600
+  },
+  "heap_bytes_per_entry": {
+    "event id": 74,
+    "strike": 114,
+    "support reason": 52,
+    "claim, 4-byte reason": 737,
+    "claim, 512-byte reason": 1245,
+    "retraction record": 218,
+    "lease record": 162
+  },
+  "state_bytes_per_entry": {
+    "event id": 48,
+    "strike": 0,
+    "support reason": 50,
+    "claim, 4-byte reason": 119,
+    "claim, 512-byte reason": 627,
+    "retraction record": 80,
+    "lease record": 91,
+    "mesh floor": 44
+  },
+  "all_bounds": {
+    "heap_bytes": 465735812,
+    "rss_kb": 530876,
+    "state_bytes": 238859397,
+    "take_and_serialize_ms": 665,
+    "save_state_ms": 361
+  },
+  "replay_guard_bytes_per_peer": 2800000,
+  "eviction_margin": 4096,
+  "notes": {
+    "all_bounds": "One table with every bound full: 262144 own claims with 512-byte reasons, 262144 retraction and lease records, 65536 event ids and strikes, 65536 targets with 8 reasons each. rss_kb is the process's VmRSS growth over the fill in a fresh test process.",
+    "take_and_serialize_ms": "take_persisted plus serde_json::to_vec; take_persisted runs under the table lock in submit_state.",
+    "save_state_ms": "The state writer thread: serialize, write, fsync, rename, fsync of the directory.",
+    "mesh floor": "A (u64, u64) pair at its widest: 2 x 20 digits, brackets, comma and separator.",
+    "replay_guard_bytes_per_peer": "ADR-0013: about 40 bytes x 70000 nonces of a peer at its frame limit; analytic, not measured.",
+    "eviction_margin": "Signals past the larger count bound in the saturation, so every node evicts and the run can check that it did."
+  }
+}

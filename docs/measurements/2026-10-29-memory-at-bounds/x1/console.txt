@@ -1,0 +1,9 @@
+# nodes=3 netem='none' host=aarch64 cpus=10 kernel=6.8.0-147-generic
+# full mesh after 2s: 3/3 nodes see 2 peers
+# saturation: node 1 event ids 65536 remembered, 4096 evicted; strikes 65536 remembered, 4096 evicted (95 s)
+# saturation: node 2 event ids 65536 remembered, 4096 evicted; strikes 65536 remembered, 4096 evicted (95 s)
+# saturation: node 3 event ids 65536 remembered, 4096 evicted; strikes 65536 remembered, 4096 evicted (95 s)
+# soak 30 min, TTL 180 s, seed 1729 (OS scheduling remains uncontrolled)
+# t=300 s: node 3 cut off for 30 s
+# t=600 s: node 2 cut off for 30 s
+# t=900 s: node 3 cut off for 30 s

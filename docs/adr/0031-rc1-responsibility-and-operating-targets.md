@@ -78,7 +78,9 @@ Upstream FlowSpec (S5 за межами RIB вузла) не має цілі: RF
 4. бенчі S1–S7 і `restart` перепрогнані на кандидаті й лежать у цілях;
 5. кампанія на VM `scripts/campaign.py --profile rc1` — LIMITED_PASS: фаза хаосу (60 хв, рестарт
    вузла щохвилини, розріз кожні 90 с, TTL 180 с) і фаза плато (120 хв без рестартів,
-   `SOAK_PLATEAU=1`: RSS і fds кожного вузла рівні, жоден блок не лишився pending). Для RC-2 —
+   `SOAK_PLATEAU=1`: RSS і fds кожного вузла рівні, жоден блок не лишився pending; since
+   2026-10-29 with the event memory saturated first and RSS and the state file judged against
+   ceilings derived from the bounds, see the amendment of that date). Для RC-2 —
    ще й `--profile long` (24 год і 72 год);
 6. немає відкритого P1; межі названі (native NIC, upstream FlowSpec — NOT_QUALIFIED).
 
@@ -112,3 +114,45 @@ TTL обох фаз — 180 с: пробний прогін 2026-10-28 на `4c5
 Фаза плато судить лише процес без рестартів: у фазі хаосу кожен вузол живе кілька хвилин,
 і витік за одне життя процесу не встигає вирости. Тому фаз дві.
 
+
+## Amendment 2026-10-29: the plateau is judged at the bounds
+
+The plateau of rule 5 (amendment 2026-10-28) could not be decided within the campaign. Each table
+a detector event fills keeps its entries up to 24 h: event ids and strikes for 24 h, claims and
+their records up to `--block-ttl-max` (24 h) past their start. At the soak's 5 signals/s a node
+needs about 11 h to fill its event memory alone, so during a 120 min phase these tables grow by
+design, and "level within 10 %" measured how far they had filled, not whether anything leaked.
+Rehearsals on 4c5cf66 (3 nodes, no restarts): ever-new addresses 120 min, 28 → 32 MB; 4 096
+cycled addresses 60 min, 29 → 33 MB; 256 cycled addresses 45 min, 29.3 → 37.3 MB with a state
+file of about 940 KB, failed on 2 of 3 nodes. The last one was not only filling: superseded
+claims were held to their ends, fixed in ADR-0025's amendment of 2026-10-29.
+
+**Rule 5's plateau phase now** (`scripts/campaign.py`, `bench/mesh.sh soak`):
+
+1. **Saturate.** Before the load each node gets `MAX_EVENTS` + 4 096 signals with new event ids
+   on the 256 cycled addresses, at the IPC's pace (about 70 s). Every node must then report
+   evicted event ids (`interdict_event_ids_evicted_total` > 0): its event memory is full and
+   stays full. The signals merge into the running claims, escalate them to `TTL_MAX` and fill
+   each address's 8 reasons.
+2. **Short lives.** TTL 180 s and `--block-ttl-max` 720 s: a claim lives at most 720 s, its
+   retraction and lease records `FORGET_GRACE` (600 s) longer. From t = 1 320 s every table that
+   follows claims is at its steady state for this load.
+3. **Judge from t = 1 320 s** (98 one-minute samples per node): the last third's RSS and
+   state-file peaks within 10 % of the first third's, fds not above the first third's peak;
+   every sample's RSS within the node's own pre-load RSS + the derived bound, and the state
+   file within the derived ceiling. The bound and the ceiling are computed by `campaign.py` from
+   the bounds in the code and the measured per-entry costs
+   (`docs/measurements/2026-10-29-memory-at-bounds/bounds.json`; `scripts/test_campaign.py`
+   refuses it when a bound changed): 518 MiB for every table at its bound + 2.8 MB of replay
+   memory per peer (ADR-0013), and 228 MiB + the mesh floors. Planning numbers: RUNBOOK §4.
+
+**Not driven, and why.** The strike memory's bound (65 536 addresses): filling it takes 65 536
+new addresses, a claim on each on every node. A trial on 2026-10-29 did so; once those claims
+were gone (256 blocks left) each node stayed at 313–362 MB RSS, because the allocator keeps the
+freed heap resident, and step 3 could not see later growth under it. The strike bound is held by
+`strike_memory_is_bounded_by_count`, and its cost (7.5 MB) is inside the derived bound. The
+claim bound (`MAX_KNOWN_CLAIMS`) is likewise covered by its capacity tests and by
+`measure_memory_at_all_bounds`, not by the campaign.
+
+**What RC-1 still cannot see:** growth tied to claim lifetimes longer than 720 s, and anything
+slower than 10 % in 98 min. RC-2's `--profile long` runs with the default `--block-ttl-max`.
