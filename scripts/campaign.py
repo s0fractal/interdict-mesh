@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Launch a bounded mesh campaign on a disposable systemd VM only (ADR-0031 rule 5).
 
---profile rc1 (default): a 60 min chaos phase (a restart every 60 s, a cut every 90 s, 30 s
-TTL) and a 120 min plateau phase without restarts (SOAK_PLATEAU=1: RSS and fds must level).
+--profile rc1 (default): a 60 min chaos phase (a restart every 60 s, a cut every 90 s, 180 s
+TTL, so blocks outlive the settle and the final agreement is on a non-empty table) and a 120 min plateau phase without restarts (SOAK_PLATEAU=1: RSS and fds must level).
 --profile long: the 24 h and 72 h phases RC-2 needs.
 
 The VM's own maintenance is stopped first: apt's timers and unattended-upgrades restarted
@@ -20,9 +20,9 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILES = {
-    'rc1': [{'name': 'chaos', 'minutes': 60, 'env': {'RESTART_EVERY': '60', 'CUT_EVERY': '90', 'TTL': '30'}},
+    'rc1': [{'name': 'chaos', 'minutes': 60, 'env': {'RESTART_EVERY': '60', 'CUT_EVERY': '90', 'TTL': '180'}},
             {'name': 'plateau', 'minutes': 120,
-             'env': {'RESTART_EVERY': '86400', 'CUT_EVERY': '300', 'TTL': '30', 'SOAK_PLATEAU': '1'}}],
+             'env': {'RESTART_EVERY': '86400', 'CUT_EVERY': '300', 'TTL': '180', 'SOAK_PLATEAU': '1'}}],
     'long': [{'name': '24h', 'minutes': 24 * 60, 'env': {}}, {'name': '72h', 'minutes': 72 * 60, 'env': {}}],
 }
 # Host maintenance that restarts services under test; stopped and masked before a campaign.

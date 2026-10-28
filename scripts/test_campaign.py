@@ -61,6 +61,11 @@ class Profiles(unittest.TestCase):
         self.assertEqual(plateau['env']['SOAK_PLATEAU'], '1')
         self.assertGreater(int(plateau['env']['RESTART_EVERY']), plateau['minutes'] * 60)
 
+    def test_rc1_blocks_outlive_the_settle_so_the_final_agreement_is_not_on_an_empty_table(self):
+        # bench/mesh.sh soak settles 90 s, then looks for agreement for up to 30 s.
+        for phase in campaign.PROFILES['rc1']:
+            self.assertGreater(int(phase['env']['TTL']), 90 + 30, phase['name'])
+
     def test_long_keeps_the_24_and_72_hour_phases(self):
         self.assertEqual([p['minutes'] for p in campaign.PROFILES['long']], [24 * 60, 72 * 60])
 
