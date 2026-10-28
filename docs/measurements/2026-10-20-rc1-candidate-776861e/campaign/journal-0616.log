@@ -1,0 +1,289 @@
+2026-10-21T06:16:29+03:00 lima-sokol-lab systemd[1]: Starting apt-daily-upgrade.service - Daily apt upgrade and clean activities...
+2026-10-21T06:16:33+03:00 lima-sokol-lab apt.systemd.daily[959698]: /usr/bin/unattended-upgrade:567: DeprecationWarning: This process (pid=959698) is multi-threaded, use of fork() may lead to deadlocks in the child.
+2026-10-21T06:16:33+03:00 lima-sokol-lab apt.systemd.daily[959698]:   pid = os.fork()
+2026-10-21T06:16:35+03:00 lima-sokol-lab dbus-daemon[763]: [system] Activating via systemd: service name='org.freedesktop.PackageKit' unit='packagekit.service' requested by ':1.54' (uid=0 pid=959973 comm="/usr/bin/gdbus call --system --dest org.freedeskto" label="unconfined")
+2026-10-21T06:16:35+03:00 lima-sokol-lab systemd[1]: Starting packagekit.service - PackageKit Daemon...
+2026-10-21T06:16:35+03:00 lima-sokol-lab PackageKit[959977]: daemon start
+2026-10-21T06:16:35+03:00 lima-sokol-lab dbus-daemon[763]: [system] Successfully activated service 'org.freedesktop.PackageKit'
+2026-10-21T06:16:35+03:00 lima-sokol-lab systemd[1]: Started packagekit.service - PackageKit Daemon.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Reexecuting requested from client PID 960124 ('systemctl') (unit apt-daily-upgrade.service)...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Reexecuting.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: systemd 255.4-1ubuntu8.18 running in system mode (+PAM +AUDIT +SELINUX +APPARMOR +IMA +SMACK +SECCOMP +GCRYPT -GNUTLS +OPENSSL +ACL +BLKID +CURL +ELFUTILS +FIDO2 +IDN2 -IDN +IPTC +KMOD +LIBCRYPTSETUP +LIBFDISK +PCRE2 -PWQUALITY +P11KIT +QRENCODE +TPM2 +BZIP2 +LZ4 +XZ +ZLIB +ZSTD -BPF_FRAMEWORK -XKBCOMMON +UTMP +SYSVINIT default-hierarchy=unified)
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Detected virtualization apple.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Detected architecture arm64.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: user-501.slice: A process of this unit has been killed by the OOM killer.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: user.slice: A process of this unit has been killed by the OOM killer.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Starting apt-daily.service - Daily apt download activities...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Starting man-db.service - Daily man-db regeneration...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopping crowdsec.service - Crowdsec agent...
+2026-10-21T06:16:38+03:00 lima-sokol-lab multipathd[401]: multipathd: shut down
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopping multipathd.service - Device-Mapper Multipath Device Controller...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopping ModemManager.service - Modem Manager...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopping rsyslog.service - System Logging Service...
+2026-10-21T06:16:38+03:00 lima-sokol-lab ModemManager[873]: <msg> caught signal, shutting down...
+2026-10-21T06:16:38+03:00 lima-sokol-lab rsyslogd[892]: [origin software="rsyslogd" swVersion="8.2312.0" x-pid="892" x-info="https://www.rsyslog.com"] exiting on signal 15.
+2026-10-21T06:16:38+03:00 lima-sokol-lab ModemManager[873]: <msg> ModemManager is shut down
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopping systemd-journald.service - Journal Service...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: netplan-ovs-cleanup.service - OpenVSwitch configuration for cleanup was skipped because of an unmet condition check (ConditionFileIsExecutable=/usr/bin/ovs-vsctl).
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: systemd-networkd-wait-online.service: Deactivated successfully.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopped systemd-networkd-wait-online.service - Wait for Network to be Configured.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopping systemd-networkd-wait-online.service - Wait for Network to be Configured...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopping systemd-networkd.service - Network Configuration...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopping systemd-resolved.service - Network Name Resolution...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-journald[366]: Received SIGTERM from PID 1 (systemd).
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopping suricata.service - Suricata IDS/IDP daemon...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-journald[366]: Journal stopped
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: rsyslog.service: Deactivated successfully.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopped rsyslog.service - System Logging Service.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: rsyslog.service: Consumed 7.011s CPU time, 22.9M memory peak, 0B memory swap peak.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Starting rsyslog.service - System Logging Service...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopping udisks2.service - Disk Manager...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Started ntpsec-systemd-netif.service.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: multipathd.service: Deactivated successfully.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopped multipathd.service - Device-Mapper Multipath Device Controller.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: multipathd.service: Consumed 2.609s CPU time, 22.0M memory peak, 0B memory swap peak.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Starting multipathd.service - Device-Mapper Multipath Device Controller...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: systemd-journald.service: Deactivated successfully.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopped systemd-journald.service - Journal Service.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: systemd-journald.service: Consumed 22.975s CPU time, 89.6M memory peak, 0B memory swap peak.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: systemd-networkd.service: Deactivated successfully.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopped systemd-networkd.service - Network Configuration.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Starting systemd-journald.service - Journal Service...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopping systemd-udevd.service - Rule-based Manager for Device Events and Files...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: ntpsec-systemd-netif.service: Deactivated successfully.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: udisks2.service: Deactivated successfully.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopped udisks2.service - Disk Manager.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Starting udisks2.service - Disk Manager...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: systemd-resolved.service: Deactivated successfully.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopped systemd-resolved.service - Network Name Resolution.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Starting systemd-resolved.service - Network Name Resolution...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: systemd-udevd.service: Deactivated successfully.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopped systemd-udevd.service - Rule-based Manager for Device Events and Files.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: systemd-udevd.service: Consumed 1.652s CPU time, 31.0M memory peak, 0B memory swap peak.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-journald[960199]: Collecting audit messages is disabled.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Starting systemd-udevd.service - Rule-based Manager for Device Events and Files...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-journald[960199]: Journal started
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-journald[960199]: System Journal (/var/log/journal/8f6ea17bd2664ce3af89201a32b48e21) is 203.9M, max 4.0G, 3.8G free.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Started systemd-journald.service - Journal Service.
+2026-10-21T06:16:38+03:00 lima-sokol-lab unknown[794]: udisks daemon version 2.10.1 exiting
+2026-10-21T06:16:38+03:00 lima-sokol-lab udisksd[960202]: udisks daemon version 2.10.1 starting
+2026-10-21T06:16:38+03:00 lima-sokol-lab multipathd[960200]: multipathd v0.9.4: start up
+2026-10-21T06:16:38+03:00 lima-sokol-lab multipathd[960200]: reconfigure: setting up paths and maps
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Started multipathd.service - Device-Mapper Multipath Device Controller.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: ModemManager.service: Deactivated successfully.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopped ModemManager.service - Modem Manager.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopping polkit.service - Authorization Manager...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-udevd[960214]: Using default interface naming scheme 'v255'.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: sokol-campaign-1792529306946940031.service: Deactivated successfully.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: sokol-campaign-1792529306946940031.service: Consumed 27min 26.021s CPU time, 380.0M memory peak, 0B memory swap peak.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: polkit.service: Deactivated successfully.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-resolved[960207]: Positive Trust Anchors:
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopped polkit.service - Authorization Manager.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-resolved[960207]: . IN DS 20326 8 2 e06d44b80b8f1d39a95c0b0d7c65d08458e880409bbc683457104237c7f8ec8d
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-resolved[960207]: . IN DS 38696 8 2 683d2d0acb8c9b712a1948b27f741219298d0a450d612c483af444a4c0fb2b16
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-resolved[960207]: Negative trust anchors: home.arpa 10.in-addr.arpa 16.172.in-addr.arpa 17.172.in-addr.arpa 18.172.in-addr.arpa 19.172.in-addr.arpa 20.172.in-addr.arpa 21.172.in-addr.arpa 22.172.in-addr.arpa 23.172.in-addr.arpa 24.172.in-addr.arpa 25.172.in-addr.arpa 26.172.in-addr.arpa 27.172.in-addr.arpa 28.172.in-addr.arpa 29.172.in-addr.arpa 30.172.in-addr.arpa 31.172.in-addr.arpa 170.0.0.192.in-addr.arpa 171.0.0.192.in-addr.arpa 168.192.in-addr.arpa d.f.ip6.arpa ipv4only.arpa corp home internal intranet lan local private test
+2026-10-21T06:16:38+03:00 lima-sokol-lab kernel: skbr0: port 2(skv2-h) entered disabled state
+2026-10-21T06:16:38+03:00 lima-sokol-lab kernel: skbr0: port 1(skv1-h) entered disabled state
+2026-10-21T06:16:38+03:00 lima-sokol-lab kernel: skv2-h (unregistering): left allmulticast mode
+2026-10-21T06:16:38+03:00 lima-sokol-lab kernel: skv2-h (unregistering): left promiscuous mode
+2026-10-21T06:16:38+03:00 lima-sokol-lab kernel: skbr0: port 2(skv2-h) entered disabled state
+2026-10-21T06:16:38+03:00 lima-sokol-lab udisksd[960202]: Acquired the name org.freedesktop.UDisks2 on the system message bus
+2026-10-21T06:16:38+03:00 lima-sokol-lab kernel: kauditd_printk_skb: 112 callbacks suppressed
+2026-10-21T06:16:38+03:00 lima-sokol-lab kernel: audit: type=1400 audit(1792552598.444:123): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="rsyslogd" pid=960219 comm="apparmor_parser"
+2026-10-21T06:16:38+03:00 lima-sokol-lab kernel: skv1-h (unregistering): left allmulticast mode
+2026-10-21T06:16:38+03:00 lima-sokol-lab kernel: skv1-h (unregistering): left promiscuous mode
+2026-10-21T06:16:38+03:00 lima-sokol-lab kernel: skbr0: port 1(skv1-h) entered disabled state
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Starting polkit.service - Authorization Manager...
+2026-10-21T06:16:38+03:00 lima-sokol-lab suricatasc[960189]: {"message": "Closing Suricata", "return": "OK"}
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-resolved[960207]: Using system hostname 'lima-sokol-lab'.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Started systemd-udevd.service - Rule-based Manager for Device Events and Files.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Started udisks2.service - Disk Manager.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Starting systemd-networkd.service - Network Configuration...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Started systemd-resolved.service - Network Name Resolution.
+2026-10-21T06:16:38+03:00 lima-sokol-lab rsyslogd[960242]: imuxsock: Acquired UNIX socket '/run/systemd/journal/syslog' (fd 3) from systemd.  [v8.2312.0]
+2026-10-21T06:16:38+03:00 lima-sokol-lab rsyslogd[960242]: rsyslogd's groupid changed to 102
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Started rsyslog.service - System Logging Service.
+2026-10-21T06:16:38+03:00 lima-sokol-lab rsyslogd[960242]: rsyslogd's userid changed to 102
+2026-10-21T06:16:38+03:00 lima-sokol-lab rsyslogd[960242]: [origin software="rsyslogd" swVersion="8.2312.0" x-pid="960242" x-info="https://www.rsyslog.com"] start
+2026-10-21T06:16:38+03:00 lima-sokol-lab polkitd[960234]: Started polkitd version 124
+2026-10-21T06:16:38+03:00 lima-sokol-lab polkitd[960234]: Loading rules from directory /etc/polkit-1/rules.d
+2026-10-21T06:16:38+03:00 lima-sokol-lab polkitd[960234]: Loading rules from directory /usr/share/polkit-1/rules.d
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: lo: Link UP
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: lo: Gained carrier
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: eth0: Link UP
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: eth0: Gained carrier
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: lima0: Link UP
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: lima0: Gained carrier
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: skbr0: Link UP
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: skbr0: Gained carrier
+2026-10-21T06:16:38+03:00 lima-sokol-lab polkitd[960234]: Finished loading, compiling and executing 6 rules
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: skv3-h: Link UP
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: skv3-h: Gained carrier
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: eth0: Gained IPv6LL
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: lima0: Gained IPv6LL
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: skbr0: Gained IPv6LL
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: skv3-h: Gained IPv6LL
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Started polkit.service - Authorization Manager.
+2026-10-21T06:16:38+03:00 lima-sokol-lab polkitd[960234]: Acquired the name org.freedesktop.PolicyKit1 on the system bus
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: Enumeration completed
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: eth0: Configuring with /run/systemd/network/10-netplan-eth0.network.
+2026-10-21T06:16:38+03:00 lima-sokol-lab kernel: skbr0: port 3(skv3-h) entered disabled state
+2026-10-21T06:16:38+03:00 lima-sokol-lab kernel: skv3-h (unregistering): left allmulticast mode
+2026-10-21T06:16:38+03:00 lima-sokol-lab kernel: skv3-h (unregistering): left promiscuous mode
+2026-10-21T06:16:38+03:00 lima-sokol-lab kernel: skbr0: port 3(skv3-h) entered disabled state
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Starting ModemManager.service - Modem Manager...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Started systemd-networkd.service - Network Configuration.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Starting systemd-networkd-wait-online.service - Wait for Network to be Configured...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: lima0: Configuring with /run/systemd/network/10-netplan-lima0.network.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: skv3-h: Link DOWN
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: skv3-h: Lost carrier
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: eth0: DHCPv4 address 192.168.5.15/24, gateway 192.168.5.2 acquired from 192.168.5.2
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Started ntpsec-systemd-netif.service.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: ntpsec-systemd-netif.service: Deactivated successfully.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd-networkd[960244]: lima0: DHCPv4 address 192.168.64.4/24, gateway 192.168.64.1 acquired from 192.168.64.1
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Started ntpsec-systemd-netif.service.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: ntpsec-systemd-netif.service: Deactivated successfully.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Finished systemd-networkd-wait-online.service - Wait for Network to be Configured.
+2026-10-21T06:16:38+03:00 lima-sokol-lab ModemManager[960263]: <msg> ModemManager (version 1.23.4) starting in system bus...
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]: Traceback (most recent call last):
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:   File "/home/s0fractal.guest/rc1b-src/scripts/campaign.py", line 107, in <module>
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:     if __name__ == '__main__': raise SystemExit(main())
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:                                                 ^^^^^^
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:   File "/home/s0fractal.guest/rc1b-src/scripts/campaign.py", line 90, in main
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:     out = args.output / str(hours); out.mkdir(mode=0o700)
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:                                     ^^^^^^^^^^^^^^^^^^^^^
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:   File "/usr/lib/python3.12/pathlib.py", line 1313, in mkdir
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:     os.mkdir(self, mode)
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]: FileExistsError: [Errno 17] File exists: '/var/lib/sokol-campaigns/rc1-776861e/24'
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: sokol-campaign-1792529306946940031.service: Main process exited, code=exited, status=1/FAILURE
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: sokol-campaign-1792529306946940031.service: Failed with result 'exit-code'.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Started ModemManager.service - Modem Manager.
+2026-10-21T06:16:39+03:00 lima-sokol-lab systemd[1]: man-db.service: Deactivated successfully.
+2026-10-21T06:16:39+03:00 lima-sokol-lab systemd[1]: Finished man-db.service - Daily man-db regeneration.
+2026-10-21T06:16:39+03:00 lima-sokol-lab systemd-networkd[960244]: skbr0: Lost carrier
+2026-10-21T06:16:39+03:00 lima-sokol-lab systemd[1]: Started ntpsec-systemd-netif.service.
+2026-10-21T06:16:39+03:00 lima-sokol-lab systemd[1]: ntpsec-systemd-netif.service: Deactivated successfully.
+2026-10-21T06:16:40+03:00 lima-sokol-lab systemd[1]: crowdsec.service: Deactivated successfully.
+2026-10-21T06:16:40+03:00 lima-sokol-lab systemd[1]: Stopped crowdsec.service - Crowdsec agent.
+2026-10-21T06:16:40+03:00 lima-sokol-lab systemd[1]: crowdsec.service: Consumed 1min 5.122s CPU time, 92.0M memory peak, 0B memory swap peak.
+2026-10-21T06:16:40+03:00 lima-sokol-lab systemd[1]: Starting crowdsec.service - Crowdsec agent...
+2026-10-21T06:16:40+03:00 lima-sokol-lab kernel: virtio_net virtio0 eth0: left promiscuous mode
+2026-10-21T06:16:40+03:00 lima-sokol-lab systemd[1]: suricata.service: Deactivated successfully.
+2026-10-21T06:16:40+03:00 lima-sokol-lab systemd[1]: Stopped suricata.service - Suricata IDS/IDP daemon.
+2026-10-21T06:16:40+03:00 lima-sokol-lab systemd[1]: suricata.service: Consumed 2min 33.198s CPU time, 120.2M memory peak, 0B memory swap peak.
+2026-10-21T06:16:40+03:00 lima-sokol-lab systemd[1]: Starting suricata.service - Suricata IDS/IDP daemon...
+2026-10-21T06:16:40+03:00 lima-sokol-lab suricata[960328]: i: suricata: This is Suricata version 7.0.3 RELEASE running in SYSTEM mode
+2026-10-21T06:16:40+03:00 lima-sokol-lab systemd[1]: Started suricata.service - Suricata IDS/IDP daemon.
+2026-10-21T06:16:40+03:00 lima-sokol-lab kernel: virtio_net virtio0 eth0: entered promiscuous mode
+2026-10-21T06:16:40+03:00 lima-sokol-lab systemd-resolved[960207]: Using degraded feature set UDP instead of UDP+EDNS0 for DNS server 192.168.5.2.
+2026-10-21T06:16:41+03:00 lima-sokol-lab systemd[1]: Started crowdsec.service - Crowdsec agent.
+2026-10-21T06:16:41+03:00 lima-sokol-lab systemd[1]: Started ntpsec-systemd-netif.service.
+2026-10-21T06:16:41+03:00 lima-sokol-lab systemd[1]: ntpsec-systemd-netif.service: Deactivated successfully.
+2026-10-21T06:16:42+03:00 lima-sokol-lab ntpd[792]: IO: Deleting interface #57 skbr0, fe80::18e4:2ff:fe43:ccc3%72#123, interface stats: received=0, sent=0, dropped=0, active_time=23292 secs
+2026-10-21T06:16:42+03:00 lima-sokol-lab ntpd[792]: IO: Deleting interface #95 skv1-h, fe80::b4c2:6cff:fe2c:932a%74#123, interface stats: received=0, sent=0, dropped=0, active_time=4361 secs
+2026-10-21T06:16:42+03:00 lima-sokol-lab ntpd[792]: IO: Deleting interface #99 skv3-h, fe80::cdf:67ff:fea2:1f4a%78#123, interface stats: received=0, sent=0, dropped=0, active_time=2560 secs
+2026-10-21T06:16:42+03:00 lima-sokol-lab ntpd[792]: IO: Deleting interface #103 skv2-h, fe80::4430:a5ff:fe78:5db8%76#123, interface stats: received=0, sent=0, dropped=0, active_time=761 secs
+2026-10-21T06:16:42+03:00 lima-sokol-lab apt.systemd.daily[959698]: /usr/bin/unattended-upgrade:567: DeprecationWarning: This process (pid=959698) is multi-threaded, use of fork() may lead to deadlocks in the child.
+2026-10-21T06:16:42+03:00 lima-sokol-lab apt.systemd.daily[959698]:   pid = os.fork()
+2026-10-21T06:16:42+03:00 lima-sokol-lab ModemManager[960263]: <msg> [base-manager] couldn't check support for device '/sys/devices/pci0000:00/0000:00:01.0': not supported by any plugin
+2026-10-21T06:16:42+03:00 lima-sokol-lab ModemManager[960263]: <msg> [base-manager] couldn't check support for device '/sys/devices/pci0000:00/0000:00:02.0': not supported by any plugin
+2026-10-21T06:16:46+03:00 lima-sokol-lab apt.systemd.daily[959698]: /usr/bin/unattended-upgrade:567: DeprecationWarning: This process (pid=959698) is multi-threaded, use of fork() may lead to deadlocks in the child.
+2026-10-21T06:16:46+03:00 lima-sokol-lab apt.systemd.daily[959698]:   pid = os.fork()
+2026-10-21T06:16:49+03:00 lima-sokol-lab apt.systemd.daily[959698]: /usr/bin/unattended-upgrade:567: DeprecationWarning: This process (pid=959698) is multi-threaded, use of fork() may lead to deadlocks in the child.
+2026-10-21T06:16:49+03:00 lima-sokol-lab apt.systemd.daily[959698]:   pid = os.fork()
+2026-10-21T06:16:53+03:00 lima-sokol-lab apt.systemd.daily[959698]: /usr/bin/unattended-upgrade:567: DeprecationWarning: This process (pid=959698) is multi-threaded, use of fork() may lead to deadlocks in the child.
+2026-10-21T06:16:53+03:00 lima-sokol-lab apt.systemd.daily[959698]:   pid = os.fork()
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[792]: ERR: ntpd exiting on signal 15 (Terminated)
+2026-10-21T06:16:53+03:00 lima-sokol-lab systemd[1]: Stopping ntpsec.service - Network Time Service...
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[792]: PROTO: 185.125.190.56 unlink local addr 192.168.64.4 -> <null>
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[792]: PROTO: 193.106.144.6 unlink local addr 192.168.64.4 -> <null>
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[792]: PROTO: 91.231.182.17 unlink local addr 192.168.64.4 -> <null>
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[792]: PROTO: 193.106.144.7 unlink local addr 192.168.64.4 -> <null>
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[792]: PROTO: 162.159.200.1 unlink local addr 192.168.64.4 -> <null>
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[792]: PROTO: 176.120.96.12 unlink local addr 192.168.64.4 -> <null>
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[792]: PROTO: 91.207.66.2 unlink local addr 192.168.64.4 -> <null>
+2026-10-21T06:16:53+03:00 lima-sokol-lab systemd[1]: ntpsec.service: Deactivated successfully.
+2026-10-21T06:16:53+03:00 lima-sokol-lab systemd[1]: Stopped ntpsec.service - Network Time Service.
+2026-10-21T06:16:53+03:00 lima-sokol-lab systemd[1]: ntpsec.service: Consumed 2.301s CPU time, 12.3M memory peak, 0B memory swap peak.
+2026-10-21T06:16:53+03:00 lima-sokol-lab systemd[1]: Starting ntpsec.service - Network Time Service...
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967364]: INIT: ntpd ntpsec-1.2.2: Starting
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntp-systemd-wrapper[967364]: 2026-10-21T06:16:53 ntpd[967364]: INIT: ntpd ntpsec-1.2.2: Starting
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntp-systemd-wrapper[967364]: 2026-10-21T06:16:53 ntpd[967364]: INIT: Command line: /usr/sbin/ntpd -p /run/ntpd.pid -c /etc/ntpsec/ntp.conf -g -N -u ntpsec:ntpsec
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967364]: INIT: Command line: /usr/sbin/ntpd -p /run/ntpd.pid -c /etc/ntpsec/ntp.conf -g -N -u ntpsec:ntpsec
+2026-10-21T06:16:53+03:00 lima-sokol-lab systemd[1]: Started ntpsec.service - Network Time Service.
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: INIT: precision = 0.041 usec (-24)
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: INIT: successfully locked into RAM
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: CONFIG: readconfig: parsing file: /etc/ntpsec/ntp.conf
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: CONFIG: restrict nopeer ignored
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: CLOCK: leapsecond file ('/usr/share/zoneinfo/leap-seconds.list'): good hash signature
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: CLOCK: leapsecond file ('/usr/share/zoneinfo/leap-seconds.list'): loaded, expire=2027-06-28T00:00Z last=2017-01-01T00:00Z ofs=37
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: INIT: Using SO_TIMESTAMPNS(ns)
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: IO: Listen and drop on 0 v6wildcard [::]:123
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: IO: Listen and drop on 1 v4wildcard 0.0.0.0:123
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: IO: Listen normally on 2 lo 127.0.0.1:123
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: IO: Listen normally on 3 eth0 192.168.5.15:123
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: IO: Listen normally on 4 lima0 192.168.64.4:123
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: IO: Listen normally on 5 lo [::1]:123
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: IO: Listen normally on 6 eth0 [fe80::5055:55ff:fef7:f4cb%2]:123
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: IO: Listen normally on 7 lima0 [fd13:f5bb:70c1:ef7e:5055:55ff:fee4:7140]:123
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: IO: Listen normally on 8 lima0 [fe80::5055:55ff:fee4:7140%3]:123
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: IO: Listening on routing socket on fd #25 for interface updates
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: INIT: MRU 10922 entries, 13 hash bits, 65536 bytes
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: INIT: OpenSSL 3.0.13 30 Jan 2024, 300000d0
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: NTSc: Using system default root certificates.
+2026-10-21T06:16:53+03:00 lima-sokol-lab ntpd[967366]: statistics directory /var/log/ntpsec/ does not exist or is unwriteable, error No such file or directory
+2026-10-21T06:16:54+03:00 lima-sokol-lab ntpd[967366]: DNS: dns_probe: 0.ubuntu.pool.ntp.org, cast_flags:8, flags:101
+2026-10-21T06:16:54+03:00 lima-sokol-lab ntpd[967366]: DNS: dns_check: processing 0.ubuntu.pool.ntp.org, 8, 101
+2026-10-21T06:16:54+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 193.84.22.254
+2026-10-21T06:16:54+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 162.159.200.123
+2026-10-21T06:16:54+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 188.191.239.24
+2026-10-21T06:16:54+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 91.236.251.38
+2026-10-21T06:16:54+03:00 lima-sokol-lab ntpd[967366]: DNS: dns_take_status: 0.ubuntu.pool.ntp.org=>good, 8
+2026-10-21T06:16:55+03:00 lima-sokol-lab ntpd[967366]: DNS: dns_probe: 1.ubuntu.pool.ntp.org, cast_flags:8, flags:101
+2026-10-21T06:16:55+03:00 lima-sokol-lab ntpd[967366]: DNS: dns_check: processing 1.ubuntu.pool.ntp.org, 8, 101
+2026-10-21T06:16:55+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 176.120.96.12
+2026-10-21T06:16:55+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 91.236.251.35
+2026-10-21T06:16:55+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 176.114.1.114
+2026-10-21T06:16:55+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 162.159.200.1
+2026-10-21T06:16:55+03:00 lima-sokol-lab ntpd[967366]: DNS: dns_take_status: 1.ubuntu.pool.ntp.org=>good, 8
+2026-10-21T06:16:56+03:00 lima-sokol-lab systemd[1]: apt-daily-upgrade.service: Deactivated successfully.
+2026-10-21T06:16:56+03:00 lima-sokol-lab systemd[1]: Finished apt-daily-upgrade.service - Daily apt upgrade and clean activities.
+2026-10-21T06:16:56+03:00 lima-sokol-lab systemd[1]: apt-daily-upgrade.service: Consumed 22.280s CPU time, 559.1M memory peak, 0B memory swap peak.
+2026-10-21T06:16:56+03:00 lima-sokol-lab systemd[1]: Starting fwupd-refresh.service - Refresh fwupd metadata and update motd...
+2026-10-21T06:16:56+03:00 lima-sokol-lab systemd[1]: Starting apt-news.service - Update APT News...
+2026-10-21T06:16:56+03:00 lima-sokol-lab systemd[1]: Starting esm-cache.service - Update the local ESM caches...
+2026-10-21T06:16:56+03:00 lima-sokol-lab dbus-daemon[763]: [system] Activating via systemd: service name='org.freedesktop.fwupd' unit='fwupd.service' requested by ':1.81' (uid=990 pid=967580 comm="/usr/bin/fwupdmgr refresh" label="unconfined")
+2026-10-21T06:16:56+03:00 lima-sokol-lab systemd[1]: Starting modprobe@sd_mod.service - Load Kernel Module sd_mod...
+2026-10-21T06:16:56+03:00 lima-sokol-lab systemd[1]: modprobe@sd_mod.service: Deactivated successfully.
+2026-10-21T06:16:56+03:00 lima-sokol-lab systemd[1]: Finished modprobe@sd_mod.service - Load Kernel Module sd_mod.
+2026-10-21T06:16:56+03:00 lima-sokol-lab systemd[1]: Starting fwupd.service - Firmware update daemon...
+2026-10-21T06:16:56+03:00 lima-sokol-lab systemd[1]: apt-news.service: Deactivated successfully.
+2026-10-21T06:16:56+03:00 lima-sokol-lab systemd[1]: Finished apt-news.service - Update APT News.
+2026-10-21T06:16:56+03:00 lima-sokol-lab fwupd[967590]: 03:16:56.626 FuMain               fwupd 2.0.20 ready for requests (locale C.UTF-8)
+2026-10-21T06:16:56+03:00 lima-sokol-lab dbus-daemon[763]: [system] Successfully activated service 'org.freedesktop.fwupd'
+2026-10-21T06:16:56+03:00 lima-sokol-lab systemd[1]: Started fwupd.service - Firmware update daemon.
+2026-10-21T06:16:56+03:00 lima-sokol-lab systemd[1]: fwupd-refresh.service: Deactivated successfully.
+2026-10-21T06:16:56+03:00 lima-sokol-lab systemd[1]: Finished fwupd-refresh.service - Refresh fwupd metadata and update motd.
+2026-10-21T06:16:56+03:00 lima-sokol-lab ntpd[967366]: DNS: dns_probe: 2.ubuntu.pool.ntp.org, cast_flags:8, flags:101
+2026-10-21T06:16:56+03:00 lima-sokol-lab ntpd[967366]: DNS: dns_check: processing 2.ubuntu.pool.ntp.org, 8, 101
+2026-10-21T06:16:56+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 188.191.234.54
+2026-10-21T06:16:56+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 176.114.2.114
+2026-10-21T06:16:56+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 212.1.104.9
+2026-10-21T06:16:56+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 91.207.66.2
+2026-10-21T06:16:56+03:00 lima-sokol-lab ntpd[967366]: DNS: dns_take_status: 2.ubuntu.pool.ntp.org=>good, 8
+2026-10-21T06:16:57+03:00 lima-sokol-lab systemd[1]: esm-cache.service: Deactivated successfully.
+2026-10-21T06:16:57+03:00 lima-sokol-lab systemd[1]: Finished esm-cache.service - Update the local ESM caches.
+2026-10-21T06:16:57+03:00 lima-sokol-lab ntpd[967366]: DNS: dns_probe: 3.ubuntu.pool.ntp.org, cast_flags:8, flags:101
+2026-10-21T06:16:57+03:00 lima-sokol-lab ntpd[967366]: DNS: dns_check: processing 3.ubuntu.pool.ntp.org, 8, 101
+2026-10-21T06:16:57+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 94.158.46.150
+2026-10-21T06:16:57+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 193.106.144.6
+2026-10-21T06:16:57+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 213.231.2.124
+2026-10-21T06:16:57+03:00 lima-sokol-lab ntpd[967366]: DNS: Pool taking: 91.231.182.17
+2026-10-21T06:16:57+03:00 lima-sokol-lab ntpd[967366]: DNS: dns_take_status: 3.ubuntu.pool.ntp.org=>good, 8
+2026-10-21T06:16:58+03:00 lima-sokol-lab ntpd[967366]: DNS: dns_probe: ntp.ubuntu.com, cast_flags:1, flags:20801
+2026-10-21T06:16:58+03:00 lima-sokol-lab systemd[1]: apt-daily.service: Deactivated successfully.
+2026-10-21T06:16:58+03:00 lima-sokol-lab systemd[1]: Finished apt-daily.service - Daily apt download activities.
+2026-10-21T06:16:58+03:00 lima-sokol-lab systemd[1]: apt-daily.service: Consumed 1.771s CPU time.
+2026-10-21T06:16:58+03:00 lima-sokol-lab ntpd[967366]: DNS: dns_check: processing ntp.ubuntu.com, 1, 20801
+2026-10-21T06:16:58+03:00 lima-sokol-lab ntpd[967366]: DNS: Server taking: 185.125.190.57
+2026-10-21T06:16:58+03:00 lima-sokol-lab ntpd[967366]: DNS: dns_take_status: ntp.ubuntu.com=>good, 0

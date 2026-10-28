@@ -1,0 +1,18 @@
+2026-10-20T23:48:26+03:00 lima-sokol-lab systemd[1]: Started sokol-campaign-1792529306946940031.service - /usr/bin/python3 /home/s0fractal.guest/rc1b-src/scripts/campaign.py --worker --binary /var/lib/sokol-campaigns/rc1-776861e-candidate/usr/local/bin/sokol-orchestrator --monitor /var/lib/sokol-campaigns/rc1-776861e-candidate/usr/local/bin/sokol-monitor --output /var/lib/sokol-campaigns/rc1-776861e.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopping sokol-campaign-1792529306946940031.service - /usr/bin/python3 /home/s0fractal.guest/rc1b-src/scripts/campaign.py --worker --binary /var/lib/sokol-campaigns/rc1-776861e-candidate/usr/local/bin/sokol-orchestrator --monitor /var/lib/sokol-campaigns/rc1-776861e-candidate/usr/local/bin/sokol-monitor --output /var/lib/sokol-campaigns/rc1-776861e...
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: sokol-campaign-1792529306946940031.service: Deactivated successfully.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Stopped sokol-campaign-1792529306946940031.service - /usr/bin/python3 /home/s0fractal.guest/rc1b-src/scripts/campaign.py --worker --binary /var/lib/sokol-campaigns/rc1-776861e-candidate/usr/local/bin/sokol-orchestrator --monitor /var/lib/sokol-campaigns/rc1-776861e-candidate/usr/local/bin/sokol-monitor --output /var/lib/sokol-campaigns/rc1-776861e.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: sokol-campaign-1792529306946940031.service: Consumed 27min 26.021s CPU time, 380.0M memory peak, 0B memory swap peak.
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: Started sokol-campaign-1792529306946940031.service - /usr/bin/python3 /home/s0fractal.guest/rc1b-src/scripts/campaign.py --worker --binary /var/lib/sokol-campaigns/rc1-776861e-candidate/usr/local/bin/sokol-orchestrator --monitor /var/lib/sokol-campaigns/rc1-776861e-candidate/usr/local/bin/sokol-monitor --output /var/lib/sokol-campaigns/rc1-776861e.
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]: Traceback (most recent call last):
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:   File "/home/s0fractal.guest/rc1b-src/scripts/campaign.py", line 107, in <module>
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:     if __name__ == '__main__': raise SystemExit(main())
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:                                                 ^^^^^^
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:   File "/home/s0fractal.guest/rc1b-src/scripts/campaign.py", line 90, in main
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:     out = args.output / str(hours); out.mkdir(mode=0o700)
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:                                     ^^^^^^^^^^^^^^^^^^^^^
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:   File "/usr/lib/python3.12/pathlib.py", line 1313, in mkdir
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]:     os.mkdir(self, mode)
+2026-10-21T06:16:38+03:00 lima-sokol-lab python3[960237]: FileExistsError: [Errno 17] File exists: '/var/lib/sokol-campaigns/rc1-776861e/24'
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: sokol-campaign-1792529306946940031.service: Main process exited, code=exited, status=1/FAILURE
+2026-10-21T06:16:38+03:00 lima-sokol-lab systemd[1]: sokol-campaign-1792529306946940031.service: Failed with result 'exit-code'.
