@@ -65,5 +65,16 @@ class Profiles(unittest.TestCase):
         self.assertEqual([p['minutes'] for p in campaign.PROFILES['long']], [24 * 60, 72 * 60])
 
 
+class Plan(unittest.TestCase):
+    def test_the_worker_runs_the_profile_the_receipt_names(self):
+        receipt = {'campaign': 'rc1', 'plan': campaign.PROFILES['rc1']}
+        self.assertIs(campaign.plan_of(receipt), campaign.PROFILES['rc1'])
+
+    def test_an_edited_plan_in_the_receipt_is_refused_not_run(self):
+        edited = [dict(step, env={**step['env'], 'BENCH_OUT': '/elsewhere'}) for step in campaign.PROFILES['rc1']]
+        self.assertIsNone(campaign.plan_of({'campaign': 'rc1', 'plan': edited}))
+        self.assertIsNone(campaign.plan_of({'campaign': 'other', 'plan': campaign.PROFILES['rc1']}))
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -61,6 +61,13 @@ def git(*args):
     return subprocess.check_output(['git', '-c', 'safe.directory=' + str(ROOT), *args], cwd=ROOT, text=True).strip()
 
 
+def plan_of(receipt):
+    """The phases to run: the code's profile named in the receipt, never the receipt's own copy (the
+    receipt records the plan; an edited one is refused, not run)."""
+    plan = PROFILES.get(receipt.get('campaign'))
+    return plan if plan is not None and receipt.get('plan') == plan else None
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--binary', type=Path, required=True)
@@ -115,9 +122,12 @@ def main():
     receipt = json.loads(path.read_text())
     if digest(args.binary) != receipt['binary_sha256'] or digest(args.monitor) != receipt['monitor_sha256']:
         receipt['status'] = 'REFUSED_CHANGED_BINARY'; write(path, receipt); return 1
+    plan = plan_of(receipt)
+    if plan is None:
+        receipt['status'] = 'REFUSED_CHANGED_PLAN'; write(path, receipt); return 1
     # Privileged experiment, not a sandbox for untrusted native code. A hard cgroup kill
     # can prevent this write; a remaining RUNNING receipt then requires systemd readback.
-    for step in receipt['plan']:
+    for step in plan:
         if git('rev-parse', 'HEAD') != receipt['source_commit'] or digest(ROOT / 'bench/mesh.sh') != receipt['bench_sha256']:
             receipt['status'] = 'REFUSED_CHANGED_EXPERIMENT'; write(path, receipt); return 1
         out = args.output / step['name']; out.mkdir(mode=0o700)
