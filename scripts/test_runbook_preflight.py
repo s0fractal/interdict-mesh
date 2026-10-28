@@ -1,7 +1,7 @@
 """runbook-rehearsal.sh refuses a host it does not own, and the refusal changes nothing.
 
 Review of #153 (b48c098): the refusal of unmarked state ran after the EXIT cleanup trap was
-armed, so it stopped sokol-orchestrator and deleted the pilot0 link and the remote namespace
+armed, so it stopped interdictd and deleted the pilot0 link and the remote namespace
 on the way out. Only file bytes were preserved. Here systemctl and ip are recording stubs and
 the state paths are relocated (REHEARSAL_ROOT); only the refusal path is run (it exits before
 any real change, so the stubs are never asked to do one).
@@ -55,7 +55,7 @@ class Preflight(unittest.TestCase):
         self.assertEqual(changed, [], 'a refusal stopped or removed something')
 
     def test_unmarked_state_is_refused_and_nothing_is_stopped_or_removed(self):
-        data = self.root / 'var/lib/sokol/audit.log'
+        data = self.root / 'var/lib/interdict/audit.log'
         data.parent.mkdir(parents=True)
         data.write_bytes(b'operator evidence')
         result, calls = self.run_rehearsal()
@@ -63,7 +63,7 @@ class Preflight(unittest.TestCase):
         self.assertEqual(data.read_bytes(), b'operator evidence')
 
     def test_an_installed_unit_without_the_marker_is_refused(self):
-        unit = self.root / 'etc/systemd/system/sokol-orchestrator.service'
+        unit = self.root / 'etc/systemd/system/interdictd.service'
         unit.parent.mkdir(parents=True)
         unit.write_text('[Service]\n')
         self.assert_refused_untouched(*self.run_rehearsal())

@@ -14,7 +14,7 @@ No RC has been admitted yet; native-NIC/router qualification and the field pilot
 
 ## System and boundaries
 
-Sokol is a Linux XDP enforcement node with local detector adapters, an
+interdict-mesh is a Linux XDP enforcement node with local detector adapters, an
 authenticated mesh, operator control and optional upstream FlowSpec. It does not
 independently establish that an address is malicious. The supported lab profile,
 unverified environments and operational recovery are in SUPPORT and RUNBOOK.

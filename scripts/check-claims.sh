@@ -17,7 +17,7 @@ bad() { echo "FAIL $*"; fail=1; }
 # shellcheck disable=SC2207  # paths in this tree have no spaces
 SRC=($(git ls-files 'orchestrator/src/*.rs'))
 
-metrics=$(grep -oE '"sokol_[a-z0-9_]+' orchestrator/src/metrics.rs | tr -d '"' | sort -u)
+metrics=$(grep -oE '"interdict_[a-z0-9_]+' orchestrator/src/metrics.rs | tr -d '"' | sort -u)
 # Flags: fields of the clap Parser structs (not of any struct), plus the ones parsed by hand.
 flags=$({ awk '/derive\(.*Parser/ {p = 1; next} p && /^}/ {p = 0} p && match($0, /^ +(pub )?[a-z][a-z0-9_]*:/) {
               f = substr($0, RSTART, RLENGTH); sub(/^ +(pub )?/, "", f); sub(/:$/, "", f); gsub(/_/, "-", f); print "--" f
@@ -30,8 +30,19 @@ flags=$({ awk '/derive\(.*Parser/ {p = 1; next} p && /^}/ {p = 0} p && match($0,
 # shellcheck disable=SC2016  # the backticks are literal
 spans=$(grep -ohE '`[^`]+`' "${DOCS[@]}" | tr -d '`')
 
-# Metrics: any sokol_* name inside a code span (with labels or in an expression), not a path.
-for m in $(echo "$spans" | grep -oE '(^|[^/a-z0-9_])sokol_[a-z0-9_]+' | grep -oE 'sokol_[a-z0-9_]+' | sort -u); do
+# Metrics: any interdict_* name inside a code span (with labels or in an expression), not a path.
+# sokol_ is the former prefix (ADR-0034): a measurement README keeps the name it measured and is
+# checked as its interdict_ successor; anywhere else a sokol_ name is a stale citation.
+# shellcheck disable=SC2016  # the backticks are literal
+measured=$(grep -ohE '`[^`]+`' docs/measurements/*/README.md | tr -d '`')
+# shellcheck disable=SC2016
+current=$(for d in "${DOCS[@]}"; do [[ $d == docs/measurements/* ]] || grep -ohE '`[^`]+`' "$d"; done | tr -d '`')
+for m in $(echo "$current" | grep -oE '(^|[^/a-z0-9_])sokol_[a-z0-9_]+' | grep -oE 'sokol_[a-z0-9_]+' | sort -u); do
+    n_metrics=$((n_metrics + 1))
+    bad "metric $m is cited under the former prefix; the node exports interdict_${m#sokol_} (ADR-0034)"
+done
+for m in $({ echo "$spans"; echo "$measured" | sed -E 's/(^|[^/a-z0-9_])sokol_/\1interdict_/g'; } |
+           grep -oE '(^|[^/a-z0-9_])interdict_[a-z0-9_]+' | grep -oE 'interdict_[a-z0-9_]+' | sort -u); do
     n_metrics=$((n_metrics + 1))
     case "$m" in
         *_) grep -q "^$m" <<<"$metrics" || bad "metric family $m* is cited but none is exported" ;;
@@ -51,7 +62,7 @@ else
 fi
 tests=$(echo "$test_list" | sed -n 's/: test$//p' | sed 's/.*:://' | sort -u)
 [ -n "$tests" ] || bad "the test list names no test: nothing to check the cited tests against"
-for id in $(echo "$spans" | grep -oxE '[a-z][a-z0-9]*(_[a-z0-9]+){3,}' | grep -v '^sokol_' | sort -u); do
+for id in $(echo "$spans" | grep -oxE '[a-z][a-z0-9]*(_[a-z0-9]+){3,}' | grep -vE '^(sokol|interdict)_' | sort -u); do
     n_tests=$((n_tests + 1))
     [ -n "${SOKOL_SKIP_TEST_NAMES:-}" ] || grep -qx -- "$id" <<<"$tests" || bad "test $id is cited but no test has that name"
 done

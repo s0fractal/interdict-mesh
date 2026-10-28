@@ -1,4 +1,4 @@
-# Working on Sokol-Core as an agent
+# Working on interdict-mesh as an agent
 
 Read [ARCHITECTURE.md](ARCHITECTURE.md) §3 first: almost every defect found here had one shape,
 a decision that read *some* record instead of the established fact. The three rules that follow

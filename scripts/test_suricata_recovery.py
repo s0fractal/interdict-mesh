@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exercise the actual adapter's queue/cursor/restart wiring, without XDP or root.
 
-Run after building: python3 scripts/test_suricata_recovery.py target/release/sokol-suricata
+Run after building: python3 scripts/test_suricata_recovery.py target/release/interdict-suricata
 The socket peer acknowledges transport only; this does not prove node durability,
 exactly-once effects, or recovery of entries in rotated-away files.
 """

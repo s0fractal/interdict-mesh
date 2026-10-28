@@ -1,14 +1,14 @@
-//! FastNetMon → Sokol hook. Set it as FastNetMon's notify script:
+//! FastNetMon → interdict-mesh hook. Set it as FastNetMon's notify script:
 //!
 //! ```text
 //! # /etc/fastnetmon.conf
-//! notify_script_path = /usr/local/bin/sokol-fastnetmon-notify
+//! notify_script_path = /usr/local/bin/interdict-fastnetmon-notify
 //! ```
 //!
 //! FastNetMon calls it as `<ip> <incoming|outgoing> <pps> <ban|unban|attack_details>` and writes
 //! attack details to stdin for `ban`; the script must read them. The hook forwards
 //! `ATTACK:fastnetmon|<ip>|<direction>|<pps>|<action>` to the node's IPC socket
-//! (`SOKOL_IPC_SOCKET`, default /run/sokol.sock). The node does not block the reported address —
+//! (`INTERDICT_IPC_SOCKET`, default /run/interdict.sock). The node does not block the reported address —
 //! it is the victim, inside the protected network — but reports itself under attack to the mesh.
 //!
 //! The report goes through `delivery::Outbox` in ACK mode, like the other detector adapters: it
@@ -115,31 +115,38 @@ fn notify(args: &[String]) -> i32 {
     let line = match report_line(args) {
         Ok(line) => line,
         Err(e) => {
-            eprintln!("sokol-fastnetmon-notify: {}", e);
+            eprintln!("interdict-fastnetmon-notify: {}", e);
             return EXIT_NOT_ACTED_ON;
         }
     };
     let report = line.trim();
-    let socket = std::env::var("SOKOL_IPC_SOCKET").unwrap_or_else(|_| "/run/sokol.sock".into());
+    let socket =
+        std::env::var("INTERDICT_IPC_SOCKET").unwrap_or_else(|_| "/run/interdict.sock".into());
     match deliver(Path::new(&socket), &line, DELIVERY_BUDGET) {
         Ok(delivery::Outcome::Refused(why)) => {
-            eprintln!("sokol-fastnetmon-notify: node refused {}: {}", report, why);
+            eprintln!(
+                "interdict-fastnetmon-notify: node refused {}: {}",
+                report, why
+            );
             EXIT_NOT_ACTED_ON
         }
         Ok(delivery::Outcome::Rejected(why)) => {
-            eprintln!("sokol-fastnetmon-notify: node rejected {}: {}", report, why);
+            eprintln!(
+                "interdict-fastnetmon-notify: node rejected {}: {}",
+                report, why
+            );
             EXIT_NOT_ACTED_ON
         }
         Ok(outcome) => {
             eprintln!(
-                "sokol-fastnetmon-notify: delivered {} (node answered {:?})",
+                "interdict-fastnetmon-notify: delivered {} (node answered {:?})",
                 report, outcome
             );
             0
         }
         Err(e) => {
             eprintln!(
-                "sokol-fastnetmon-notify: NOT delivered {}: no answer from {} within {:?} ({}); the report is lost",
+                "interdict-fastnetmon-notify: NOT delivered {}: no answer from {} within {:?} ({}); the report is lost",
                 report, socket, DELIVERY_BUDGET, e
             );
             EXIT_NOT_DELIVERED
@@ -225,7 +232,7 @@ mod tests {
         let output = Command::new(std::env::current_exe().unwrap())
             .args(["--exact", test, "--nocapture", "--test-threads=1"])
             .env(CHILD, "1")
-            .env("SOKOL_IPC_SOCKET", socket)
+            .env("INTERDICT_IPC_SOCKET", socket)
             .stdin(Stdio::null())
             .output()
             .unwrap();

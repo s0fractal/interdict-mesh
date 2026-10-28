@@ -284,7 +284,7 @@ deadline=$((SECONDS + 90))
 until [ $SECONDS -ge $deadline ]; do
     ready=0
     for i in $(seq 1 "$N"); do
-        [ "$(metric "$i" sokol_p2p_active_peers)" = "$((N - 1))" ] && ready=$((ready + 1))
+        [ "$(metric "$i" interdict_p2p_active_peers)" = "$((N - 1))" ] && ready=$((ready + 1))
     done
     [ "$ready" = "$N" ] && break
     sleep 0.5
@@ -388,10 +388,10 @@ partition)
         echo "node $N did NOT learn the block within 60 s after the link came back"
     fi
     for _ in $(seq 1 60); do
-        [ "$(metric "$N" sokol_p2p_active_peers)" = "$((N - 1))" ] && break
+        [ "$(metric "$N" interdict_p2p_active_peers)" = "$((N - 1))" ] && break
         sleep 0.5
     done
-    echo "node $N sees $(metric "$N" sokol_p2p_active_peers)/$((N - 1)) peers $(( $(date +%s%3N) - t_up )) ms after the link came back"
+    echo "node $N sees $(metric "$N" interdict_p2p_active_peers)/$((N - 1)) peers $(( $(date +%s%3N) - t_up )) ms after the link came back"
     if [ -n "${VERBOSE:-}" ]; then
         echo "node $N log (P2P):"; grep -E "P2P|Mesh" "$WORK/n$N/node.log" | tail -25 | sed 's/^/    /'
     fi
@@ -422,7 +422,7 @@ soak)
             # (RC-1, 72 h phase: a restart at the sample's second ended the run at 69.3 h).
             audit=$(du -cb "$WORK/n$i"/audit.log* 2>/dev/null | tail -1 | cut -f1 || true)
             state=$(stat -c %s "$WORK/n$i/audit.log.blocks.json" 2>/dev/null || echo 0)
-            echo "$t,$i,${rss:-0},$fds,${audit:-0},$state,$(metric "$i" 'sokol_blocks_active{family="ipv4"}'),$(metric "$i" sokol_blocks_pending),$(metric "$i" sokol_tick_seconds_max),$(metric "$i" sokol_p2p_active_peers)" >>"$CSV"
+            echo "$t,$i,${rss:-0},$fds,${audit:-0},$state,$(metric "$i" 'interdict_blocks_active{family="ipv4"}'),$(metric "$i" interdict_blocks_pending),$(metric "$i" interdict_tick_seconds_max),$(metric "$i" interdict_p2p_active_peers)" >>"$CSV"
         done
     }
     start=$SECONDS; end=$((start + MINUTES * 60))
@@ -467,7 +467,7 @@ soak)
     agreed=""
     for _ in $(seq 1 30); do
         # Every node must answer: a node that is down has no value, and must not drop out of the vote.
-        actives=$(for i in $(seq 1 "$N"); do v=$(metric "$i" 'sokol_blocks_active{family="ipv4"}'); echo "${v:-down}"; done | sort -u | tr '\n' ' ')
+        actives=$(for i in $(seq 1 "$N"); do v=$(metric "$i" 'interdict_blocks_active{family="ipv4"}'); echo "${v:-down}"; done | sort -u | tr '\n' ' ')
         read -ra distinct <<<"$actives"
         [ ${#distinct[@]} = 1 ] && [ "${distinct[0]}" != down ] && { agreed=1; break; }
         sleep 1
@@ -542,13 +542,13 @@ PY
     ctl_max=0; ctl_n=0
     # Probe until node 1 has taken every signal (the senders finish long before: the socket
     # buffers what the node's IPC pacing has not read yet), at most 5 minutes.
-    while [ "$(metric 1 'sokol_blocks_active{family="ipv4"}')" != "$SIGNALS" ] && [ $((SECONDS - t0)) -lt 300 ]; do
+    while [ "$(metric 1 'interdict_blocks_active{family="ipv4"}')" != "$SIGNALS" ] && [ $((SECONDS - t0)) -lt 300 ]; do
         ms=$(ctl_ms 1 LIST_BANS); ctl_n=$((ctl_n + 1)); [ "$ms" -gt "$ctl_max" ] && ctl_max=$ms
         sleep 0.5
     done
     flood_s=$((SECONDS - t0))
     wait "${senders[@]}"
-    dropped=$(metric 1 'sokol_mesh_broadcasts_dropped_total{class="urgent"}')
+    dropped=$(metric 1 'interdict_mesh_broadcasts_dropped_total{class="urgent"}')
     echo "# flood done in ${flood_s} s; node 1 dropped ${dropped:-0} urgent broadcasts; control answered $ctl_n times, max ${ctl_max} ms"
     fail=0
     [ "${dropped:-0}" -gt 0 ] || { echo "NOT EXERCISED no broadcast was dropped: raise the signals or lower RECOVER_RATE"; fail=1; }
@@ -556,17 +556,17 @@ PY
     # L3: every node reaches node 1's count; polled once a second.
     t_end=$SECONDS; converged=""
     while [ $((SECONDS - t_end)) -le 120 ]; do
-        want=$(metric 1 'sokol_blocks_active{family="ipv4"}'); behind=0
+        want=$(metric 1 'interdict_blocks_active{family="ipv4"}'); behind=0
         [ -n "$want" ] && [ "$want" -gt 16384 ] && want=16384   # ADR-0007 envelope, default
-        for i in $(seq 2 "$N"); do [ "$(metric "$i" 'sokol_blocks_active{family="ipv4"}')" = "$want" ] || behind=$((behind + 1)); done
+        for i in $(seq 2 "$N"); do [ "$(metric "$i" 'interdict_blocks_active{family="ipv4"}')" = "$want" ] || behind=$((behind + 1)); done
         [ "$behind" = 0 ] && [ -n "$want" ] && { converged=$((SECONDS - t_end)); break; }
         sleep 1
     done
-    if [ -n "$converged" ]; then echo "PASS L3 all $N nodes hold node 1's blocks (${want}, envelope 16384) ${converged} s after the flood"; else echo "FAIL L3 after 120 s $behind node(s) still differ from node 1 ($want blocks): $(for i in $(seq 2 "$N"); do printf '%s ' "$(metric "$i" 'sokol_blocks_active{family="ipv4"}')"; done)"; fail=1; fi
+    if [ -n "$converged" ]; then echo "PASS L3 all $N nodes hold node 1's blocks (${want}, envelope 16384) ${converged} s after the flood"; else echo "FAIL L3 after 120 s $behind node(s) still differ from node 1 ($want blocks): $(for i in $(seq 2 "$N"); do printf '%s ' "$(metric "$i" 'interdict_blocks_active{family="ipv4"}')"; done)"; fail=1; fi
     tick=0; pending=0
     for i in $(seq 1 "$N"); do
-        t=$(metric "$i" sokol_tick_seconds_max); awk -v t="${t:-9}" 'BEGIN { exit !(t > 0.5) }' && { echo "     node $i tick max ${t}s"; tick=1; }
-        [ "$(metric "$i" sokol_blocks_pending)" = 0 ] || pending=$((pending + 1))
+        t=$(metric "$i" interdict_tick_seconds_max); awk -v t="${t:-9}" 'BEGIN { exit !(t > 0.5) }' && { echo "     node $i tick max ${t}s"; tick=1; }
+        [ "$(metric "$i" interdict_blocks_pending)" = 0 ] || pending=$((pending + 1))
     done
     if [ $tick = 0 ]; then echo "PASS L2 no maintenance tick over 500 ms"; else echo "FAIL L2 maintenance tick over 500 ms"; fail=1; fi
     if [ $pending = 0 ]; then echo "PASS L4 no node has blocks waiting for the kernel map"; else echo "FAIL L4 $pending node(s) have pending blocks"; fail=1; fi
@@ -582,7 +582,7 @@ clock)
     fail=0
     pass() { echo "PASS $*"; }
     flunk() { echo "FAIL $*"; fail=1; }
-    active() { local v; v=$(metric "$1" 'sokol_blocks_active{family="ipv4"}'); echo "${v:-down}"; }
+    active() { local v; v=$(metric "$1" 'interdict_blocks_active{family="ipv4"}'); echo "${v:-down}"; }
     signal_at() { printf 'SIGNAL:clock|%s|-|clock test\n' "$2" | in_ns "$1" nc -U -q1 "$WORK/n$1/ipc.sock" >/dev/null; }
     wait_for() {   # wait_for <seconds> '<condition>': seconds taken, or failure on timeout
         # The condition is a string evaluated on every try: passed as words, a $(metric ...)
@@ -592,8 +592,8 @@ clock)
         echo $((SECONDS - t0))
     }
     # S1 (node 3 was started at +20 s: see below)
-    [ "$(metric 1 sokol_p2p_active_peers)" = 2 ] && [ "$(metric 3 sokol_p2p_active_peers)" = 2 ] \
-        && pass "C1 node 3 at +20 s is in the full mesh" || flunk "C1 mesh with node 3 at +20 s: node 1 sees $(metric 1 sokol_p2p_active_peers), node 3 sees $(metric 3 sokol_p2p_active_peers)"
+    [ "$(metric 1 interdict_p2p_active_peers)" = 2 ] && [ "$(metric 3 interdict_p2p_active_peers)" = 2 ] \
+        && pass "C1 node 3 at +20 s is in the full mesh" || flunk "C1 mesh with node 3 at +20 s: node 1 sees $(metric 1 interdict_p2p_active_peers), node 3 sees $(metric 3 interdict_p2p_active_peers)"
     signal_at 1 198.18.7.1
     if t=$(wait_for 10 'test "$(active 3)" = 1'); then pass "C2 node 1's block reached node 3 in ${t} s"; else flunk "C2 node 3 never got node 1's block"; fi
     t_3=""; t_1=""; t0=$SECONDS
@@ -607,18 +607,18 @@ clock)
     else flunk "C3 expiry: node 3 at ${t_3:-never}, node 1 at ${t_1:-never} (script seconds)"; fi
     # S2
     echo "+60" >"$WORK/n3/clock"
-    if t=$(wait_for 45 'test "$(metric 1 sokol_p2p_active_peers)" = 1'); then pass "C4 node 3 at +60 s left node 1's mesh after ${t} s"
-    else flunk "C4 node 1 still sees $(metric 1 sokol_p2p_active_peers) peers 45 s after node 3 stepped to +60 s"; fi
+    if t=$(wait_for 45 'test "$(metric 1 interdict_p2p_active_peers)" = 1'); then pass "C4 node 3 at +60 s left node 1's mesh after ${t} s"
+    else flunk "C4 node 1 still sees $(metric 1 interdict_p2p_active_peers) peers 45 s after node 3 stepped to +60 s"; fi
     signal_at 3 198.18.7.3
     sleep 3
     if [ "$(active 3)" = 1 ] && [ "$(active 1)" = 0 ]; then pass "C5 node 3 still blocks its own detector's target; node 1 did not get it"
     else flunk "C5 node 3 holds $(active 3), node 1 holds $(active 1)"; fi
     # S3
     echo "+0" >"$WORK/n3/clock"
-    if t=$(wait_for 60 'test "$(metric 1 sokol_p2p_active_peers)" = 2'); then pass "C6 node 3 back at +0 rejoined node 1 after ${t} s"
+    if t=$(wait_for 60 'test "$(metric 1 interdict_p2p_active_peers)" = 2'); then pass "C6 node 3 back at +0 rejoined node 1 after ${t} s"
         if t=$(wait_for 60 'test "$(active 1)" = 1'); then pass "C7 node 1 got node 3's block ${t} s after the rejoin"
         else flunk "C7 node 1 never got node 3's block"; fi
-    else flunk "C6 node 1 sees $(metric 1 sokol_p2p_active_peers) peers 60 s after node 3 came back"; flunk "C7 not reached"; fi
+    else flunk "C6 node 1 sees $(metric 1 interdict_p2p_active_peers) peers 60 s after node 3 came back"; flunk "C7 not reached"; fi
     # S4 (exploratory). The block count is per node, so first let node 2's earlier blocks end
     # (node 3's block from S2 was issued at +60 s and ends later here): then it counts S4's only.
     wait_for 240 'test "$(active 2)" = 0' >/dev/null || echo "OBS  S4 node 2 still holds $(active 2) earlier blocks"
@@ -636,15 +636,15 @@ clock)
     dead=0
     for i in $(seq 1 "$N"); do pid=${NODE_PID[$i]}; { [ -e "/proc/$pid" ] && [ "$(awk '{print $3}' "/proc/$pid/stat")" != Z ]; } || dead=1; done
     [ $dead = 0 ] && pass "C8 no node exited" || flunk "C8 a node exited"
-    tick=0; for i in $(seq 1 "$N"); do awk -v t="$(metric "$i" sokol_tick_seconds_max)" 'BEGIN { exit !(t == "" || t > 0.5) }' && tick=1; done
+    tick=0; for i in $(seq 1 "$N"); do awk -v t="$(metric "$i" interdict_tick_seconds_max)" 'BEGIN { exit !(t == "" || t > 0.5) }' && tick=1; done
     [ $tick = 0 ] && pass "C9 no tick over 500 ms" || flunk "C9 a tick over 500 ms"
     exit $fail
     ;;
 observe)
     [ "$N" = 3 ] || { echo "observe mode runs on 3 nodes"; exit 2; }
     fail=0
-    active() { local v; v=$(metric "$1" 'sokol_blocks_active{family="ipv4"}'); echo "${v:-down}"; }
-    [ "$(metric 1 'sokol_enforce_mode{mode="observe"}')" = 1 ] || { echo "FAIL node 1 is not in observe mode"; exit 1; }
+    active() { local v; v=$(metric "$1" 'interdict_blocks_active{family="ipv4"}'); echo "${v:-down}"; }
+    [ "$(metric 1 'interdict_enforce_mode{mode="observe"}')" = 1 ] || { echo "FAIL node 1 is not in observe mode"; exit 1; }
     printf 'SIGNAL:obs|198.18.9.1|-|observed only\n' | in_ns 1 nc -U -q1 "$WORK/n1/ipc.sock" >/dev/null
     sleep 2
     if [ "$(active 1)" = 1 ]; then echo "PASS O1 node 1 decided locally (1 block)"; else echo "FAIL O1 node 1 holds $(active 1)"; fail=1; fi
@@ -662,7 +662,7 @@ floors)
     [ "$N" = 3 ] || { echo "floors mode runs on 3 nodes"; exit 2; }
     fail=0
     floors() { python3 -c 'import json,sys; print(" ".join(f"{a}:{b}" for a, b in json.load(open(sys.argv[1])).get("mesh_floors", [])))' "$WORK/n1/audit.log.blocks.json"; }
-    active() { local v; v=$(metric 1 'sokol_blocks_active{family="ipv4"}'); echo "${v:-down}"; }
+    active() { local v; v=$(metric 1 'interdict_blocks_active{family="ipv4"}'); echo "${v:-down}"; }
     for j in 2 3; do printf 'SIGNAL:fl|198.18.10.%s|-|floors\n' "$j" | in_ns "$j" nc -U -q1 "$WORK/n$j/ipc.sock" >/dev/null; done
     sleep 3
     before=$(floors); now=$(now_ms)
@@ -899,7 +899,7 @@ restart)
         ctl=""; peers=""
         while [ $(($(now_ms) - t0)) -lt 30000 ]; do
             [ -z "$ctl" ] && send ctl LIST_BANS >/dev/null 2>&1 && ctl=$(($(now_ms) - t0))
-            if [ -n "$ctl" ] && [ "$(metric 1 sokol_p2p_active_peers || true)" = $((N - 1)) ]; then
+            if [ -n "$ctl" ] && [ "$(metric 1 interdict_p2p_active_peers || true)" = $((N - 1)) ]; then
                 peers=$(($(now_ms) - t0)); break
             fi
             sleep 0.05
@@ -950,7 +950,7 @@ relapse)
         fi
         sleep 2   # the restored table is applied and a tick ran
         got=$(ip netns exec sk-atk ping -n -c 20 -i 0.05 -W 1 -I "$a" 10.240.0.1 2>/dev/null | awk '/packets transmitted/ { print $4 }' || true)
-        active=$(metric 1 'sokol_blocks_active{family="ipv4"}' || true)
+        active=$(metric 1 'interdict_blocks_active{family="ipv4"}' || true)
         line="round $r: '$reply'; after the restart node 1 answers ${got:-0}/20 pings from $a, blocks_active=${active:-?}${rib:+, rule $rib}"
         for n in $(seq 2 "$N"); do
             pg=$(ip netns exec sk-atk ping -n -c 5 -i 0.05 -W 1 -I "$a" "10.240.0.$n" 2>/dev/null | awk '/packets transmitted/ { print $4 }' || true)
@@ -973,7 +973,7 @@ bulkflush)
     t0=$SECONDS; held=""
     while [ $((SECONDS - t0)) -lt 180 ]; do
         held=1
-        for n in $(seq 1 "$N"); do [ "$(metric "$n" 'sokol_blocks_active{family="ipv4"}')" = "$COUNT" ] || held=""; done
+        for n in $(seq 1 "$N"); do [ "$(metric "$n" 'interdict_blocks_active{family="ipv4"}')" = "$COUNT" ] || held=""; done
         [ -n "$held" ] && break
         sleep 1
     done
@@ -992,12 +992,12 @@ bulkflush)
     for n in $(seq 2 "$N"); do
         gone=""
         while [ $(($(now_ms) - t_end)) -lt 120000 ]; do
-            [ "$(metric "$n" 'sokol_blocks_active{family="ipv4"}')" = 0 ] && { gone=$(now_ms); break; }
+            [ "$(metric "$n" 'interdict_blocks_active{family="ipv4"}')" = 0 ] && { gone=$(now_ms); break; }
             sleep 0.05
         done
         dropped=$(grep -c "exceeds limit" "$WORK/n$n/node.log" || true)
         if [ -n "$gone" ]; then echo "node $n holds none of them $((gone - t_end)) ms after the flush; 'frame exceeds limit' in its log: $dropped"
-        else echo "node $n still holds $(metric "$n" 'sokol_blocks_active{family="ipv4"}') of them 120 s after the flush"; fail=1; fi
+        else echo "node $n still holds $(metric "$n" 'interdict_blocks_active{family="ipv4"}') of them 120 s after the flush"; fail=1; fi
     done
     if [ -n "$FLOWSPEC" ]; then
         gone=""

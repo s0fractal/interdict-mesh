@@ -25,7 +25,7 @@ use std::time::Duration;
 
 use common::audit_log::{rotated_segments, verify_chain, AuditReader, ChainVerifyError};
 
-const DB_FILE: &str = "/var/lib/sokol/audit.log";
+const DB_FILE: &str = "/var/lib/interdict/audit.log";
 
 #[derive(Debug, Clone)]
 struct AuditEvent {
@@ -562,7 +562,7 @@ fn main() -> io::Result<()> {
         io::stdout().flush()?;
 
         println!("==================================================================");
-        println!("       SOKOL-CORE: RUST NATIVE SECURITY & EBPF TELEMETRY         ");
+        println!("     INTERDICT-MESH: RUST NATIVE SECURITY & EBPF TELEMETRY       ");
         println!("==================================================================");
 
         if let Some(err) = &read_error {

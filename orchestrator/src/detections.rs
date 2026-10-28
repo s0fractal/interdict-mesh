@@ -1,8 +1,8 @@
-//! Block decisions by the detector that asked for them (`sokol_detections_total`).
+//! Block decisions by the detector that asked for them (`interdict_detections_total`).
 //!
 //! A detector that misfires (a bad rule, a poisoned feed) makes this node block whatever it
-//! names, within the block policy. The aggregate `sokol_blocks_active` shows that only once the
-//! map fills up; counted per source, a surge shows within minutes (`SokolDetectorSurge`).
+//! names, within the block policy. The aggregate `interdict_blocks_active` shows that only once the
+//! map fills up; counted per source, a surge shows within minutes (`InterdictDetectorSurge`).
 //!
 //! Sources are names adapters choose, so the label set is bounded: the first
 //! `MAX_SOURCES` names seen get their own label, every later one counts as `other`.
@@ -86,7 +86,7 @@ pub fn rows() -> Vec<(String, [u64; RESULTS.len()])> {
     DETECTIONS.lock().map(|d| d.rows()).unwrap_or_default()
 }
 
-/// Peer claims by what this node did with them, in counter order (`sokol_mesh_claims_total`):
+/// Peer claims by what this node did with them, in counter order (`interdict_mesh_claims_total`):
 /// enforced here, held (known, not enforced: protected, quota, envelope, quorum, map full),
 /// refused (not taken in), known (a copy already held).
 pub const PEER_RESULTS: [&str; 4] = ["enforced", "held", "refused", "known"];
@@ -96,7 +96,7 @@ pub const MAX_ISSUERS: usize = 64;
 
 /// The mesh counterpart of `Detections`: a peer whose detector misfires, or a compromised peer
 /// within its envelope (ADR-7), makes this node block what it claims; counted per issuer, a
-/// surge shows within minutes (`SokolPeerClaimSurge`) instead of when the map fills.
+/// surge shows within minutes (`InterdictPeerClaimSurge`) instead of when the map fills.
 #[derive(Default)]
 pub struct PeerClaims {
     issuers: Vec<(u64, [u64; PEER_RESULTS.len()])>,

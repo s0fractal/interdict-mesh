@@ -40,7 +40,7 @@ pub struct PacketStats {
     pub events_in_window: u64,
     /// Events within the rate limit that found the ring buffer full (its consumer behind).
     pub events_lost: u64,
-    /// Observe mode: packets Sokol would have dropped and passed instead, total and per
+    /// Observe mode: packets the node would have dropped and passed instead, total and per
     /// `drop_reason` code (the would-be `dropped_packets` / `drops_by_reason`).
     pub observed_packets: u64,
     pub observed_by_reason: [u64; DROP_REASON_SLOTS],
@@ -451,7 +451,7 @@ pub mod config_flags {
     /// Drop packets whose headers do not parse, instead of passing them to the stack
     /// (set while a distributed storm is engaged, ADR-6).
     pub const STRICT_PARSE: u32 = 1 << 1;
-    /// Pilot phase 0: never drop. Every packet Sokol would drop is passed and counted as
+    /// Pilot phase 0: never drop. Every packet the node would drop is passed and counted as
     /// observed (`--enforce observe`).
     pub const OBSERVE_ONLY: u32 = 1 << 2;
 

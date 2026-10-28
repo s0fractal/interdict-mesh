@@ -1,0 +1,202 @@
+# promtool test rules deploy/prometheus/interdict-alerts.test.yml  (run from deploy/prometheus)
+rule_files: [interdict-alerts.yml]
+evaluation_interval: 30s
+tests:
+  - interval: 30s
+    input_series:
+      - { series: 'up{job="interdict",instance="n1"}', values: '1 1 0 0 0 0' }
+      - { series: 'interdict_state_healthy{job="interdict",instance="n1"}', values: '1 0 0 0 0 0' }
+      - { series: 'interdict_audit_healthy{job="interdict",instance="n1"}', values: '1 1 1 1 1 1' }
+      - { series: 'interdict_enforce_mode{job="interdict",instance="n1",mode="observe"}', values: '1 1 1 1 1 1' }
+      - { series: 'interdict_tick_seconds{job="interdict",instance="n1"}', values: '0.01 0.7 0.01 0.01 0.01 0.01' }
+      - { series: 'interdict_tick_seconds{job="interdict",instance="n2"}', values: '0.01 0.01 0.01 0.01 0.01 0.01' }
+      - { series: 'interdict_xdp_events_malformed_total{job="interdict",instance="n2"}', values: '0 0 0 0 0 0' }
+      - { series: 'interdict_xdp_events_malformed_total{job="interdict",instance="n1"}', values: '0 0 1 1 1 1' }
+    alert_rule_test:
+      - { eval_time: 3m, alertname: InterdictNodeDown, exp_alerts: [ { exp_labels: { severity: critical, job: interdict, instance: n1 }, exp_annotations: { summary: "n1: metrics unreachable", runbook: "RUNBOOK §3: systemctl status interdictd; journalctl -u interdictd" } } ] }
+      - eval_time: 3m
+        alertname: InterdictDegraded
+        exp_alerts: [ { exp_labels: { severity: critical, job: interdict, instance: n1 }, exp_annotations: { summary: "n1: node DEGRADED (audit, state, restore or protected set); protection still runs", runbook: "RUNBOOK §5.3" } } ]
+      - eval_time: 2m
+        alertname: InterdictNotDropping
+        exp_alerts: [ { exp_labels: { severity: info, job: interdict, instance: n1, mode: observe }, exp_annotations: { summary: "n1: observe mode, decisions are recorded but nothing is dropped", runbook: "RUNBOOK §9 (pilot phase 0)" } } ]
+      - eval_time: 2m
+        alertname: InterdictTickSlow
+        exp_alerts: [ { exp_labels: { severity: warning, job: interdict, instance: n1 }, exp_annotations: { summary: "n1: a maintenance tick took over 0.5 s", runbook: "RUNBOOK §4" } } ]
+      - eval_time: 2m
+        alertname: InterdictKernelAbiMismatch
+        exp_alerts: [ { exp_labels: { severity: critical, job: interdict, instance: n1 }, exp_annotations: { summary: "n1: XDP program and orchestrator disagree on the event layout: wrong build", runbook: "ADR-0015" } } ]
+
+  # Healthy nodes: nothing fires.
+  - interval: 1m
+    input_series:
+      - { series: 'up{job="interdict",instance="n1"}', values: '1x20' }
+      - { series: 'interdict_state_healthy{job="interdict",instance="n1"}', values: '1x20' }
+      - { series: 'interdict_state_restore_ok{job="interdict",instance="n1"}', values: '1x20' }
+      - { series: 'interdict_tick_seconds{job="interdict",instance="n1"}', values: '0.01x20' }
+      - { series: 'interdict_blocks_pending{job="interdict",instance="n1"}', values: '0x20' }
+      - { series: 'interdict_p2p_active_peers{job="interdict",instance="n1"}', values: '3x20' }
+      - { series: 'interdict_p2p_expected_peers{job="interdict",instance="n1"}', values: '3x20' }
+      - { series: 'interdict_claims_waiting{job="interdict",instance="n1"}', values: '0x20' }
+      - { series: 'interdict_enforce_mode{job="interdict",instance="n1",mode="drop"}', values: '1x20' }
+      - { series: 'interdict_blocks_active{job="interdict",instance="n1",family="ipv4"}', values: '100x20' }
+      - { series: 'interdict_blocks_capacity{job="interdict",instance="n1"}', values: '65536x20' }
+    alert_rule_test:
+      - { eval_time: 15m, alertname: InterdictNodeDown, exp_alerts: [] }
+      - { eval_time: 15m, alertname: InterdictDegraded, exp_alerts: [] }
+      - { eval_time: 15m, alertname: InterdictTickSlow, exp_alerts: [] }
+      - { eval_time: 15m, alertname: InterdictBlocksPending, exp_alerts: [] }
+      - { eval_time: 15m, alertname: InterdictPeersLost, exp_alerts: [] }
+      - { eval_time: 15m, alertname: InterdictNotDropping, exp_alerts: [] }
+      - { eval_time: 15m, alertname: InterdictBlocklistNearCapacity, exp_alerts: [] }
+
+  # Enforcement and mesh trouble.
+  - interval: 1m
+    input_series:
+      - { series: 'interdict_blocks_pending{job="interdict",instance="n1"}', values: '0 3x10' }
+      - { series: 'interdict_blocks_active{job="interdict",instance="n1",family="ipv4"}', values: '60000x10' }
+      - { series: 'interdict_blocks_capacity{job="interdict",instance="n1"}', values: '65536x10' }
+      - { series: 'interdict_p2p_active_peers{job="interdict",instance="n1"}', values: '3 3 3 1x8' }
+      - { series: 'interdict_p2p_expected_peers{job="interdict",instance="n1"}', values: '3x11' }
+      - { series: 'interdict_xdp_events_lost_total{job="interdict",instance="n1"}', values: '0 0 573x8' }
+      - { series: 'interdict_mesh_envelopes_rejected_total{job="interdict",instance="n1",reason="stale_timestamp"}', values: '0+5x30' }
+      - { series: 'interdict_clock_steps_total{job="interdict",instance="n1"}', values: '0 0 1x8' }
+      - { series: 'interdict_clock_last_step_seconds{job="interdict",instance="n1"}', values: '0 0 -3600x8' }
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: InterdictBlocksPending
+        exp_alerts: [ { exp_labels: { severity: warning, job: interdict, instance: n1 }, exp_annotations: { summary: "n1: 3 blocks wait for the kernel map for 5 min", runbook: "RUNBOOK §4: the map refuses entries (full?)" } } ]
+      - eval_time: 8m
+        alertname: InterdictBlocklistNearCapacity
+        exp_alerts: [ { exp_labels: { severity: warning, job: interdict, instance: n1, family: ipv4 }, exp_annotations: { summary: "n1 ipv4: blocklist over 80 % of 65 536", runbook: "RUNBOOK §4" } } ]
+      - eval_time: 9m
+        alertname: InterdictPeersLost
+        exp_alerts: [ { exp_labels: { severity: warning, job: interdict, instance: n1 }, exp_annotations: { summary: "n1: 1 connected peers, below configured mesh size", runbook: "RUNBOOK §5.5" } } ]
+      - eval_time: 5m
+        alertname: InterdictKernelEventsLost
+        exp_alerts: [ { exp_labels: { severity: warning, job: interdict, instance: n1 }, exp_annotations: { summary: "n1: the ring buffer was full, kernel events (not blocks) were lost", runbook: "RUNBOOK §4" } } ]
+      - eval_time: 25m
+        alertname: InterdictPeerClockSkew
+        exp_alerts: [ { exp_labels: { severity: warning, job: interdict, instance: n1, reason: stale_timestamp }, exp_annotations: { summary: "n1: envelopes refused as stale: a peer's clock is over 30 s off", runbook: "RUNBOOK §5.5" } } ]
+      - eval_time: 5m
+        alertname: InterdictClockStepped
+        exp_alerts: [ { exp_labels: { severity: warning, job: interdict, instance: n1 }, exp_annotations: { summary: "n1: wall clock stepped -3600 s", runbook: "ADR-0017: blocks in force keep their length; check NTP/chrony" } } ]
+
+  # The rest of the rules.
+  - interval: 1m
+    input_series:
+      - { series: 'interdict_audit_lost_total{job="interdict",instance="n1"}', values: '0 0 4x10' }
+      - { series: 'interdict_audit_queue_overflow_total{job="interdict",instance="n1"}', values: '0x12' }
+      - { series: 'interdict_xdp_mode{job="interdict",instance="n1",mode="generic"}', values: '1x15' }
+      - { series: 'interdict_mesh_broadcasts_dropped_total{job="interdict",instance="n1",class="urgent"}', values: '0 0 250x10' }
+      - { series: 'interdict_claims_waiting{job="interdict",instance="n1"}', values: '13616x40' }
+      - { series: 'interdict_cluster_storm_engaged{job="interdict",instance="n1"}', values: '0 1x5' }
+      - { series: 'interdict_mesh_handshakes_wrong_address_total{job="interdict",instance="n1"}', values: '0 0 1x10' }
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: InterdictPeerWrongAddress
+        exp_alerts: [ { exp_labels: { severity: critical, job: interdict, instance: n1 }, exp_annotations: { summary: "n1: a pinned peer's handshake came from an address its peers-file entry does not bind", runbook: "RUNBOOK §5.5" } } ]
+      - eval_time: 5m
+        alertname: InterdictAuditRecordsLost
+        exp_alerts: [ { exp_labels: { severity: warning, job: interdict, instance: n1 }, exp_annotations: { summary: "n1: audit records lost (disk, rights or queue overflow)", runbook: "RUNBOOK §5.3" } } ]
+      - eval_time: 12m
+        alertname: InterdictXdpGeneric
+        exp_alerts: [ { exp_labels: { severity: info, job: interdict, instance: n1, mode: generic }, exp_annotations: { summary: "n1: XDP runs in generic (slower) mode; the NIC driver refused native", runbook: "SUPPORT.md §2" } } ]
+      - eval_time: 5m
+        alertname: InterdictUrgentBroadcastsDropped
+        exp_alerts: [ { exp_labels: { severity: warning, job: interdict, instance: n1, class: urgent }, exp_annotations: { summary: "n1: block decisions not queued to a peer (its link is behind); repair follows", runbook: "RUNBOOK §4" } } ]
+      - eval_time: 35m
+        alertname: InterdictClaimsWaiting
+        exp_alerts: [ { exp_labels: { severity: info, job: interdict, instance: n1 }, exp_annotations: { summary: "n1: 13616 peer claims wait for a slot in their issuer's envelope", runbook: "RUNBOOK §4 (ADR-0007): the mesh is fine, a peer issued more than --peer-max-active" } } ]
+      - { eval_time: 20m, alertname: InterdictClaimsWaiting, exp_alerts: [] }
+      - eval_time: 3m
+        alertname: InterdictStormEngaged
+        exp_alerts: [ { exp_labels: { severity: warning, job: interdict, instance: n1 }, exp_annotations: { summary: "n1: distributed storm engaged (strict parsing and fragment drops)", runbook: "ADR-0006" } } ]
+
+  # A detector surge. crowdsec: a quiet hour then 300 decisions a minute; suricata: a steady
+  # high pace; trap: a small burst; duplicates do not count. The cold sources have no series at
+  # all before their first decision (as the node exports them): cold-rise grows from its first
+  # scrape, cold-jump is first scraped at 1500, cold-small stays under the threshold.
+  - interval: 1m
+    input_series:
+      - { series: 'interdict_detections_total{job="interdict",instance="n1",source="crowdsec",result="enforced"}', values: '0x65 300+300x9' }
+      - { series: 'interdict_detections_total{job="interdict",instance="n1",source="suricata",result="enforced"}', values: '0+100x75' }
+      - { series: 'interdict_detections_total{job="interdict",instance="n1",source="trap",result="enforced"}', values: '0x65 30+30x9' }
+      - { series: 'interdict_detections_total{job="interdict",instance="n1",source="crowdsec",result="duplicate"}', values: '0x65 1000+1000x9' }
+      - { series: 'interdict_detections_total{job="interdict",instance="n1",source="cold-rise",result="enforced"}', values: '_x65 300+300x9' }
+      - { series: 'interdict_detections_total{job="interdict",instance="n1",source="cold-jump",result="enforced"}', values: '_x69 1500x5' }
+      - { series: 'interdict_detections_total{job="interdict",instance="n1",source="cold-small",result="enforced"}', values: '_x65 30+30x9' }
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: InterdictDetectorSurge
+        exp_alerts:
+          - { exp_labels: { severity: warning, instance: n1, source: crowdsec }, exp_annotations: { summary: "n1: crowdsec asked for 1.5k blocks within 5 min, over ten times its usual pace or with no history", runbook: "RUNBOOK §5.1: check the detector before its blocks spread" } }
+          - { exp_labels: { severity: warning, instance: n1, source: cold-rise }, exp_annotations: { summary: "n1: cold-rise asked for 1.5k blocks within 5 min, over ten times its usual pace or with no history", runbook: "RUNBOOK §5.1: check the detector before its blocks spread" } }
+          - { exp_labels: { severity: warning, instance: n1, source: cold-jump }, exp_annotations: { summary: "n1: cold-jump asked for 1.5k blocks within 5 min, over ten times its usual pace or with no history", runbook: "RUNBOOK §5.1: check the detector before its blocks spread" } }
+      # At 71 min cold-rise is over 5 min old and has one sample in the hour before: only the
+      # no-history branch can report it.
+      - eval_time: 71m
+        alertname: InterdictDetectorSurge
+        exp_alerts:
+          - { exp_labels: { severity: warning, instance: n1, source: crowdsec }, exp_annotations: { summary: "n1: crowdsec asked for 1.5k blocks within 5 min, over ten times its usual pace or with no history", runbook: "RUNBOOK §5.1: check the detector before its blocks spread" } }
+          - { exp_labels: { severity: warning, instance: n1, source: cold-rise }, exp_annotations: { summary: "n1: cold-rise asked for 1.5k blocks within 5 min, over ten times its usual pace or with no history", runbook: "RUNBOOK §5.1: check the detector before its blocks spread" } }
+          - { exp_labels: { severity: warning, instance: n1, source: cold-jump }, exp_annotations: { summary: "n1: cold-jump asked for 1.5k blocks within 5 min, over ten times its usual pace or with no history", runbook: "RUNBOOK §5.1: check the detector before its blocks spread" } }
+      - { eval_time: 60m, alertname: InterdictDetectorSurge, exp_alerts: [] }
+
+  # A peer claim surge, as the detector surge above: node 2 a quiet hour then 300 claims a
+  # minute (enforced and held both count); node 3 a steady high pace; node 4's known copies do
+  # not count; node 5 has no series before its first claim.
+  - interval: 1m
+    input_series:
+      - { series: 'interdict_mesh_claims_total{job="interdict",instance="n1",issuer="2",result="enforced"}', values: '0x65 200+200x9' }
+      - { series: 'interdict_mesh_claims_total{job="interdict",instance="n1",issuer="2",result="held"}', values: '0x65 100+100x9' }
+      - { series: 'interdict_mesh_claims_total{job="interdict",instance="n1",issuer="3",result="enforced"}', values: '0+100x75' }
+      - { series: 'interdict_mesh_claims_total{job="interdict",instance="n1",issuer="4",result="known"}', values: '0x65 1000+1000x9' }
+      - { series: 'interdict_mesh_claims_total{job="interdict",instance="n1",issuer="5",result="enforced"}', values: '_x65 300+300x9' }
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: InterdictPeerClaimSurge
+        exp_alerts:
+          - { exp_labels: { severity: warning, instance: n1, issuer: "2" }, exp_annotations: { summary: "n1: node 2 sent 1.5k claims within 5 min, over ten times its usual pace or with no history", runbook: "RUNBOOK §5.1: check the peer's detector; its envelope bounds what this node enforces" } }
+          - { exp_labels: { severity: warning, instance: n1, issuer: "5" }, exp_annotations: { summary: "n1: node 5 sent 1.5k claims within 5 min, over ten times its usual pace or with no history", runbook: "RUNBOOK §5.1: check the peer's detector; its envelope bounds what this node enforces" } }
+      - { eval_time: 60m, alertname: InterdictPeerClaimSurge, exp_alerts: [] }
+
+  # A partition persists beyond the old one-hour high-water window, then recovers.
+  - interval: 1m
+    input_series:
+      - { series: 'interdict_p2p_active_peers{job="interdict",instance="n1"}', values: '3 3 3 1x80 3x10' }
+      - { series: 'interdict_p2p_expected_peers{job="interdict",instance="n1"}', values: '3x95' }
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: InterdictPeersLost
+        exp_alerts:
+          - exp_labels: {severity: warning, job: interdict, instance: n1}
+            exp_annotations:
+              summary: "n1: 1 connected peers, below configured mesh size"
+              runbook: "RUNBOOK §5.5"
+      - { eval_time: 90m, alertname: InterdictPeersLost, exp_alerts: [] }
+  # A cold isolated node has no historical high-water mark; configuration still matters.
+  - interval: 1m
+    input_series:
+      - { series: 'interdict_p2p_active_peers{job="interdict",instance="cold"}', values: '0x20' }
+      - { series: 'interdict_p2p_expected_peers{job="interdict",instance="cold"}', values: '2x8 0x12' }
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: InterdictPeersLost
+        exp_alerts:
+          - exp_labels: {severity: warning, job: interdict, instance: cold}
+            exp_annotations:
+              summary: "cold: 0 connected peers, below configured mesh size"
+              runbook: "RUNBOOK §5.5"
+      - { eval_time: 15m, alertname: InterdictPeersLost, exp_alerts: [] }
+  - interval: 1m
+    input_series:
+      - { series: 'up{job="interdict",instance="missing"}', values: '1x10' }
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: InterdictMeshObservationMissing
+        exp_alerts:
+          - exp_labels: {severity: warning, job: interdict, instance: missing}
+            exp_annotations:
+              summary: "missing: mesh observations missing from a reachable exporter"
+              runbook: "RUNBOOK §5.5"

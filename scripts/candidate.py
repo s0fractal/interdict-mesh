@@ -24,7 +24,7 @@ MAX_ARCHIVE = 128 * 1024 * 1024
 MAX_FILE = 64 * 1024 * 1024
 MAX_FILES = 512
 MAX_META = 1_048_576
-PREFIXES = ('usr/local/bin/', 'usr/local/share/sokol/', 'etc/systemd/system/')
+PREFIXES = ('usr/local/bin/', 'usr/local/share/interdict/', 'etc/systemd/system/')
 METADATA = {'candidate.json', 'SBOM.spdx.json', 'build-inputs.json', 'SHA256SUMS'}
 
 
@@ -84,9 +84,9 @@ def sbom(commit):
     from datetime import datetime, timezone
     created = datetime.fromisoformat(created).astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
     return {'spdxVersion': 'SPDX-2.3', 'dataLicense': 'CC0-1.0', 'SPDXID': 'SPDXRef-DOCUMENT',
-            'name': 'sokol-core-build-graph',
+            'name': 'interdict-mesh-build-graph',
             'documentNamespace': 'https://github.com/s0fractal/sokol-core/sbom/' + commit + '/' + arch(),
-            'creationInfo': {'creators': ['Tool: sokol-candidate'], 'created': created},
+            'creationInfo': {'creators': ['Tool: interdict-candidate'], 'created': created},
             'comment': 'Union of resolved Cargo metadata graphs, not measured symbol-level binary dependencies.',
             'packages': [packages[k] for k in sorted(packages)],
             'relationships': [{'spdxElementId': 'SPDXRef-DOCUMENT', 'relationshipType': 'DESCRIBES',

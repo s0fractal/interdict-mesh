@@ -57,7 +57,7 @@ start() {
         --ipc-socket "$WORK/ipc.sock" --control-socket "$WORK/ctl.sock" --p2p-bind 127.0.0.1:0 \
         --metrics-bind 127.0.0.1:9471 "$@" >"$WORK/node.log" 2>&1 </dev/null &
     ORCH=$!
-    for _ in $(seq 1 100); do grep -q "Sokol-Core running" "$WORK/node.log" && return; sleep 0.1; done
+    for _ in $(seq 1 100); do grep -q "interdictd running" "$WORK/node.log" && return; sleep 0.1; done
     echo "FAIL node did not start"; cat "$WORK/node.log"; exit 1
 }
 # Never fails: an empty answer means "no value" (see bench/mesh.sh).
@@ -153,13 +153,13 @@ fill)
     t_sent=$(date +%s%3N)
     filled=""; peak=0
     for _ in $(seq 1 $(( TTL * 10 ))); do
-        now=$(metric 'sokol_blocks_active{family="ipv4"}'); now=${now:-0}
+        now=$(metric 'interdict_blocks_active{family="ipv4"}'); now=${now:-0}
         [ "$now" -gt "$peak" ] && peak=$now
         [ "$now" = "$COUNT" ] && { filled=1; break; }
         sleep 0.1
     done
     t_all=$(date +%s%3N)
-    [ -n "$filled" ] || { echo "FAIL the kernel map never held all $COUNT blocks within $TTL s (peak $peak, capacity $(metric sokol_blocks_capacity), pending now $(metric sokol_blocks_pending))"; exit 1; }
+    [ -n "$filled" ] || { echo "FAIL the kernel map never held all $COUNT blocks within $TTL s (peak $peak, capacity $(metric interdict_blocks_capacity), pending now $(metric interdict_blocks_pending))"; exit 1; }
     during=$(witness_pass)
     [ "$during" = 0 ] || { echo "FAIL witness: $during of ${#WITNESS[@]} blocked addresses still reach the node"; exit 1; }
     rss1=$(grep VmRSS /proc/"$ORCH"/status | awk '{print $2}')
@@ -167,12 +167,12 @@ fill)
     echo "   RSS $((rss0 / 1024)) MB -> $((rss1 / 1024)) MB; watermark logged: $(grep -c 'blocklist is' "$WORK/node.log")"
     gone=""
     for _ in $(seq 1 $(( (TTL + 60) * 10 ))); do
-        [ "$(metric 'sokol_blocks_active{family="ipv4"}')" = "0" ] && { gone=1; break; }
+        [ "$(metric 'interdict_blocks_active{family="ipv4"}')" = "0" ] && { gone=1; break; }
         sleep 0.1
     done
     t_gone=$(date +%s%3N)
     kill -INT "$lp" 2>/dev/null || true; wait "$lp" 2>/dev/null || true
-    [ -n "$gone" ] || { echo "FAIL $(metric 'sokol_blocks_active{family="ipv4"}') blocks still active $((TTL + 60)) s after the fill (TTL $TTL s)"; exit 1; }
+    [ -n "$gone" ] || { echo "FAIL $(metric 'interdict_blocks_active{family="ipv4"}') blocks still active $((TTL + 60)) s after the fill (TTL $TTL s)"; exit 1; }
     after=$(witness_pass)
     [ "$after" = "${#WITNESS[@]}" ] || { echo "FAIL witness: only $after of ${#WITNESS[@]} addresses pass again after the expiry"; exit 1; }
     echo "   all expired $((t_gone - t_all)) ms after the fill completed (TTL $TTL s); witness: all pass again"

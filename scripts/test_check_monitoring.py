@@ -1,7 +1,7 @@
 """scripts/check-monitoring.sh: the alert rules and the dashboard select series the node exports.
 
 The check compared metric names only. A label value an alert selects on
-(`sokol_xdp_mode{mode="generic"}`, `sokol_mesh_broadcasts_dropped_total{class="urgent"}`)
+(`interdict_xdp_mode{mode="generic"}`, `interdict_mesh_broadcasts_dropped_total{class="urgent"}`)
 could be renamed in the exporter and the check, the metrics tests and promtool's own rule
 tests (which feed synthetic series) all stayed green, while the alert could never fire.
 
@@ -16,8 +16,8 @@ import unittest
 ROOT = Path(__file__).resolve().parent.parent
 FILES = [
     'scripts/check-monitoring.sh',
-    'deploy/prometheus/sokol-alerts.yml',
-    'deploy/grafana/sokol-dashboard.json',
+    'deploy/prometheus/interdict-alerts.yml',
+    'deploy/grafana/interdict-dashboard.json',
     'orchestrator/src/metrics.rs',
     'orchestrator/src/detections.rs',
     'orchestrator/src/p2p.rs',
@@ -49,7 +49,7 @@ class Monitoring(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
     def test_a_renamed_metric_fails(self):
-        self.mutate('orchestrator/src/metrics.rs', 'sokol_claims_waiting', 'sokol_claims_queued')
+        self.mutate('orchestrator/src/metrics.rs', 'interdict_claims_waiting', 'interdict_claims_queued')
         self.assertNotEqual(self.run_check().returncode, 0)
 
     def test_a_renamed_label_value_an_alert_selects_fails(self):

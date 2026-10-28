@@ -236,20 +236,20 @@ fn render_at(s: &Snapshot, now: Instant) -> String {
     let mut out = String::new();
     family(
         &mut out,
-        "sokol_build_info",
+        "interdict_build_info",
         "gauge",
         "Always 1; the labels name the running build (version and source commit).",
     );
     let _ = writeln!(
         out,
-        "sokol_build_info{{version=\"{}\",build=\"{}\"}} 1",
+        "interdict_build_info{{version=\"{}\",build=\"{}\"}} 1",
         env!("CARGO_PKG_VERSION"),
         env!("SOKOL_BUILD_ID")
     );
 
     family(
         &mut out,
-        "sokol_xdp_observed_packets_total",
+        "interdict_xdp_observed_packets_total",
         "counter",
         "Observe mode (--enforce observe): packets XDP would have dropped and passed, by reason.",
     );
@@ -257,63 +257,63 @@ fn render_at(s: &Snapshot, now: Instant) -> String {
         if let Some(reason) = drop_reason::name(code as u16) {
             let _ = writeln!(
                 out,
-                "sokol_xdp_observed_packets_total{{reason=\"{}\"}} {}",
+                "interdict_xdp_observed_packets_total{{reason=\"{}\"}} {}",
                 reason, count
             );
         }
     }
     family(
         &mut out,
-        "sokol_enforce_mode",
+        "interdict_enforce_mode",
         "gauge",
         "1 for how decisions act: drop (enforced) or observe (recorded and counted, nothing dropped).",
     );
     let _ = writeln!(
         out,
-        "sokol_enforce_mode{{mode=\"{}\"}} 1",
+        "interdict_enforce_mode{{mode=\"{}\"}} 1",
         if s.observe_only { "observe" } else { "drop" }
     );
 
     family(
         &mut out,
-        "sokol_xdp_mode",
+        "interdict_xdp_mode",
         "gauge",
         "1 for the mode the XDP program runs in: native (driver) or generic (slower fallback).",
     );
     let _ = writeln!(
         out,
-        "sokol_xdp_mode{{mode=\"{}\"}} 1",
+        "interdict_xdp_mode{{mode=\"{}\"}} 1",
         if s.xdp_native { "native" } else { "generic" }
     );
     family(
         &mut out,
-        "sokol_xdp_rx_packets_total",
+        "interdict_xdp_rx_packets_total",
         "counter",
         "Packets seen by the XDP program.",
     );
-    let _ = writeln!(out, "sokol_xdp_rx_packets_total {}", s.rx_packets);
+    let _ = writeln!(out, "interdict_xdp_rx_packets_total {}", s.rx_packets);
     family(
         &mut out,
-        "sokol_xdp_rx_bytes_total",
+        "interdict_xdp_rx_bytes_total",
         "counter",
         "Bytes seen by the XDP program.",
     );
-    let _ = writeln!(out, "sokol_xdp_rx_bytes_total {}", s.rx_bytes);
+    let _ = writeln!(out, "interdict_xdp_rx_bytes_total {}", s.rx_bytes);
     family(
         &mut out,
-        "sokol_xdp_stats_read_failures_total",
+        "interdict_xdp_stats_read_failures_total",
         "counter",
         "Reads of the XDP STATS map that failed; the XDP counters keep their last good values.",
     );
     let _ = writeln!(
         out,
-        "sokol_xdp_stats_read_failures_total {}",
+        "interdict_xdp_stats_read_failures_total {}",
         s.xdp_stats_read_failures
     );
 
     family(
         &mut out,
-        "sokol_xdp_dropped_packets_total",
+        "interdict_xdp_dropped_packets_total",
         "counter",
         "Packets dropped in XDP, by reason.",
     );
@@ -321,7 +321,7 @@ fn render_at(s: &Snapshot, now: Instant) -> String {
         if let Some(reason) = drop_reason::name(code as u16) {
             let _ = writeln!(
                 out,
-                "sokol_xdp_dropped_packets_total{{reason=\"{}\"}} {}",
+                "interdict_xdp_dropped_packets_total{{reason=\"{}\"}} {}",
                 reason, count
             );
         }
@@ -329,80 +329,88 @@ fn render_at(s: &Snapshot, now: Instant) -> String {
 
     family(
         &mut out,
-        "sokol_xdp_events_suppressed_total",
+        "interdict_xdp_events_suppressed_total",
         "counter",
         "Kernel events withheld by the per-CPU rate limit.",
     );
     let _ = writeln!(
         out,
-        "sokol_xdp_events_suppressed_total {}",
+        "interdict_xdp_events_suppressed_total {}",
         s.events_suppressed
     );
     family(
         &mut out,
-        "sokol_xdp_events_lost_total",
+        "interdict_xdp_events_lost_total",
         "counter",
         "Kernel events within the rate limit that found the ring buffer full (the reader was behind).",
     );
-    let _ = writeln!(out, "sokol_xdp_events_lost_total {}", s.events_lost);
+    let _ = writeln!(out, "interdict_xdp_events_lost_total {}", s.events_lost);
     family(
         &mut out,
-        "sokol_xdp_events_malformed_total",
+        "interdict_xdp_events_malformed_total",
         "counter",
         "Ring-buffer records of the wrong size, refused: the XDP program and this build disagree on the event layout.",
     );
     let _ = writeln!(
         out,
-        "sokol_xdp_events_malformed_total {}",
+        "interdict_xdp_events_malformed_total {}",
         s.events_malformed
     );
     family(
         &mut out,
-        "sokol_blocks_active",
+        "interdict_blocks_active",
         "gauge",
         "Addresses currently blocked (static and dynamic), per blocklist map.",
     );
     let _ = writeln!(
         out,
-        "sokol_blocks_active{{family=\"ipv4\"}} {}",
+        "interdict_blocks_active{{family=\"ipv4\"}} {}",
         s.blocks_active_v4
     );
     let _ = writeln!(
         out,
-        "sokol_blocks_active{{family=\"ipv6\"}} {}",
+        "interdict_blocks_active{{family=\"ipv6\"}} {}",
         s.blocks_active_v6
     );
     family(
         &mut out,
-        "sokol_blocks_capacity",
+        "interdict_blocks_capacity",
         "gauge",
         "Entries each blocklist map can hold.",
     );
-    let _ = writeln!(out, "sokol_blocks_capacity {}", s.blocks_capacity);
+    let _ = writeln!(out, "interdict_blocks_capacity {}", s.blocks_capacity);
     family(
         &mut out,
-        "sokol_blocks_pending",
+        "interdict_blocks_pending",
         "gauge",
         "Targets whose kernel entry does not match the block decisions yet (retried every second).",
     );
-    let _ = writeln!(out, "sokol_blocks_pending {}", s.blocks_pending);
+    let _ = writeln!(out, "interdict_blocks_pending {}", s.blocks_pending);
     family(
         &mut out,
-        "sokol_event_ids_remembered",
+        "interdict_event_ids_remembered",
         "gauge",
         "Detector event ids remembered to recognise resends.",
     );
-    let _ = writeln!(out, "sokol_event_ids_remembered {}", s.event_ids_remembered);
+    let _ = writeln!(
+        out,
+        "interdict_event_ids_remembered {}",
+        s.event_ids_remembered
+    );
     family(
         &mut out,
-        "sokol_event_ids_evicted_total",
+        "interdict_event_ids_evicted_total",
         "counter",
         "Event ids forgotten early because the memory was full (a resend of one adds a strike).",
     );
-    let _ = writeln!(out, "sokol_event_ids_evicted_total {}", s.event_ids_evicted);
+    let _ = writeln!(
+        out,
+        "interdict_event_ids_evicted_total {}",
+        s.event_ids_evicted
+    );
     family(
         &mut out,
-        "sokol_detector_retractions_total",
+        "interdict_detector_retractions_total",
         "counter",
         "Detector retractions (RETRACT, ADR-0019) by result: lifted, shortened, still_held (another reason holds), not_holding, before_signal, duplicate, refused (state capacity).",
     );
@@ -412,13 +420,13 @@ fn render_at(s: &Snapshot, now: Instant) -> String {
     {
         let _ = writeln!(
             out,
-            "sokol_detector_retractions_total{{result=\"{}\"}} {}",
+            "interdict_detector_retractions_total{{result=\"{}\"}} {}",
             label, n
         );
     }
     family(
         &mut out,
-        "sokol_detections_total",
+        "interdict_detections_total",
         "counter",
         "Block decisions by who asked (a detector's name, trap, telemetry; the first 16 names, then other) and result: enforced, pending (map full), refused (protected), duplicate (event already acted on).",
     );
@@ -426,14 +434,14 @@ fn render_at(s: &Snapshot, now: Instant) -> String {
         for (result, n) in crate::detections::RESULTS.iter().zip(counts) {
             let _ = writeln!(
                 out,
-                "sokol_detections_total{{source=\"{}\",result=\"{}\"}} {}",
+                "interdict_detections_total{{source=\"{}\",result=\"{}\"}} {}",
                 source, result, n
             );
         }
     }
     family(
         &mut out,
-        "sokol_mesh_claims_total",
+        "interdict_mesh_claims_total",
         "counter",
         "Peer claims by issuer (a node id; the first 64, then other) and what this node did: enforced, held (known, not enforced), refused, known (a copy already held).",
     );
@@ -441,49 +449,49 @@ fn render_at(s: &Snapshot, now: Instant) -> String {
         for (result, n) in crate::detections::PEER_RESULTS.iter().zip(counts) {
             let _ = writeln!(
                 out,
-                "sokol_mesh_claims_total{{issuer=\"{}\",result=\"{}\"}} {}",
+                "interdict_mesh_claims_total{{issuer=\"{}\",result=\"{}\"}} {}",
                 issuer, result, n
             );
         }
     }
     family(
         &mut out,
-        "sokol_strikes_remembered",
+        "interdict_strikes_remembered",
         "gauge",
         "Targets whose detector strikes are remembered (bounded by MAX_STRIKES).",
     );
-    let _ = writeln!(out, "sokol_strikes_remembered {}", s.strikes_remembered);
+    let _ = writeln!(out, "interdict_strikes_remembered {}", s.strikes_remembered);
     family(
         &mut out,
-        "sokol_strikes_evicted_total",
+        "interdict_strikes_evicted_total",
         "counter",
         "Targets whose strikes were forgotten early because the memory was full (they restart at the base TTL).",
     );
-    let _ = writeln!(out, "sokol_strikes_evicted_total {}", s.strikes_evicted);
+    let _ = writeln!(out, "interdict_strikes_evicted_total {}", s.strikes_evicted);
     family(
         &mut out,
-        "sokol_claims_waiting",
+        "interdict_claims_waiting",
         "gauge",
         "Peers' claims known here but waiting for a slot in their issuer's envelope (ADR-0007): not enforced yet.",
     );
-    let _ = writeln!(out, "sokol_claims_waiting {}", s.claims_waiting);
+    let _ = writeln!(out, "interdict_claims_waiting {}", s.claims_waiting);
     family(
         &mut out,
-        "sokol_p2p_active_peers",
+        "interdict_p2p_active_peers",
         "gauge",
         "Authenticated mesh nodes connected (a node with two connections counts once).",
     );
-    let _ = writeln!(out, "sokol_p2p_active_peers {}", s.p2p_peers);
+    let _ = writeln!(out, "interdict_p2p_active_peers {}", s.p2p_peers);
     family(
         &mut out,
-        "sokol_p2p_expected_peers",
+        "interdict_p2p_expected_peers",
         "gauge",
         "Peers in the current trust configuration, not a historical high-water mark.",
     );
-    let _ = writeln!(out, "sokol_p2p_expected_peers {}", s.p2p_expected);
+    let _ = writeln!(out, "interdict_p2p_expected_peers {}", s.p2p_expected);
     family(
         &mut out,
-        "sokol_snapshot_age_seconds",
+        "interdict_snapshot_age_seconds",
         "gauge",
         "Monotonic age of this snapshot, -1 before the first sample.",
     );
@@ -492,91 +500,95 @@ fn render_at(s: &Snapshot, now: Instant) -> String {
         .and_then(|at| now.checked_duration_since(at))
         .map(|age| age.as_secs_f64())
         .unwrap_or(-1.0);
-    let _ = writeln!(out, "sokol_snapshot_age_seconds {}", age);
+    let _ = writeln!(out, "interdict_snapshot_age_seconds {}", age);
     family(
         &mut out,
-        "sokol_worker_state",
+        "interdict_worker_state",
         "gauge",
         "0 unknown, 1 running, 2 failed, 3 stopped; snapshot age applies.",
     );
     let _ = writeln!(
         out,
-        "sokol_worker_state{{worker=\"mesh_listener\"}} {}",
+        "interdict_worker_state{{worker=\"mesh_listener\"}} {}",
         s.mesh_worker
     );
     let _ = writeln!(
         out,
-        "sokol_worker_state{{worker=\"kernel_events\"}} {}",
+        "interdict_worker_state{{worker=\"kernel_events\"}} {}",
         s.kernel_worker
     );
     family(
         &mut out,
-        "sokol_audit_queue_overflow_total",
+        "interdict_audit_queue_overflow_total",
         "counter",
         "Audit records lost because the write queue was full.",
     );
     let _ = writeln!(
         out,
-        "sokol_audit_queue_overflow_total {}",
+        "interdict_audit_queue_overflow_total {}",
         s.audit_queue_overflow
     );
 
     family(
         &mut out,
-        "sokol_audit_healthy",
+        "interdict_audit_healthy",
         "gauge",
         "1 while the audit log is written and fsynced; 0 while the node is DEGRADED (enforcement continues).",
     );
-    let _ = writeln!(out, "sokol_audit_healthy {}", s.audit_healthy as u8);
+    let _ = writeln!(out, "interdict_audit_healthy {}", s.audit_healthy as u8);
     family(
         &mut out,
-        "sokol_state_healthy",
+        "interdict_state_healthy",
         "gauge",
         "1 while --state-file is written; 0 while this node's decisions are not being persisted.",
     );
-    let _ = writeln!(out, "sokol_state_healthy {}", s.state_healthy as u8);
+    let _ = writeln!(out, "interdict_state_healthy {}", s.state_healthy as u8);
     family(
         &mut out,
-        "sokol_state_pending_seconds",
+        "interdict_state_pending_seconds",
         "gauge",
         "How long the oldest change to this node's decisions has waited to reach --state-file.",
     );
     let _ = writeln!(
         out,
-        "sokol_state_pending_seconds {:.3}",
+        "interdict_state_pending_seconds {:.3}",
         s.state_pending_secs
     );
     family(
         &mut out,
-        "sokol_state_restore_ok",
+        "interdict_state_restore_ok",
         "gauge",
         "0 after a state file failed to restore, until ACCEPT_STATE_LOSS on the control socket.",
     );
-    let _ = writeln!(out, "sokol_state_restore_ok {}", s.state_restore_ok as u8);
+    let _ = writeln!(
+        out,
+        "interdict_state_restore_ok {}",
+        s.state_restore_ok as u8
+    );
     family(
         &mut out,
-        "sokol_protected_refresh_ok",
+        "interdict_protected_refresh_ok",
         "gauge",
         "0 while this host's addresses and gateways cannot be re-read (the last known ones stay protected).",
     );
     let _ = writeln!(
         out,
-        "sokol_protected_refresh_ok {}",
+        "interdict_protected_refresh_ok {}",
         s.protected_refresh_ok as u8
     );
     let gauges: [(&str, &str, f64); 3] = [
         (
-            "sokol_blocks_pending_oldest_seconds",
+            "interdict_blocks_pending_oldest_seconds",
             "How long the oldest failing kernel map operation has been retried.",
             s.blocks_pending_oldest_secs,
         ),
         (
-            "sokol_tick_seconds",
+            "interdict_tick_seconds",
             "Time the last maintenance tick took (expiry, state hand-off, digest, heartbeat, stats).",
             s.tick_secs,
         ),
         (
-            "sokol_tick_seconds_max",
+            "interdict_tick_seconds_max",
             "Longest maintenance tick since start.",
             s.tick_max_secs,
         ),
@@ -587,47 +599,47 @@ fn render_at(s: &Snapshot, now: Instant) -> String {
     }
     let counters: [(&str, &str, u64); 9] = [
         (
-            "sokol_mesh_handshakes_wrong_address_total",
+            "interdict_mesh_handshakes_wrong_address_total",
             "Handshakes refused: a pinned node connected from an address its peers-file entry does not bind it to.",
             s.mesh_wrong_address,
         ),
         (
-            "sokol_mesh_handshakes_refused_total",
+            "interdict_mesh_handshakes_refused_total",
             "Connections refused: too many not yet authenticated (in total or from one address).",
             s.mesh_handshakes_refused,
         ),
         (
-            "sokol_mesh_handshake_timeouts_total",
+            "interdict_mesh_handshake_timeouts_total",
             "Connections closed for not authenticating within the handshake timeout.",
             s.mesh_handshake_timeouts,
         ),
         (
-            "sokol_mesh_frames_delayed_total",
+            "interdict_mesh_frames_delayed_total",
             "Frames from an authenticated peer read late because it exceeded its rate.",
             s.mesh_frames_delayed,
         ),
         (
-            "sokol_mesh_sync_requests_throttled_total",
+            "interdict_mesh_sync_requests_throttled_total",
             "Snapshot requests not answered because the peer got one less than 5 s ago.",
             s.mesh_sync_requests_throttled,
         ),
         (
-            "sokol_audit_witnesses_recorded_total",
+            "interdict_audit_witnesses_recorded_total",
             "Peers' audit heads recorded in this node's audit log (ADR-0021).",
             s.audit_witnesses_recorded,
         ),
         (
-            "sokol_audit_witnesses_refused_total",
+            "interdict_audit_witnesses_refused_total",
             "Peers' audit heads not recorded: more than one per peer per 30 s, or malformed.",
             s.audit_witnesses_refused,
         ),
         (
-            "sokol_audit_anchors_written_total",
+            "interdict_audit_anchors_written_total",
             "Audit head statements written to --anchor-dir for an external stamp (ADR-0022).",
             s.audit_anchors_written,
         ),
         (
-            "sokol_audit_anchor_failures_total",
+            "interdict_audit_anchor_failures_total",
             "Audit head statements that could not be written to --anchor-dir.",
             s.audit_anchor_failures,
         ),
@@ -638,7 +650,7 @@ fn render_at(s: &Snapshot, now: Instant) -> String {
     }
     family(
         &mut out,
-        "sokol_block_outcomes_total",
+        "interdict_block_outcomes_total",
         "counter",
         "Removed blocks by observed effect: dropped packets, dropped none, counter unreadable.",
     );
@@ -649,47 +661,51 @@ fn render_at(s: &Snapshot, now: Instant) -> String {
     ] {
         let _ = writeln!(
             out,
-            "sokol_block_outcomes_total{{effect=\"{}\"}} {}",
+            "interdict_block_outcomes_total{{effect=\"{}\"}} {}",
             effect, n
         );
     }
     family(
         &mut out,
-        "sokol_block_outcome_packets_total",
+        "interdict_block_outcome_packets_total",
         "counter",
         "Packets dropped by blocks, counted when each block is removed.",
     );
-    let _ = writeln!(out, "sokol_block_outcome_packets_total {}", s.outcomes.hits);
+    let _ = writeln!(
+        out,
+        "interdict_block_outcome_packets_total {}",
+        s.outcomes.hits
+    );
     family(
         &mut out,
-        "sokol_block_outcomes_lost_total",
+        "interdict_block_outcomes_lost_total",
         "counter",
         "Block outcomes lost before they were collected.",
     );
     let _ = writeln!(
         out,
-        "sokol_block_outcomes_lost_total {}",
+        "interdict_block_outcomes_lost_total {}",
         s.outcomes.dropped
     );
     family(
         &mut out,
-        "sokol_mesh_broadcasts_dropped_total",
+        "interdict_mesh_broadcasts_dropped_total",
         "counter",
         "Broadcasts not queued because a peer's queue was full: urgent (block decisions) or bulk (reports).",
     );
     let _ = writeln!(
         out,
-        "sokol_mesh_broadcasts_dropped_total{{class=\"urgent\"}} {}",
+        "interdict_mesh_broadcasts_dropped_total{{class=\"urgent\"}} {}",
         s.mesh_dropped_urgent
     );
     let _ = writeln!(
         out,
-        "sokol_mesh_broadcasts_dropped_total{{class=\"bulk\"}} {}",
+        "interdict_mesh_broadcasts_dropped_total{{class=\"bulk\"}} {}",
         s.mesh_dropped_bulk
     );
     family(
         &mut out,
-        "sokol_mesh_envelopes_rejected_total",
+        "interdict_mesh_envelopes_rejected_total",
         "counter",
         "Mesh envelopes refused, by reason; stale_timestamp means a peer's clock is out of the 30 s window.",
     );
@@ -699,110 +715,118 @@ fn render_at(s: &Snapshot, now: Instant) -> String {
     {
         let _ = writeln!(
             out,
-            "sokol_mesh_envelopes_rejected_total{{reason=\"{}\"}} {}",
+            "interdict_mesh_envelopes_rejected_total{{reason=\"{}\"}} {}",
             label, n
         );
     }
     family(
         &mut out,
-        "sokol_clock_steps_total",
+        "interdict_clock_steps_total",
         "counter",
         "Wall-clock steps of 5 s or more against the monotonic clock (ADR-0017); blocks in force keep their length.",
     );
-    let _ = writeln!(out, "sokol_clock_steps_total {}", s.clock_steps);
+    let _ = writeln!(out, "interdict_clock_steps_total {}", s.clock_steps);
     family(
         &mut out,
-        "sokol_clock_last_step_seconds",
+        "interdict_clock_last_step_seconds",
         "gauge",
         "Size of the last wall-clock step: positive forward, negative back.",
     );
     let _ = writeln!(
         out,
-        "sokol_clock_last_step_seconds {:.3}",
+        "interdict_clock_last_step_seconds {:.3}",
         s.clock_last_step_ms as f64 / 1000.0
     );
     family(
         &mut out,
-        "sokol_ipc_lines_delayed_total",
+        "interdict_ipc_lines_delayed_total",
         "counter",
         "Detector lines handled late because a connection or the IPC socket exceeded its rate.",
     );
-    let _ = writeln!(out, "sokol_ipc_lines_delayed_total {}", s.ipc_lines_delayed);
+    let _ = writeln!(
+        out,
+        "interdict_ipc_lines_delayed_total {}",
+        s.ipc_lines_delayed
+    );
     family(
         &mut out,
-        "sokol_audit_write_errors_total",
+        "interdict_audit_write_errors_total",
         "counter",
         "Failed audit writes and fsyncs.",
     );
     let _ = writeln!(
         out,
-        "sokol_audit_write_errors_total {}",
+        "interdict_audit_write_errors_total {}",
         s.audit_write_errors
     );
     family(
         &mut out,
-        "sokol_audit_lost_total",
+        "interdict_audit_lost_total",
         "counter",
         "Audit records not written due to an unavailable log or oversized payload (queue overflow is counted separately).",
     );
-    let _ = writeln!(out, "sokol_audit_lost_total {}", s.audit_lost);
+    let _ = writeln!(out, "interdict_audit_lost_total {}", s.audit_lost);
     family(
         &mut out,
-        "sokol_audit_last_sync_age_seconds",
+        "interdict_audit_last_sync_age_seconds",
         "gauge",
         "Time since the audit log was last fsynced successfully.",
     );
     let _ = writeln!(
         out,
-        "sokol_audit_last_sync_age_seconds {:.3}",
+        "interdict_audit_last_sync_age_seconds {:.3}",
         s.audit_sync_age_ms as f64 / 1000.0
     );
     family(
         &mut out,
-        "sokol_defense_strict",
+        "interdict_defense_strict",
         "gauge",
         "1 while a distributed storm has XDP in strict mode (--storm-mode strict).",
     );
-    let _ = writeln!(out, "sokol_defense_strict {}", s.defense_strict as u8);
+    let _ = writeln!(out, "interdict_defense_strict {}", s.defense_strict as u8);
     family(
         &mut out,
-        "sokol_flowspec_announced",
+        "interdict_flowspec_announced",
         "gauge",
         "Owned source-prefix rules in the last successful local GoBGP RIB read; not router enforcement.",
     );
-    let _ = writeln!(out, "sokol_flowspec_announced {}", s.flowspec_announced);
+    let _ = writeln!(out, "interdict_flowspec_announced {}", s.flowspec_announced);
     family(
         &mut out,
-        "sokol_flowspec_discard_rules",
+        "interdict_flowspec_discard_rules",
         "gauge",
         "Owned full source-prefix paths with one verified zero traffic-rate action in the last successful local RIB read; not upstream enforcement.",
     );
     let _ = writeln!(
         out,
-        "sokol_flowspec_discard_rules {}",
+        "interdict_flowspec_discard_rules {}",
         s.flowspec_discard_rules
     );
     family(
         &mut out,
-        "sokol_flowspec_enabled",
+        "interdict_flowspec_enabled",
         "gauge",
         "1 when the local FlowSpec worker is enabled; 0 when disabled or in observe mode.",
     );
-    let _ = writeln!(out, "sokol_flowspec_enabled {}", s.flowspec_enabled as u8);
+    let _ = writeln!(
+        out,
+        "interdict_flowspec_enabled {}",
+        s.flowspec_enabled as u8
+    );
     family(
         &mut out,
-        "sokol_flowspec_readback_ok",
+        "interdict_flowspec_readback_ok",
         "gauge",
         "1 after a successful full round; 0 before any success, during a round or after failure. Not convergence or router enforcement.",
     );
     let _ = writeln!(
         out,
-        "sokol_flowspec_readback_ok {}",
+        "interdict_flowspec_readback_ok {}",
         s.flowspec_readback_ok as u8
     );
     family(
         &mut out,
-        "sokol_flowspec_round_converged",
+        "interdict_flowspec_round_converged",
         "gauge",
         "1 if the latest completed round observed owned and canonical-discard prefix sets equal to its sampled wanted set; 0 if not or unverified. Not latest-intent equality or upstream enforcement; check age.",
     );
@@ -810,10 +834,14 @@ fn render_at(s: &Snapshot, now: Instant) -> String {
         && s.flowspec_enabled
         && s.flowspec_readback_ok
         && s.flowspec_read_started.is_some();
-    let _ = writeln!(out, "sokol_flowspec_round_converged {}", converged as u8);
+    let _ = writeln!(
+        out,
+        "interdict_flowspec_round_converged {}",
+        converged as u8
+    );
     family(
         &mut out,
-        "sokol_flowspec_round_progress",
+        "interdict_flowspec_round_progress",
         "gauge",
         "1 if initial/final reads observed a strict reduction of sampled-target identity/action obligations without new ones; 0 if not; -1 if unverified. Not attributed to this round's commands, convergence, latest intent or upstream enforcement; check age.",
     );
@@ -823,10 +851,10 @@ fn render_at(s: &Snapshot, now: Instant) -> String {
         } else {
             -1
         };
-    let _ = writeln!(out, "sokol_flowspec_round_progress {}", progress);
+    let _ = writeln!(out, "interdict_flowspec_round_progress {}", progress);
     family(
         &mut out,
-        "sokol_flowspec_readback_age_seconds",
+        "interdict_flowspec_readback_age_seconds",
         "gauge",
         "Monotonic age since the start of the last successful two-family RIB read, computed at scrape; -1 if none.",
     );
@@ -834,48 +862,52 @@ fn render_at(s: &Snapshot, now: Instant) -> String {
         .flowspec_read_started
         .map(|started| now.saturating_duration_since(started).as_secs_f64())
         .unwrap_or(-1.0);
-    let _ = writeln!(out, "sokol_flowspec_readback_age_seconds {:.3}", age);
+    let _ = writeln!(out, "interdict_flowspec_readback_age_seconds {:.3}", age);
     family(
         &mut out,
-        "sokol_external_attacks_active",
+        "interdict_external_attacks_active",
         "gauge",
         "Attack reports from flow detectors (FastNetMon) currently in force for this node.",
     );
-    let _ = writeln!(out, "sokol_external_attacks_active {}", s.external_attacks);
+    let _ = writeln!(
+        out,
+        "interdict_external_attacks_active {}",
+        s.external_attacks
+    );
     family(
         &mut out,
-        "sokol_cluster_status",
+        "interdict_cluster_status",
         "gauge",
         "Cluster status: 0 unknown, 1 stable, 2 local incident, 3 distributed storm.",
     );
-    let _ = writeln!(out, "sokol_cluster_status {}", s.cluster_status);
+    let _ = writeln!(out, "interdict_cluster_status {}", s.cluster_status);
     family(
         &mut out,
-        "sokol_cluster_nodes",
+        "interdict_cluster_nodes",
         "gauge",
         "Nodes (this one included) that reported telemetry recently.",
     );
-    let _ = writeln!(out, "sokol_cluster_nodes {}", s.cluster_nodes);
+    let _ = writeln!(out, "interdict_cluster_nodes {}", s.cluster_nodes);
     family(
         &mut out,
-        "sokol_cluster_nodes_under_attack",
+        "interdict_cluster_nodes_under_attack",
         "gauge",
         "Nodes reporting drops above their --attack-drops-per-sec.",
     );
     let _ = writeln!(
         out,
-        "sokol_cluster_nodes_under_attack {}",
+        "interdict_cluster_nodes_under_attack {}",
         s.cluster_attacked
     );
     family(
         &mut out,
-        "sokol_cluster_storm_engaged",
+        "interdict_cluster_storm_engaged",
         "gauge",
         "1 while the distributed-storm latch is engaged.",
     );
     let _ = writeln!(
         out,
-        "sokol_cluster_storm_engaged {}",
+        "interdict_cluster_storm_engaged {}",
         s.cluster_storm_engaged as u8
     );
 
@@ -903,7 +935,9 @@ mod tests {
                 flowspec_round_progress: progress,
                 ..Default::default()
             };
-            assert!(render(&snap).contains(&format!("sokol_flowspec_round_progress {expected}\n")));
+            assert!(
+                render(&snap).contains(&format!("interdict_flowspec_round_progress {expected}\n"))
+            );
         }
     }
 
@@ -920,9 +954,9 @@ mod tests {
             };
             let first = render_at(&snapshot, started + std::time::Duration::from_secs(2));
             let later = render_at(&snapshot, started + std::time::Duration::from_secs(12));
-            assert!(first.contains("sokol_flowspec_readback_age_seconds 2.000\n"));
-            assert!(later.contains("sokol_flowspec_readback_age_seconds 12.000\n"));
-            assert!(later.contains("sokol_flowspec_announced 1\n"));
+            assert!(first.contains("interdict_flowspec_readback_age_seconds 2.000\n"));
+            assert!(later.contains("interdict_flowspec_readback_age_seconds 12.000\n"));
+            assert!(later.contains("interdict_flowspec_announced 1\n"));
         }
     }
 
@@ -931,9 +965,9 @@ mod tests {
         // The existing count cannot distinguish startup or failed readback from
         // an observed empty RIB. Unknown must not masquerade as verified zero.
         let text = render(&Snapshot::default());
-        assert!(text.contains("sokol_flowspec_announced 0\n"));
-        assert!(text.contains("sokol_flowspec_readback_ok 0\n"));
-        assert!(text.contains("sokol_flowspec_readback_age_seconds -1.000\n"));
+        assert!(text.contains("interdict_flowspec_announced 0\n"));
+        assert!(text.contains("interdict_flowspec_readback_ok 0\n"));
+        assert!(text.contains("interdict_flowspec_readback_age_seconds -1.000\n"));
     }
 
     #[test]
@@ -952,7 +986,9 @@ mod tests {
                 flowspec_read_started: observed.then(Instant::now),
                 ..Default::default()
             };
-            assert!(render(&snap).contains(&format!("sokol_flowspec_round_converged {expected}\n")));
+            assert!(
+                render(&snap).contains(&format!("interdict_flowspec_round_converged {expected}\n"))
+            );
         }
     }
 
@@ -988,33 +1024,36 @@ mod tests {
         snap.observe_only = true;
         let text = render(&snap);
 
-        assert!(text.contains("sokol_xdp_rx_packets_total 10\n"));
-        assert!(text.contains("sokol_xdp_dropped_packets_total{reason=\"blocklist\"} 2\n"));
-        assert!(text.contains("sokol_xdp_dropped_packets_total{reason=\"fragment_blocked\"} 1\n"));
-        assert!(text.contains("sokol_xdp_observed_packets_total{reason=\"blocklist\"} 4\n"));
-        assert!(text.contains("sokol_enforce_mode{mode=\"observe\"} 1\n"));
-        assert!(text.contains("sokol_xdp_events_suppressed_total 7\n"));
-        assert!(text.contains("sokol_xdp_events_lost_total 6\n"));
+        assert!(text.contains("interdict_xdp_rx_packets_total 10\n"));
+        assert!(text.contains("interdict_xdp_dropped_packets_total{reason=\"blocklist\"} 2\n"));
         assert!(
-            text.contains("sokol_mesh_envelopes_rejected_total{reason=\"stale_timestamp\"} 3\n")
+            text.contains("interdict_xdp_dropped_packets_total{reason=\"fragment_blocked\"} 1\n")
         );
-        assert!(text.contains("sokol_mesh_envelopes_rejected_total{reason=\"before_window\"} 4\n"));
-        assert!(text.contains("sokol_clock_steps_total 2\n"));
-        assert!(text.contains("sokol_clock_last_step_seconds -3600.000\n"));
-        assert!(text.contains("sokol_claims_waiting 5\n"));
-        assert!(text.contains("sokol_xdp_events_malformed_total 2\n"));
-        assert!(text.contains("sokol_strikes_remembered 3\n"));
+        assert!(text.contains("interdict_xdp_observed_packets_total{reason=\"blocklist\"} 4\n"));
+        assert!(text.contains("interdict_enforce_mode{mode=\"observe\"} 1\n"));
+        assert!(text.contains("interdict_xdp_events_suppressed_total 7\n"));
+        assert!(text.contains("interdict_xdp_events_lost_total 6\n"));
+        assert!(text
+            .contains("interdict_mesh_envelopes_rejected_total{reason=\"stale_timestamp\"} 3\n"));
         assert!(
-            text.contains("sokol_detections_total{source=\"suricata\",result=\"enforced\"} 4\n")
+            text.contains("interdict_mesh_envelopes_rejected_total{reason=\"before_window\"} 4\n")
         );
+        assert!(text.contains("interdict_clock_steps_total 2\n"));
+        assert!(text.contains("interdict_clock_last_step_seconds -3600.000\n"));
+        assert!(text.contains("interdict_claims_waiting 5\n"));
+        assert!(text.contains("interdict_xdp_events_malformed_total 2\n"));
+        assert!(text.contains("interdict_strikes_remembered 3\n"));
+        assert!(text
+            .contains("interdict_detections_total{source=\"suricata\",result=\"enforced\"} 4\n"));
+        assert!(text
+            .contains("interdict_detections_total{source=\"suricata\",result=\"duplicate\"} 2\n"));
         assert!(
-            text.contains("sokol_detections_total{source=\"suricata\",result=\"duplicate\"} 2\n")
+            text.contains("interdict_detections_total{source=\"other\",result=\"refused\"} 3\n")
         );
-        assert!(text.contains("sokol_detections_total{source=\"other\",result=\"refused\"} 3\n"));
-        assert!(text.contains("sokol_strikes_evicted_total 4\n"));
-        assert!(text.contains("sokol_blocks_active{family=\"ipv4\"} 2\n"));
-        assert!(text.contains("sokol_blocks_capacity 65536\n"));
-        assert!(text.contains("sokol_p2p_active_peers 1\n"));
+        assert!(text.contains("interdict_strikes_evicted_total 4\n"));
+        assert!(text.contains("interdict_blocks_active{family=\"ipv4\"} 2\n"));
+        assert!(text.contains("interdict_blocks_capacity 65536\n"));
+        assert!(text.contains("interdict_p2p_active_peers 1\n"));
         // Every sample line belongs to a declared family.
         for line in text.lines().filter(|l| !l.starts_with('#')) {
             let name = line.split(['{', ' ']).next().unwrap();
@@ -1072,7 +1111,7 @@ mod tests {
         assert_eq!((snap.events_suppressed, snap.events_lost), (6, 10));
         let text = render(&snap);
         assert!(
-            text.contains("sokol_xdp_stats_read_failures_total 1\n"),
+            text.contains("interdict_xdp_stats_read_failures_total 1\n"),
             "the failed read is not counted"
         );
         // A good read after it takes the new sums and keeps the count of failures.
@@ -1089,10 +1128,10 @@ mod tests {
         };
         let text = render(&snap);
         for line in [
-            "sokol_mesh_claims_total{issuer=\"2\",result=\"enforced\"} 5\n",
-            "sokol_mesh_claims_total{issuer=\"2\",result=\"held\"} 1\n",
-            "sokol_mesh_claims_total{issuer=\"2\",result=\"known\"} 3\n",
-            "sokol_mesh_claims_total{issuer=\"other\",result=\"refused\"} 2\n",
+            "interdict_mesh_claims_total{issuer=\"2\",result=\"enforced\"} 5\n",
+            "interdict_mesh_claims_total{issuer=\"2\",result=\"held\"} 1\n",
+            "interdict_mesh_claims_total{issuer=\"2\",result=\"known\"} 3\n",
+            "interdict_mesh_claims_total{issuer=\"other\",result=\"refused\"} 2\n",
         ] {
             assert!(text.contains(line), "missing {line}");
         }

@@ -435,7 +435,7 @@ mod tests {
         );
     }
 
-    /// `trap` and `telemetry` are this node's own sources in `sokol_detections_total`
+    /// `trap` and `telemetry` are this node's own sources in `interdict_detections_total`
     /// (ROADMAP item 10): an adapter that names itself so on the IPC socket must not have its
     /// decisions counted as trap hits or telemetry. It is still enforced, and its audit record
     /// keeps the name it gave; only the counter label is `other`.

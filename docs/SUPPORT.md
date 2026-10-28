@@ -2,7 +2,7 @@
 
 **Стан:** 2026-10-05, лабораторно кваліфіковано; польового пілоту й виміру на цільовій NIC у
 `native` ще немає (ROADMAP, P4). Релізу немає, тож цей профіль описує, **на чому
-Sokol-Core перевірено**, а не гарантію. «Перевірено» означає, що автоматична перевірка проходить
+interdict-mesh перевірено**, а не гарантію. «Перевірено» означає, що автоматична перевірка проходить
 на цьому середовищі й тепер. Решта — або очікування з обґрунтуванням, або «не перевірено».
 Змінюйте документ разом із тим, що справді перевіряється.
 
@@ -27,11 +27,11 @@ SKIP.
 | CrowdSec | 1.4.6 (пакет Ubuntu 24.04) |
 | GoBGP (Flowspec) | 4.9.0 |
 | WireGuard | `wireguard-tools` з Ubuntu 24.04 |
-| systemd | юніт `deploy/sokol-orchestrator.service`: без root, лише `CAP_NET_ADMIN CAP_BPF CAP_PERFMON` (smoke перевіряє, що без `CAP_PERFMON` завантаження відхиляється) |
+| systemd | юніт `deploy/interdictd.service`: без root, лише `CAP_NET_ADMIN CAP_BPF CAP_PERFMON` (smoke перевіряє, що без `CAP_PERFMON` завантаження відхиляється) |
 
 | Властивість | Перевірено |
 |---|---|
-| Режими XDP | `native` і `generic` на veth; `auto` (типово) бере native, а якщо драйвер відмовляє — generic (`sokol_xdp_mode`) |
+| Режими XDP | `native` і `generic` на veth; `auto` (типово) бере native, а якщо драйвер відмовляє — generic (`interdict_xdp_mode`) |
 | Apple Virtualization (VM lima/colima з `vz`) | native XDP **неможливий**: `virtio_net: Can't set XDP while host is implementing GRO_HW/CSUM`; `auto` працює в generic (перевірено на Ubuntu 24.04, ядро 6.8) |
 | Розмір мешу | 2 вузли (smoke, зокрема через WireGuard), 3 вузли (демо); повний меш до 30 вузлів — лабораторні виміри `bench/mesh.sh` ([2026-09-27](measurements/2026-09-27-lab/README.md), не в CI) |
 | Повний меш | так; ретрансляції немає (ADR-0002) |
@@ -66,9 +66,9 @@ SKIP.
 
 ## 4. Вимоги до вузла
 
-- Linux з XDP, systemd, root лише для встановлення (служба працює як `sokol`).
+- Linux з XDP, systemd, root лише для встановлення (служба працює як `interdict`).
 - Синхронізація часу (NTP/chrony).
-- Файлова система для `/var/lib/sokol` з `fsync` і атомарним `rename` (ext4, xfs).
+- Файлова система для `/var/lib/interdict` з `fsync` і атомарним `rename` (ext4, xfs).
 - **Пам'ять і потік подій залежать від кількості CPU** (N03). Вузол друкує на старті
   `[Resources] …` зі своїми значеннями:
   - лічильники влучань блоків: 1 МіБ × possible CPU (64 CPU → 64 МіБ), навіть якщо частина

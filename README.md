@@ -1,4 +1,4 @@
-# Sokol-Core 🛡️
+# interdict-mesh 🛡️
 
 > **Status:** lab-qualified, no release. Not yet measured on a target NIC in native mode and not
 > run in a field pilot ([ROADMAP](ROADMAP.md), P4).
@@ -93,7 +93,7 @@ at or below its XDP limit, and several drivers refuse XDP with jumbo frames or L
 (`ethtool -K eth0 lro off`). Start the service with `--xdp-mode native` in production so a
 driver problem fails loudly instead of silently falling back to generic mode.
 
-`sokol_blocks_active{family=...}` and `sokol_blocks_capacity` (65 536 per family) show map
+`interdict_blocks_active{family=...}` and `interdict_blocks_capacity` (65 536 per family) show map
 usage; crossing 80% is logged and recorded in the audit log.
 
 ## Integrations and operation

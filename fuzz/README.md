@@ -22,4 +22,4 @@ inputs remain unchanged. CALIBRATED_RUN covers these assertions and these faults
 not parser correctness for every input or owner acceptance. Kani remains separate.
 
 The manual `Native fuzz calibration` workflow publishes the unsigned receipt;
-this is separate from PR checks and does not add runtime dependencies to Sokol.
+this is separate from PR checks and does not add runtime dependencies to interdict-mesh.

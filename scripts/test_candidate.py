@@ -63,7 +63,7 @@ class Candidate(unittest.TestCase):
     def test_all_product_files_roundtrip_including_monitor(self):
         digest = self.build()
         manifest, files = tool.verify(self.output, digest)
-        self.assertIn('usr/local/bin/sokol-monitor', files)
+        self.assertIn('usr/local/bin/interdict-mon', files)
         self.assertEqual(manifest['admission'], 'NOT_ADMITTED')
         with self.assertRaisesRegex(ValueError, 'overwrite'):
             tool.build(self.binaries, self.output)
@@ -104,17 +104,17 @@ class Candidate(unittest.TestCase):
     def test_install_and_remove_do_not_change_state_or_configuration(self):
         digest = self.build()
         prefix = self.root / 'host'; prefix.mkdir()
-        state = prefix / 'var/lib/sokol/node.key'; state.parent.mkdir(parents=True)
+        state = prefix / 'var/lib/interdict/node.key'; state.parent.mkdir(parents=True)
         state.write_bytes(b'private canary')
         result = tool.install(self.output, digest, prefix)
         self.assertEqual(result['service'], 'NOT_STARTED')
-        monitor = prefix / 'usr/local/bin/sokol-monitor'
+        monitor = prefix / 'usr/local/bin/interdict-mon'
         self.assertEqual(monitor.read_bytes(), b'binary:monitor')
         self.assertEqual(monitor.stat().st_mode & 0o777, 0o755)
         monitor.write_bytes(b'locally modified')
         with self.assertRaisesRegex(ValueError, 'Modified'):
             tool.install(self.output, digest, prefix, remove=True)
-        self.assertTrue((prefix / 'usr/local/bin/sokol-orchestrator').exists())
+        self.assertTrue((prefix / 'usr/local/bin/interdictd').exists())
         monitor.write_bytes(b'binary:monitor')
         tool.install(self.output, digest, prefix, remove=True)
         self.assertFalse(monitor.exists())

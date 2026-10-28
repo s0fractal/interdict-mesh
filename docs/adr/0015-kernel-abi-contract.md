@@ -25,7 +25,7 @@ XDP-програма пише `DropEvent` у ring buffer і `PacketStats` у per
   - Розбіжна зміна не збирається ніде, а не лише там, де є тести.
 - **Декодування за зсувами.** `orchestrator::kernel_events` читає поля за зсувами з
   `offset_of!`, без `read_unaligned` і без `unsafe`.
-  - Запис іншого розміру відкидається й рахується в `sokol_xdp_events_malformed_total`;
+  - Запис іншого розміру відкидається й рахується в `interdict_xdp_events_malformed_total`;
     перший такий запис пишеться в журнал.
 - **IP у рядку аудиту.** `KERNEL_DROP_NOTIFY|IP:<src>|Reason|Proto|Version|PktLen` — джерело
   тепер видно, а отже його можна перевірити.
@@ -48,7 +48,7 @@ XDP-програма пише `DropEvent` у ring buffer і `PacketStats` у per
 ## Зміна 2026-09-29: `PacketStats.events_lost` (208 → 216 байт)
 
 - Подія в межах ліміту, для якої кільце повне (споживач відстав), раніше зникала без сліду.
-  Тепер вона рахується в `events_lost` (зсув 208) і метриці `sokol_xdp_events_lost_total`
+  Тепер вона рахується в `events_lost` (зсув 208) і метриці `interdict_xdp_events_lost_total`
   (числове рев'ю N03).
 - Smoke перевіряє баланс. Споживача зупинено (`SIGSTOP`), надіслано рівно 20 000 SYN на порт
   пастки. Має виконуватись: записано + притримано + втрачено = 20 000.
@@ -82,5 +82,5 @@ XDP-програма пише `DropEvent` у ring buffer і `PacketStats` у per
   `drops_by_reason`/`observed_by_reason`. Перевіряють
   `every_drop_reason_code_is_distinct_and_has_its_own_counter_slot` і
   `the_xdp_program_drops_unparsable_headers_in_strict_mode_with_their_own_reason`.
-- Метрика `sokol_xdp_dropped_packets_total{reason="malformed_header"}` більше не росте від
+- Метрика `interdict_xdp_dropped_packets_total{reason="malformed_header"}` більше не росте від
   суворого розбору; ці відкидання тепер `reason="strict_parse"`. Релізу ще немає.

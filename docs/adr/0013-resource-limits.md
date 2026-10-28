@@ -26,11 +26,11 @@
 - **Пріоритет у черзі до піра.** Дві черги: термінова (256 місць) — заявки, відкликання,
   знімки, запити знімків і keepalive; фонова (64 місця) — телеметрія, дайджести, сповіщення.
   Записувач спершу вичитує термінову. На переповненому лінку першою губиться фонова, і
-  відкинуте рахується за класом (`sokol_mesh_broadcasts_dropped_total{class}`).
+  відкинуте рахується за класом (`interdict_mesh_broadcasts_dropped_total{class}`).
 - **Локальні сокети.**
   - IPC детекторів: до 1 000 рядків/с на з'єднання (запас 5 000) і 2 000/с на весь сокет
     (запас 20 000). Понад це читач чекає: адаптер у режимі ACK просто повільніше отримує
-    відповіді, жоден рядок не губиться (`sokol_ipc_lines_delayed_total`).
+    відповіді, жоден рядок не губиться (`interdict_ipc_lines_delayed_total`).
   - Керуючий сокет: 50 команд/с на з'єднання (запас 500).
 - **Пам'ять повторів мешу — окремо для кожного відправника** (N02 з
   числового рев'ю 2026-09-28, архів у `docs/RETIRED.md`).
@@ -57,13 +57,13 @@
   підписується й не розсилається вдруге: піри її вже мають. Підпис (~0,2 мс) коштує лише нове
   рішення, тож найгірший випадок на IPC — ≈ 2 000 × 0,22 мс ≈ 0,44 ядра.
 - **Видимість:**
-  - `sokol_mesh_handshakes_refused_total`, `sokol_mesh_handshake_timeouts_total`;
-  - `sokol_mesh_frames_delayed_total`, `sokol_mesh_sync_requests_throttled_total`;
-  - `sokol_tick_seconds`, `sokol_tick_seconds_max`;
-  - `sokol_blocks_pending_oldest_seconds` — вік найстарішої операції з картою, яка не
+  - `interdict_mesh_handshakes_refused_total`, `interdict_mesh_handshake_timeouts_total`;
+  - `interdict_mesh_frames_delayed_total`, `interdict_mesh_sync_requests_throttled_total`;
+  - `interdict_tick_seconds`, `interdict_tick_seconds_max`;
+  - `interdict_blocks_pending_oldest_seconds` — вік найстарішої операції з картою, яка не
     вдається;
-  - `sokol_event_ids_remembered` / `sokol_event_ids_evicted_total`,
-    `sokol_strikes_remembered` / `sokol_strikes_evicted_total`.
+  - `interdict_event_ids_remembered` / `interdict_event_ids_evicted_total`,
+    `interdict_strikes_remembered` / `interdict_strikes_evicted_total`.
 
 ## Ціни, з яких виведено ліміти
 

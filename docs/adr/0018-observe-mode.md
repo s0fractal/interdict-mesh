@@ -25,7 +25,7 @@
 - **Семплінг подій ядра** рахує разом відкинуті й «відкинув би» пакети, тож події в тіні є.
 - **Решта без змін:** рішення, заявки мешу, аудит, наслідки й відтворення працюють як у
   режимі `drop`. Змінюється лише дія в ядрі.
-- **Видимість:** `sokol_enforce_mode{mode}`, `sokol_xdp_observed_packets_total{reason}`,
+- **Видимість:** `interdict_enforce_mode{mode}`, `interdict_xdp_observed_packets_total{reason}`,
   запис аудиту `ENFORCE_MODE|Mode:observe|drop` на кожному старті.
 - **ABI:** `PacketStats` 216 → 352 байти (`observed_packets` зі зсувом 216,
   `observed_by_reason` зі зсувом 224), див. ADR-0015. Після прибирання полів без запису —

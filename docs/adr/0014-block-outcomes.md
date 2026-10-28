@@ -30,9 +30,9 @@
   тривалості. Змінні хвости причин (як-от тривалість рішення CrowdSec) не розщеплюють групу.
   Це перша shadow-аналітика: вона нічого не змінює, лише показує, які детектори й правила
   дають блоки, що нічого не роблять. Паралельно метрики:
-  - `sokol_block_outcomes_total{effect="dropped"|"none"|"unknown"}`;
-  - `sokol_block_outcome_packets_total`;
-  - `sokol_block_outcomes_lost_total`.
+  - `interdict_block_outcomes_total{effect="dropped"|"none"|"unknown"}`;
+  - `interdict_block_outcome_packets_total`;
+  - `interdict_block_outcomes_lost_total`.
 - Незібрані наслідки обмежені (`MAX_OUTCOMES`, 4096). Надлишок рахується, а не зникає мовчки.
 
 ## Розглянуті варіанти

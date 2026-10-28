@@ -59,7 +59,7 @@ def cited_tests():
     result = subprocess.run(['bash', '-c', '''
         grep -ohE '`[^`]+`' README.md ARCHITECTURE.md ROADMAP.md AGENTS.md docs/*.md docs/adr/*.md \
             docs/measurements/*/README.md | tr -d '`' \
-            | grep -oxE '[a-z][a-z0-9]*(_[a-z0-9]+){3,}' | grep -v '^sokol_' | sort -u'''],
+            | grep -oxE '[a-z][a-z0-9]*(_[a-z0-9]+){3,}' | grep -vE '^(sokol|interdict)_' | sort -u'''],
         cwd=ROOT, capture_output=True, text=True, check=True)
     return result.stdout.split()
 
@@ -97,6 +97,44 @@ class Claims(unittest.TestCase):
         result = self.check(every_fn_as_a_test() - {cited[0]},
                             extra=f'some::module::{cited[0]}: benchmark\n')
         self.assertNotEqual(result.returncode, 0, result.stdout)
+
+
+class FormerPrefix(unittest.TestCase):
+    """sokol_ is the metric prefix before ADR-0034. Renaming the check's pattern alone stopped it
+    from reading sokol_ names at all: a live document could keep citing a metric the node no
+    longer exports, and a measurement README could cite one that never existed."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.dir)
+        files = subprocess.run(['git', 'ls-files', '-z'], cwd=ROOT, capture_output=True,
+                               check=True).stdout.decode().split('\0')
+        for f in filter(None, files):
+            if (ROOT / f).is_file():
+                (self.dir / f).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(ROOT / f, self.dir / f)
+        subprocess.run(['git', 'init', '-q'], cwd=self.dir, check=True)
+        subprocess.run(['git', 'add', '-A'], cwd=self.dir, check=True)
+
+    def cite(self, rel, span):
+        with open(self.dir / rel, 'a') as stream:
+            stream.write(f'\nCited: `{span}`.\n')
+        return subprocess.run([str(self.dir / 'scripts/check-claims.sh')], cwd=self.dir,
+                              capture_output=True, text=True,
+                              env={**os.environ, 'SOKOL_SKIP_TEST_NAMES': '1'})
+
+    def test_a_live_document_citing_a_metric_under_the_former_prefix_fails(self):
+        result = self.cite('README.md', 'sokol_blocks_active')
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        self.assertIn('metric sokol_blocks_active is cited under the former prefix', result.stdout)
+
+    def test_a_measurement_citing_the_former_prefix_is_checked_as_its_successor(self):
+        measurement = sorted((self.dir / 'docs/measurements').glob('*/README.md'))[0]
+        result = self.cite(measurement.relative_to(self.dir), 'sokol_blocks_active')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        result = self.cite(measurement.relative_to(self.dir), 'sokol_blocks_never_exported')
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        self.assertIn('metric interdict_blocks_never_exported is cited but not exported', result.stdout)
 
 
 class Attached(unittest.TestCase):

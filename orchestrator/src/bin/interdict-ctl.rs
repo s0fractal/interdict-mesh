@@ -177,7 +177,7 @@ struct AppState {
     node_uids: Arc<HashSet<u32>>,
 }
 
-const SESSION_COOKIE: &str = "sokol_operator";
+const SESSION_COOKIE: &str = "interdict_operator";
 const TELEMETRY_MAX_CONNS: usize = 32;
 /// Heartbeats come every second; a node silent this long is shown as STALE.
 const NODE_STALE_AFTER: Duration = Duration::from_secs(15);
@@ -194,10 +194,10 @@ const CONTROL_ERROR_CHARS: usize = 512;
 const TELEMETRY_MAX_LINE: u64 = 8192;
 const TELEMETRY_IDLE: Duration = Duration::from_secs(10);
 
-/// uids allowed to send telemetry and serve node control sockets: `SOKOL_NODE_UIDS`
+/// uids allowed to send telemetry and serve node control sockets: `INTERDICT_NODE_UIDS`
 /// (comma-separated), by default root and the operator's own uid.
 fn node_uids_from_env() -> HashSet<u32> {
-    match std::env::var("SOKOL_NODE_UIDS") {
+    match std::env::var("INTERDICT_NODE_UIDS") {
         Ok(list) => list
             .split(',')
             .filter_map(|u| u.trim().parse().ok())
@@ -206,11 +206,11 @@ fn node_uids_from_env() -> HashSet<u32> {
     }
 }
 
-/// Mode 0660, and group `SOKOL_TELEMETRY_GROUP` if set (so a node running as another user in
+/// Mode 0660, and group `INTERDICT_TELEMETRY_GROUP` if set (so a node running as another user in
 /// that group can write). Without the group only the operator's own uid (and root) can connect.
 fn restrict_telemetry_socket(path: &str) -> Result<(), String> {
     use std::os::unix::fs::PermissionsExt;
-    if let Ok(group) = std::env::var("SOKOL_TELEMETRY_GROUP") {
+    if let Ok(group) = std::env::var("INTERDICT_TELEMETRY_GROUP") {
         let name = std::ffi::CString::new(group.clone()).map_err(|e| e.to_string())?;
         let gr = unsafe { libc::getgrnam(name.as_ptr()) };
         if gr.is_null() {
@@ -246,15 +246,15 @@ async fn read_telemetry(state: &AppState, uid: u32, stream: UnixStream) {
 /// Every API route needs this token, even on loopback: without it any web page the operator
 /// visits could POST to the unauthenticated endpoints (a body-less POST needs no CORS preflight).
 fn operator_token() -> Result<String, String> {
-    match std::env::var("SOKOL_OPERATOR_TOKEN") {
+    match std::env::var("INTERDICT_OPERATOR_TOKEN") {
         Ok(token) if token.len() >= 16 => Ok(token),
-        Ok(_) => Err("SOKOL_OPERATOR_TOKEN must be at least 16 characters".into()),
+        Ok(_) => Err("INTERDICT_OPERATOR_TOKEN must be at least 16 characters".into()),
         Err(_) => {
             let token: String = (0..32)
                 .map(|_| format!("{:x}", rand::random::<u8>() & 0xF))
                 .collect();
             log::warn!(
-                "[*] SOKOL_OPERATOR_TOKEN not set; generated one-time token: {}",
+                "[*] INTERDICT_OPERATOR_TOKEN not set; generated one-time token: {}",
                 token
             );
             Ok(token)
@@ -340,7 +340,7 @@ struct BlacklistReq {
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
-    log::info!("[*] Запуск SOKOL-CORE Operations & Control Center...");
+    log::info!("[*] Запуск INTERDICT-MESH Operations & Control Center...");
 
     let token = match operator_token() {
         Ok(token) => token,
@@ -361,7 +361,7 @@ async fn main() -> std::io::Result<()> {
     let state_clone = state.clone();
     tokio::spawn(async move {
         // The node writes to this fixed path (push_telemetry in the orchestrator).
-        let socket_path = "/run/sokol_telemetry.sock".to_string();
+        let socket_path = "/run/interdict_telemetry.sock".to_string();
         if StdPath::new(&socket_path).exists() {
             let _ = std::fs::remove_file(&socket_path);
         }
@@ -413,7 +413,7 @@ async fn main() -> std::io::Result<()> {
     let app = build_router(state);
 
     let bind_addr =
-        std::env::var("SOKOL_OPERATOR_BIND").unwrap_or_else(|_| "127.0.0.1:3000".to_string());
+        std::env::var("INTERDICT_OPERATOR_BIND").unwrap_or_else(|_| "127.0.0.1:3000".to_string());
     let listener = TcpListener::bind(&bind_addr).await?;
     log::info!("[*] Command Center operational at http://{}", bind_addr);
     axum::serve(listener, app).await
@@ -454,7 +454,7 @@ async fn process_trident_telemetry(state: &AppState, uid: u32, raw_msg: &str) {
                     name: extract_value(data, "NAME=").unwrap_or(format!("Node-{}", id)),
                     endpoint: extract_value(data, "EP=").unwrap_or("Unknown".into()),
                     control_socket: extract_value(data, "CTL=")
-                        .unwrap_or_else(|| format!("/run/sokol_node_{}.sock", id)),
+                        .unwrap_or_else(|| format!("/run/interdict_node_{}.sock", id)),
                     health_status: "HEALTHY".into(),
                     last_seen: Utc::now().format("%H:%M:%S").to_string(),
                     xdp_loaded: true,
@@ -878,7 +878,7 @@ const HTML_DASHBOARD: &str = r###"
 <html lang="uk" class="dark">
 <head>
     <meta charset="UTF-8">
-    <title>SOKOL-CORE // Operations Center</title>
+    <title>INTERDICT-MESH // Operations Center</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root { color-scheme: dark; font: 15px/1.5 system-ui, sans-serif; background:#0d141c; color:#dbe5ef; }
@@ -925,7 +925,7 @@ const HTML_DASHBOARD: &str = r###"
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div class="bg-zinc-900 border border-zinc-800 p-4 rounded-xl flex items-center justify-between">
                 <div>
-                    <h1 class="font-bold text-amber-500">SOKOL-CORE</h1>
+                    <h1 class="font-bold text-amber-500">INTERDICT-MESH</h1>
                     <p class="text-[10px] text-zinc-500">XDP enforcement + trust mesh</p>
                 </div>
                 <div class="text-right">
@@ -2312,5 +2312,66 @@ mod tests {
             "the node's durability warning was dropped from the operator answer: {body}"
         );
         std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn node_uids_come_from_the_environment_or_default_to_root_and_this_uid() {
+        std::env::set_var("INTERDICT_NODE_UIDS", "7, 1000,x,0");
+        let listed = node_uids_from_env();
+        std::env::remove_var("INTERDICT_NODE_UIDS");
+        let default = node_uids_from_env();
+        assert_eq!(listed, HashSet::from([0, 7, 1000]));
+        assert_eq!(default, HashSet::from([0, unsafe { libc::getuid() }]));
+    }
+
+    #[test]
+    fn the_telemetry_socket_is_left_to_owner_and_group_only() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir =
+            std::env::temp_dir().join(format!("interdict-telemetry-{}", rand::random::<u64>()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("telemetry.sock");
+        let _listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o777)).unwrap();
+        std::env::remove_var("INTERDICT_TELEMETRY_GROUP");
+        let restricted = restrict_telemetry_socket(path.to_str().unwrap());
+        let mode = std::fs::metadata(&path).unwrap().permissions().mode() & 0o777;
+        // With a group named, the socket is handed to it (here the test's own primary group,
+        // which a non-root user may chown to); a group that does not exist is refused.
+        let own = unsafe { std::ffi::CStr::from_ptr((*libc::getgrgid(libc::getgid())).gr_name) };
+        std::env::set_var("INTERDICT_TELEMETRY_GROUP", own.to_str().unwrap());
+        let grouped = restrict_telemetry_socket(path.to_str().unwrap());
+        std::env::set_var("INTERDICT_TELEMETRY_GROUP", "interdict-no-such-group");
+        let unknown = restrict_telemetry_socket(path.to_str().unwrap());
+        std::env::remove_var("INTERDICT_TELEMETRY_GROUP");
+        std::fs::remove_dir_all(dir).unwrap();
+        assert_eq!(restricted, Ok(()));
+        assert_eq!(mode, 0o660, "the socket mode is {mode:o}");
+        assert_eq!(grouped, Ok(()));
+        assert_eq!(
+            unknown,
+            Err("group interdict-no-such-group does not exist".to_string())
+        );
+    }
+
+    #[test]
+    fn an_operator_token_shorter_than_16_characters_is_refused() {
+        std::env::set_var("INTERDICT_OPERATOR_TOKEN", "fifteen-chars-x");
+        let short = operator_token();
+        std::env::set_var("INTERDICT_OPERATOR_TOKEN", "sixteen-chars-xy");
+        let enough = operator_token();
+        std::env::remove_var("INTERDICT_OPERATOR_TOKEN");
+        let generated = operator_token();
+        assert_eq!(
+            short,
+            Err("INTERDICT_OPERATOR_TOKEN must be at least 16 characters".to_string())
+        );
+        assert_eq!(enough, Ok("sixteen-chars-xy".to_string()));
+        let generated = generated.unwrap();
+        assert_eq!(generated.len(), 32);
+        assert!(
+            generated.bytes().all(|b| b.is_ascii_hexdigit()),
+            "{generated}"
+        );
     }
 }

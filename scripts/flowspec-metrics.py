@@ -5,10 +5,10 @@ import sys
 import time
 import urllib.request
 
-NAMES = ("sokol_flowspec_enabled", "sokol_flowspec_readback_ok",
-         "sokol_flowspec_announced", "sokol_flowspec_readback_age_seconds",
-         "sokol_flowspec_discard_rules", "sokol_flowspec_round_converged",
-         "sokol_flowspec_round_progress")
+NAMES = ("interdict_flowspec_enabled", "interdict_flowspec_readback_ok",
+         "interdict_flowspec_announced", "interdict_flowspec_readback_age_seconds",
+         "interdict_flowspec_discard_rules", "interdict_flowspec_round_converged",
+         "interdict_flowspec_round_progress")
 
 
 def matches(text, state, count, minimum_age):

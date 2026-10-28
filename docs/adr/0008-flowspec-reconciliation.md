@@ -26,11 +26,11 @@
   читання (-1 до першого успіху); HTTP бере їх з worker, вік рахується при scrape.
   Споживач сам визначає допустимий вік. Запис `FLOWSPEC_ANNOUNCE`/`WITHDRAW` підтверджує CLI,
   не застосування маршрутизатором. Ownership і canonical discard рахуються окремо:
-  `sokol_flowspec_discard_rules` — підмножина власних правил з рівно однією traffic-rate
+  `interdict_flowspec_discard_rules` — підмножина власних правил з рівно однією traffic-rate
   extended community (type 128, subtype 6) та числовим rate 0, без окремого
   IPv6-specific extended-community атрибуту type 25. Інші дії перевидаються як
   discard, якщо prefix бажаний, і відкликаються, якщо вже не потрібний.
-  `sokol_flowspec_round_converged` перевіряє рівність обох повних prefix sets
+  `interdict_flowspec_round_converged` перевіряє рівність обох повних prefix sets
   (owned і canonical discard) з wanted snapshot цього раунду. Публікується разом
   з observation; pending/failure/cancellation відкликають його до await. Health
   може бути 1, коли convergence 0. Це не рівність із latest intent, що міг

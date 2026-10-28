@@ -2,7 +2,7 @@
 
 Status: experimental tooling; no runtime admission or owner acceptance. The five
 parts below ship together. Warrant owns record identity, signatures and decision
-links; Sokol owns source/witness binding, execution and interpretation.
+links; interdict-mesh owns source/witness binding, execution and interpretation.
 
 1. Export one complete tracked source snapshot, its owner-pinned OPERATOR-R1
    context, and a precisely derived defect snapshot in a Warrant evidence pack.
@@ -81,11 +81,11 @@ no binary or generated evidence pack is committed.
 
 Install the released verifier with `cargo install --locked --version 0.9.0
 warrant-verify`. Obtain the binary digest locally; never accept a digest or trust
-configuration merely because the producer included it. Fetch the locked Sokol
+configuration merely because the producer included it. Fetch the locked interdict-mesh
 dependencies before disconnecting the worker (`cargo fetch --locked`).
 
 ```sh
-# Linux, in a staged Sokol checkout; artifacts and DEMO keys go outside it.
+# Linux, in a staged interdict-mesh checkout; artifacts and DEMO keys go outside it.
 SOKOL_WARRANT_BIN=/absolute/path/to/warrant-rs \
   scripts/rehearse-counterexample-exchange.sh
 ```
@@ -131,7 +131,7 @@ blob. A structured resource refusal is recorded as prose plus evidence with no
 The runner records the complete selected toolchain and public registry digest,
 the four local method files, Warrant binary and kernel. System compiler/libraries
 remain host-profile inputs rather than a byte-complete reproducible-build claim.
-No artifact binary is admitted into Sokol's live node or sent over its mesh.
+No artifact binary is admitted into interdict-mesh's live node or sent over its mesh.
 
 Checks: `scripts/test_counterexample_task.py` covers interpretation and hostile
 packs against the real released Warrant CLI when `SOKOL_WARRANT_BIN` is set. Both

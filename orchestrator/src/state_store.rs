@@ -100,7 +100,7 @@ impl StateStore {
         });
         let (writer_shared, writer_path) = (shared.clone(), path.clone());
         std::thread::Builder::new()
-            .name("sokol-state-writer".into())
+            .name("interdict-state".into())
             .spawn(move || writer_loop(&writer_path, &rx, &writer_shared, &*write))
             .map_err(|e| log::error!("[State] Cannot start the state writer: {}", e))
             .ok();
@@ -331,7 +331,7 @@ pub fn save_state(path: &Path, state: &Persisted) -> std::io::Result<()> {
 }
 
 /// The temporary file a state is written through: the state file's own name plus `.tmp`, as
-/// `sokol-suricata` does for its cursor. `with_extension("tmp")` would be the state file itself
+/// `interdict-suricata` does for its cursor. `with_extension("tmp")` would be the state file itself
 /// for `--state-file sokol.tmp`, and the save would truncate it in place instead of replacing it
 /// atomically (ADR-0004).
 fn state_tmp(path: &Path) -> PathBuf {

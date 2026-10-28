@@ -12,7 +12,7 @@ Nodes accept mesh commands (e.g. `BlockIp`) only from peers whose public key is 
 peers file. Without `--peers-file` the mesh rejects every peer. Identities are ML-DSA-65
 (FIPS 204) keys; every mesh message is signed with one (mesh protocol v2).
 
-Each node keeps its identity key in `--key-file` (default `/var/lib/sokol/node.key`, created
+Each node keeps its identity key in `--key-file` (default `/var/lib/interdict/node.key`, created
 with mode `0600` on first start). Print a node's public key:
 
 ```shell
@@ -29,14 +29,14 @@ Collect the keys into a peers file on every node:
 ```
 
 ```shell
-sudo ./target/release/orchestrator -i eth0 --node-id 1 --peers-file /etc/sokol/peers.json --seed-peer 10.0.0.2:7946
+sudo ./target/release/orchestrator -i eth0 --node-id 1 --peers-file /etc/interdict/peers.json --seed-peer 10.0.0.2:7946
 ```
 
 To rotate a node's key without downtime:
 
-1. Generate the new key: `orchestrator --key-file /var/lib/sokol/node.key.new --print-public-key`.
+1. Generate the new key: `orchestrator --key-file /var/lib/interdict/node.key.new --print-public-key`.
 2. On every peer, list both keys for that node — `{"node_id": 1, "public_keys": ["<old>", "<new>"]}` —
-   and apply it with `printf 'RELOAD_PEERS\n' | nc -U /run/sokol/control.sock`.
+   and apply it with `printf 'RELOAD_PEERS\n' | nc -U /run/interdict/control.sock`.
 3. Move `node.key.new` over `node.key` and restart that node.
 4. Remove the old key from every peers file and send `RELOAD_PEERS` again. Open connections that
    still sign with the removed key are closed on their next message.
@@ -85,7 +85,7 @@ node's storm strict mode adds, `strict_parse` and `fragment_blocked` without the
 `--drop-ipv4-fragments`, are left out so a storm cannot keep itself going). A node may only report
 about itself. Nodes silent for 15 s drop out of the view. The cluster status is:
 
-| nodes under attack                          | `sokol_cluster_status` |
+| nodes under attack                          | `interdict_cluster_status` |
 |---------------------------------------------|------------------------|
 | no reports                                  | 0 unknown              |
 | none                                        | 1 stable               |
@@ -100,7 +100,7 @@ While the latch is engaged, `--storm-mode strict` (the default) tightens XDP on 
 whose headers do not parse are dropped instead of passed to the stack (`strict_parse`), and
 IPv4 fragments are dropped. When the latch disengages, exactly the flags the operator configured
 (e.g. `--drop-ipv4-fragments`) are restored. Both transitions are audited (`DEFENSE_MODE|Strict`,
-`DEFENSE_MODE|Normal`) and shown as `sokol_defense_strict`. `--storm-mode observe` only logs the
+`DEFENSE_MODE|Normal`) and shown as `interdict_defense_strict`. `--storm-mode observe` only logs the
 storm. Only a node's own latch switches its mode: a peer's EngageDefense/DisengageDefense is
 refused.
 
@@ -110,12 +110,12 @@ authenticated but not encrypted.
 
 ## Signals from detectors (Suricata)
 
-Sokol enforces decisions made by detectors you already run. `sokol-suricata` follows Suricata's
+interdict-mesh enforces decisions made by detectors you already run. `interdict-suricata` follows Suricata's
 EVE log and sends each alert at or above `--max-severity` (default 2) to the node as a signal:
 
 ```shell
-sokol-suricata --eve /var/log/suricata/eve.json --ipc-socket /run/sokol/sokol.sock \
-    --cursor-file /var/lib/sokol/suricata.cursor
+interdict-suricata --eve /var/log/suricata/eve.json --ipc-socket /run/interdict/interdict.sock \
+    --cursor-file /var/lib/interdict/suricata.cursor
 ```
 
 With `--cursor-file` the adapter saves the oldest unanswered position for restart.
@@ -205,18 +205,18 @@ admission order; a full cache skips new addresses without evicting an unexpired 
 Capacity refusals use the aggregated warnings described above. Those alerts are deliberately
 skipped, not queued for retry, and the source cursor may advance past them. This is a cardinality bound,
 not a process RSS or latency guarantee. Noisy rules can be skipped with `--ignore-sid`.
-The adapter only needs to read the EVE log and write to the IPC socket (group `sokol-ipc`).
+The adapter only needs to read the EVE log and write to the IPC socket (group `interdict-ipc`).
 The [invariant ledger](INVARIANTS.md) maps these boundaries and
 source/queue/ACK/cursor properties to code and executable counterexamples.
 
 ### CrowdSec
 
-`sokol-crowdsec` is a CrowdSec bouncer: it polls the Local API decision stream and turns `ban`
+`interdict-crowdsec` is a CrowdSec bouncer: it polls the Local API decision stream and turns `ban`
 decisions on single addresses into signals.
 
 ```shell
-cscli bouncers add sokol                         # prints the API key
-SOKOL_CROWDSEC_KEY=<key> sokol-crowdsec --lapi-url http://127.0.0.1:8080 --ipc-socket /run/sokol/sokol.sock
+cscli bouncers add interdict                         # prints the API key
+INTERDICT_CROWDSEC_KEY=<key> interdict-crowdsec --lapi-url http://127.0.0.1:8080 --ipc-socket /run/interdict/interdict.sock
 ```
 
 Only local decisions (origins `crowdsec` and `cscli`) are forwarded by default; community lists
@@ -284,22 +284,22 @@ everything about an address at once.
 
 FastNetMon reports the *victim* of a volumetric attack (an address inside the protected network),
 and flood sources are usually spoofed, so a report does not block anything. Instead
-`sokol-fastnetmon-notify`, set as FastNetMon's notify script, marks the node under attack in its
+`interdict-fastnetmon-notify`, set as FastNetMon's notify script, marks the node under attack in its
 mesh telemetry until FastNetMon sends `unban` (or `--attack-report-ttl-secs`, default 600, passes).
-That feeds the cluster status and the distributed-storm latch; `sokol_external_attacks_active`
+That feeds the cluster status and the distributed-storm latch; `interdict_external_attacks_active`
 shows active reports.
 
 ```shell
 # /etc/fastnetmon.conf
-notify_script_path = /usr/local/bin/sokol-fastnetmon-notify   # SOKOL_IPC_SOCKET selects the node socket
+notify_script_path = /usr/local/bin/interdict-fastnetmon-notify   # INTERDICT_IPC_SOCKET selects the node socket
 ```
 
 Other detectors can use the same line protocol on the IPC socket:
 `SIGNAL:<source>|<src ip>|<dst ip or ->|<reason>`. A detector that can name its events sends
 `SIGNAL#<event id>:<source>|...` (id: 1-64 of `A-Z a-z 0-9 . _ -`, unique per source); the node
 acts on each (source, id) once within 24 h and answers a resend with `OK duplicate`, so a retry
-after a lost reply or an adapter restart adds no strike. `sokol-crowdsec` sends the LAPI decision
-id, `sokol-suricata` a hash of the EVE line.
+after a lost reply or an adapter restart adds no strike. `interdict-crowdsec` sends the LAPI decision
+id, `interdict-suricata` a hash of the EVE line.
 
 A detector with its own decision lifecycle can also send (ADR-0019):
 - `SIGNAL#<id>;ttl=<seconds>:...` — the block lasts that long, within `--block-ttl-max`, instead
@@ -317,11 +317,11 @@ A detector with its own decision lifecycle can also send (ADR-0019):
     outbox request, not an automatic retry or a promise of eventual removal.
 
   Events without an id, such as `DROP_IMMEDIATE` or the trap, cannot be taken back.
-  `sokol_detector_retractions_total{result}` counts the answers.
+  `interdict_detector_retractions_total{result}` counts the answers.
 
 ## Local control socket and protected addresses
 
-`/run/sokol.sock` accepts `DROP_IMMEDIATE:<ip>` from local tools such as `trident_trap`.
+`/run/interdict.sock` accepts `DROP_IMMEDIATE:<ip>` from local tools such as `trident_trap`.
 A client that first sends the line `ACK` gets one reply per command: `OK applied`, `OK pending`
 (recorded; the node retries the kernel write), `OK recorded` (reports, logs), `OK duplicate`
 (an event id already acted on), `OK refused <why>`
@@ -329,7 +329,7 @@ or `ERR <why>`. `OK applied` means the block is in the kernel; it is written to 
 within about a second (a crash before that loses it on this node; operator decisions, in contrast,
 wait up to 2 s for the write before the control socket answers, and say `WARNING: not yet durable`
 if it has not finished; a graceful shutdown writes the last state).
-`sokol-suricata` and `sokol-crowdsec` use it: a signal stays in their bounded
+`interdict-suricata` and `interdict-crowdsec` use it: a signal stays in their bounded
 queue until the node has answered it, so alerts and decisions that arrive while the node is down
 or restarting are delivered when it is back (refusals and errors are final, not retried).
 It is root-only (`0600`) unless `--ipc-group <group>` is given, in which case members of that
@@ -361,11 +361,11 @@ claim keeps its own expiry but is enforced here for at most `--block-ttl-max`.
   restored on start, re-checked against the never-block policy. Peers' claims come back through
   the mesh. A separate writer thread owns the file, so a slow or hung disk never holds up expiry
   or the heartbeat; the node turns DEGRADED if a change waits more than 5 s
-  (`sokol_state_pending_seconds`). A state file that cannot be read or parsed is kept as
-  `<state-file>.corrupt` and the node stays DEGRADED (`sokol_state_restore_ok 0`) until the
+  (`interdict_state_pending_seconds`). A state file that cannot be read or parsed is kept as
+  `<state-file>.corrupt` and the node stays DEGRADED (`interdict_state_restore_ok 0`) until the
   operator sends `ACCEPT_STATE_LOSS` on the control socket.
 - The kernel map follows the claims. A map write or delete that fails (e.g. the map is full) stays
-  pending, is retried every second and is shown as `sokol_blocks_pending`; `sokol_blocks_active`
+  pending, is retried every second and is shown as `interdict_blocks_pending`; `interdict_blocks_active`
   counts only entries the kernel holds.
 - What a peer can impose here is bounded (ADR-7). A peer's claims enforced at once are capped
   (`--peer-max-active`, default 16384; more wait for a free slot), each for at most
@@ -397,7 +397,7 @@ below — a detector mistake must not cut the node off.
 
 The node re-reads its addresses and default gateways every 2 s: an address that moves onto
 this host is released at once if it was blocked, and refused afterwards
-(`sokol_protected_refresh_ok` shows the reads work).
+(`interdict_protected_refresh_ok` shows the reads work).
 
 Some addresses are never blocked, whether the request comes from `--block`, the control
 socket, a trap or the mesh: loopback, multicast, IPv6 link-local, every address of this node,
@@ -409,8 +409,8 @@ sudo ./target/release/orchestrator -i eth0 --never-block 203.0.113.0/24 --never-
 
 ## Web dashboards
 
-`sokol-operator` (default `127.0.0.1:3000`, override with `SOKOL_OPERATOR_BIND`) requires a
-token on every API call. Set `SOKOL_OPERATOR_TOKEN` (16+ characters), or read the one-time
+`interdict-ctl` (default `127.0.0.1:3000`, override with `INTERDICT_OPERATOR_BIND`) requires a
+token on every API call. Set `INTERDICT_OPERATOR_TOKEN` (16+ characters), or read the one-time
 token it prints at startup; the dashboard asks for it and keeps it in an `HttpOnly`,
 `SameSite=Strict` cookie. Ban/unban/flush buttons go to the node's control socket
 (`--control-socket`, announced in its heartbeat): operator bans are permanent until lifted,
@@ -419,8 +419,8 @@ token it prints at startup; the dashboard asks for it and keeps it in an `HttpOn
 not keep its own copy of the bans: it reads them from each node (`LIST_BANS`) every 5 s and after
 every action, so a restarted dashboard or another operator's change shows the node's real state.
 A node without a heartbeat for 15 s is shown as STALE. The operator needs access to that socket (`--control-group`, e.g.
-`sokol-ops`). The dashboard takes node heartbeats on `/run/sokol_telemetry.sock` (mode 0660, group
-`SOKOL_TELEMETRY_GROUP` if set) only from the uids in `SOKOL_NODE_UIDS` (default: root and its own
+`interdict-ops`). The dashboard takes node heartbeats on `/run/interdict_telemetry.sock` (mode 0660, group
+`INTERDICT_TELEMETRY_GROUP` if set) only from the uids in `INTERDICT_NODE_UIDS` (default: root and its own
 uid). A node is bound to the uid that first announced it: heartbeats for it from another uid are
 ignored, and a control socket is used only if the process serving it runs as that uid, so a
 local process cannot re-point the operator's commands to a socket of its own. The dashboard offers only what a node carries out: there is no XDP toggle, shield mode or
@@ -436,9 +436,9 @@ address cannot get an innocent host blocked. The XDP trap port (44333) is differ
 is only recorded (`KERNEL_DROP_NOTIFY|…|Reason:6`), because a single SYN's source is trivially
 forged. Do not turn those records into blocks in an external detector.
 
-- `SOKOL_TRAP_PORTS` — comma-separated ports (default `22,80,443,3306,6379,8443`; `2222`, the
+- `INTERDICT_TRAP_PORTS` — comma-separated ports (default `22,80,443,3306,6379,8443`; `2222`, the
   operator SSH port, is refused)
-- `SOKOL_JAIL_ADDR` — optional external interactive jail for SSH attackers; without it an
+- `INTERDICT_JAIL_ADDR` — optional external interactive jail for SSH attackers; without it an
   embedded mock jail answers. It must not be the operator SSH port.
 
 At most 256 trap connections are handled at once; binary floods get a slow 32 B/s drip for up
@@ -446,25 +446,25 @@ to 30 s instead of a burst.
 
 ## Running as a service
 
-`deploy/sokol-orchestrator.service` runs the orchestrator as user `sokol` with only
+`deploy/interdictd.service` runs the orchestrator as user `interdict` with only
 `CAP_NET_ADMIN`, `CAP_BPF` and `CAP_PERFMON` (the smoke test checks that this set works and that
 dropping `CAP_PERFMON` does not), `ProtectSystem=strict` and related hardening
-(`systemd-analyze security`: 3.7 "OK"). State lives in `/var/lib/sokol`, the control socket in
-`/run/sokol/sokol.sock` for members of `sokol-ipc`; point `trident_trap` at it with
-`SOKOL_IPC_SOCKET=/run/sokol/sokol.sock` (it also needs `CAP_NET_BIND_SERVICE` for ports below
+(`systemd-analyze security`: 3.7 "OK"). State lives in `/var/lib/interdict`, the control socket in
+`/run/interdict/interdict.sock` for members of `interdict-ipc`; point `trident_trap` at it with
+`INTERDICT_IPC_SOCKET=/run/interdict/interdict.sock` (it also needs `CAP_NET_BIND_SERVICE` for ports below
 1024). SIGTERM shuts down gracefully and flushes the audit log.
 
 ## Audit log
 
 Blocks, unblocks, trap hits and sampled kernel drop events go to `--db-path`
-(`/var/lib/sokol/audit.log`), an append-only log whose records are chained with BLAKE3. It
+(`/var/lib/interdict/audit.log`), an append-only log whose records are chained with BLAKE3. It
 rotates at `--audit-max-bytes` (default 100 MiB) into `audit.log.<first sequence number>`,
 keeping `--audit-keep` segments (default 10); each segment starts where the previous one ended,
 so the chain stays verifiable across files:
 
 ```shell
-./target/release/monitor --verify /var/lib/sokol/audit.log
-# OK /var/lib/sokol/audit.log: 4 file(s), records 1200..5210, head 3f9c...
+./target/release/monitor --verify /var/lib/interdict/audit.log
+# OK /var/lib/interdict/audit.log: 4 file(s), records 1200..5210, head 3f9c...
 ```
 
 A missing, reordered or edited segment makes it print `BROKEN` and exit 1. Someone with write
@@ -474,11 +474,11 @@ cannot write (another host, a ticket, a timestamping service).
 Mesh peers do this for each other ([ADR-0021](adr/0021-audit-witnesses.md)): every 60 s, when its
 log grew, a node sends its fsynced head to peers that announced the `audit-head` feature, and
 each records it in its own log as `AUDIT_WITNESS|Issuer:<id>|Records:<n>|Head:<hex>` (at most one
-per peer per 30 s; `sokol_audit_witnesses_recorded_total`, `sokol_audit_witnesses_refused_total`).
+per peer per 30 s; `interdict_audit_witnesses_recorded_total`, `interdict_audit_witnesses_refused_total`).
 Check a node's log against a peer's witnesses:
 
 ```shell
-sokol-orchestrator --db-path /var/lib/sokol/audit.log --node-id 1 --verify-witnesses peer-audit.log
+interdictd --db-path /var/lib/interdict/audit.log --node-id 1 --verify-witnesses peer-audit.log
 # peer record 812: head after 4031 records confirmed
 # witnesses for node 1: 1 confirmed, 0 contradicted, 0 missing, 0 pruned
 ```
@@ -493,13 +493,13 @@ write its durable head as a statement file and stamp it with OpenTimestamps from
 (the node itself contacts nothing; the calendars see only a SHA-256 and the stamping host's IP):
 
 ```shell
-sudo useradd --system --no-create-home --shell /usr/sbin/nologin sokol-anchor
-sudo install -d -o sokol -g sokol-anchor -m 2775 /var/lib/sokol-anchors
+sudo useradd --system --no-create-home --shell /usr/sbin/nologin interdict-anchor
+sudo install -d -o interdict -g interdict-anchor -m 2775 /var/lib/interdict-anchors
 sudo pip install opentimestamps-client          # provides `ots`
-sudo install -m 0755 scripts/anchor-ots.sh /usr/local/bin/sokol-anchor-ots
-sudo install -m 0644 deploy/sokol-anchor.service deploy/sokol-anchor.timer /etc/systemd/system/
-sudo systemctl enable --now sokol-anchor.timer
-# and add to SOKOL_ARGS in /etc/default/sokol:  --anchor-dir /var/lib/sokol-anchors
+sudo install -m 0755 scripts/anchor-ots.sh /usr/local/bin/interdict-anchor-ots
+sudo install -m 0644 deploy/interdict-anchor.service deploy/interdict-anchor.timer /etc/systemd/system/
+sudo systemctl enable --now interdict-anchor.timer
+# and add to INTERDICT_ARGS in /etc/default/interdict:  --anchor-dir /var/lib/interdict-anchors
 ```
 
 Every hour, if the log grew, the node writes `head-<node>-<records>.txt` (one line:
@@ -507,8 +507,8 @@ Every hour, if the log grew, the node writes `head-<node>-<records>.txt` (one li
 stamps new statements and upgrades pending stamps. Check later, anywhere:
 
 ```shell
-sokol-orchestrator --db-path /var/lib/sokol/audit.log --node-id 1 --verify-anchors /var/lib/sokol-anchors
-ots verify /var/lib/sokol-anchors/head-1-00000000000000004031.txt.ots   # the Bitcoin attestation
+interdictd --db-path /var/lib/interdict/audit.log --node-id 1 --verify-anchors /var/lib/interdict-anchors
+ots verify /var/lib/interdict-anchors/head-1-00000000000000004031.txt.ots   # the Bitcoin attestation
 ```
 
 Keep copies of the statements and `.ots` files off the node: deleting them hides nothing the audit
@@ -519,9 +519,9 @@ steady the stream of events. One writer per log: a second process opening the sa
 is refused (`<db-path>.lock`).
 
 If the log cannot be written (disk full, I/O error), **enforcement continues**: blocking never
-waits for the audit. The node reports itself degraded instead: `sokol_audit_healthy 0`,
-`MODE=DEGRADED` in its heartbeat to the dashboard, `sokol_audit_write_errors_total`,
-`sokol_audit_lost_total` and `sokol_audit_last_sync_age_seconds`. It keeps reopening the log (which
+waits for the audit. The node reports itself degraded instead: `interdict_audit_healthy 0`,
+`MODE=DEGRADED` in its heartbeat to the dashboard, `interdict_audit_write_errors_total`,
+`interdict_audit_lost_total` and `interdict_audit_last_sync_age_seconds`. It keeps reopening the log (which
 drops a torn record) and, once it can write again, records how many records were lost
 (`AUDIT_LOST|Records:<n>`), so the gap is visible in the chain itself.
 
@@ -541,8 +541,8 @@ until their shared-daemon ownership is resolved.
 **Upstream acceptance.** These rules match a source prefix only. Under RFC 8955 §6, by default
 a received Flow Specification is feasible only if it embeds a destination prefix component
 (rule a); rule a may be relaxed only by explicit configuration, and rules b and c are then
-disregarded. A router that applies the default procedure therefore does not install Sokol's
-rules, and nothing on this node shows it: the local RIB, `sokol_flowspec_discard_rules` and
+disregarded. A router that applies the default procedure therefore does not install interdict-mesh's
+rules, and nothing on this node shows it: the local RIB, `interdict_flowspec_discard_rules` and
 convergence describe the node's gobgpd, not the router. The lab and smoke upstream is GoBGP,
 which kept the rules in its RIB; that does not show acceptance by a validating router. Before
 relying on FlowSpec, the operator configures the receiving routers to relax rule a for this
@@ -570,7 +570,7 @@ A reported nonzero ID is excluded if supplied, but this CLI cannot reveal hidden
 Writers must also reserve the ownership community: reusing our tag on a nonzero-ID
 path can make it count as owned while ID-zero CLI withdrawal fails to remove it.
 
-A slow or hung gobgpd runs apart from the main loop. `sokol_flowspec_announced` counts owned
+A slow or hung gobgpd runs apart from the main loop. `interdict_flowspec_announced` counts owned
 paths in this scope last seen in the local RIB, regardless of action.
 An actual change to the desired prefix set interrupts a pending round and starts a
 new RIB read for the latest set. Identical main ticks send no notification, so they
@@ -591,7 +591,7 @@ necessary calls. The 64-operation quota is
 per round, not a rate limit across interrupted rounds.
 Even normally fast calls with a large backlog can prevent completed observations
 under per-tick changes, leaving readback health revoked throughout an attack.
-`sokol_flowspec_discard_rules` counts the subset satisfying the canonical discard contract.
+`interdict_flowspec_discard_rules` counts the subset satisfying the canonical discard contract.
 After writes, both families are read again before either count is published; CLI success
 alone cannot update them. The pinned CLI represents an empty RIB as `{}`. Missing stdout,
 `null`, invalid UTF-8/JSON, malformed path collections or unclassifiable ownership/source
@@ -602,14 +602,14 @@ writes; an invalid post-write read cannot confirm their result. This validates t
 used for local identity and source selection, not the whole GoBGP JSON schema.
 Failed rounds retain the last successful counts and time, which may be stale. Read them together with:
 
-- `sokol_flowspec_enabled`: 1 when the worker is configured; 0 when disabled or in observe mode.
-- `sokol_flowspec_readback_ok`: 1 after the latest round completed successfully;
+- `interdict_flowspec_enabled`: 1 when the worker is configured; 0 when disabled or in observe mode.
+- `interdict_flowspec_readback_ok`: 1 after the latest round completed successfully;
   0 at startup, during a round, after failure or cancellation. This is not convergence.
-- `sokol_flowspec_readback_age_seconds`: monotonic age since the start of the last
+- `interdict_flowspec_readback_age_seconds`: monotonic age since the start of the last
   successful two-family read; -1 before any successful observation. It continues
   to grow after failure and is computed when scraped, independently of the main tick.
 
-- `sokol_flowspec_round_converged`: 1 when the latest completed round observed both
+- `interdict_flowspec_round_converged`: 1 when the latest completed round observed both
   its owned-prefix set and canonical-discard-prefix set equal to the wanted set
   sampled for that round. 0 after a non-converged successful read, or while disabled,
   pending, failed or cancelled. Equal counts alone cannot establish prefix equality.
@@ -644,12 +644,12 @@ instances.
 ## Metrics
 
 `--metrics-bind 127.0.0.1:9469` serves Prometheus metrics at `/metrics`:
-`sokol_xdp_rx_packets_total`, `sokol_xdp_rx_bytes_total`,
-`sokol_xdp_dropped_packets_total{reason=...}` (`blocklist` for every blocked source, `malformed_header` for outer headers dropped in every mode, `strict_parse` for headers dropped only in storm strict mode, `invalid_tcp_flags`, `fragment_blocked`), `sokol_xdp_events_suppressed_total`,
-`sokol_blocks_active`, `sokol_p2p_active_peers`, `sokol_audit_queue_overflow_total`,
-`sokol_flowspec_announced`, `sokol_flowspec_enabled`, `sokol_flowspec_readback_ok`,
-`sokol_flowspec_readback_age_seconds`, `sokol_flowspec_discard_rules`, `sokol_flowspec_round_converged`, `sokol_cluster_status`, `sokol_cluster_nodes`,
-`sokol_cluster_nodes_under_attack`, `sokol_cluster_storm_engaged`.
+`interdict_xdp_rx_packets_total`, `interdict_xdp_rx_bytes_total`,
+`interdict_xdp_dropped_packets_total{reason=...}` (`blocklist` for every blocked source, `malformed_header` for outer headers dropped in every mode, `strict_parse` for headers dropped only in storm strict mode, `invalid_tcp_flags`, `fragment_blocked`), `interdict_xdp_events_suppressed_total`,
+`interdict_blocks_active`, `interdict_p2p_active_peers`, `interdict_audit_queue_overflow_total`,
+`interdict_flowspec_announced`, `interdict_flowspec_enabled`, `interdict_flowspec_readback_ok`,
+`interdict_flowspec_readback_age_seconds`, `interdict_flowspec_discard_rules`, `interdict_flowspec_round_converged`, `interdict_cluster_status`, `interdict_cluster_nodes`,
+`interdict_cluster_nodes_under_attack`, `interdict_cluster_storm_engaged`.
 
 Kernel drop events reach user space at most 64 times per second per CPU (trap-port events only
-for connection attempts); the rest are counted in `sokol_xdp_events_suppressed_total`.
+for connection attempts); the rest are counted in `interdict_xdp_events_suppressed_total`.
