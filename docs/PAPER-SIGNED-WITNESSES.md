@@ -181,7 +181,7 @@ author's mistakes cheap to find and expensive to hide.
 ## 8. Reproducing
 
 ```
-git clone https://github.com/s0fractal/sokol-core && cd sokol-core
+git clone https://github.com/s0fractal/interdict-mesh && cd interdict-mesh
 python3 scripts/witness-pin.py check            # rows, witnesses, closures, contracts
 python3 scripts/witness-pin.py closure an_authenticated_connection_survives_a_replayed_frame
 python3 scripts/test_witness_pin.py             # the gate's own regressions
