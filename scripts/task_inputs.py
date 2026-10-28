@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounded inputs for the evidence tools (proof-task.py, counterexample-task.py, sokol-dev.py).
+"""Bounded inputs for the evidence tools (proof-task.py, sokol-dev.py).
 
 Bounded reads, a bounded process runner, the tracked-file inventory and its hash-checked private
 copy, and `prepare`: a contract's context packet from its lineage in .warrant/records.jsonl, bound
@@ -28,7 +28,6 @@ MAX_OUTPUT_BYTES = 1_048_576
 MAX_PACKET_BYTES = 16_384
 RUN_TIMEOUT = 900
 RECIPES = {
-    'delivery': ['bash', 'scripts/check-delivery.sh'],
     'orchestrator-unit': ['cargo', 'test', '--release', '--locked', '-p', 'orchestrator', '--bins', '{witness}', '--', '--color', 'never'],
     'workspace-unit': ['cargo', 'test', '--release', '--locked', '-p', 'orchestrator', '-p', 'common', '--lib', '--bins', '{witness}', '--', '--color', 'never'],
     'common-unit': ['cargo', 'test', '--release', '--locked', '-p', 'common', '--lib', '{witness}', '--', '--color', 'never'],
@@ -214,9 +213,7 @@ def prepare(root, rid, signers=None):
             raise ValueError('Selected contract history differs from owner pin')
         correspondence = 'MATCH'
     files = sorted({location.rsplit(':', 1)[0] for v in body_locations.values() for location in v})
-    if all(file == 'orchestrator/src/delivery.rs' for file in files):
-        recipe = 'delivery'
-    elif all(file.startswith('orchestrator/src/') for file in files) and not any('.' in w for w in witnesses):
+    if all(file.startswith('orchestrator/src/') for file in files) and not any('.' in w for w in witnesses):
         recipe = 'orchestrator-unit'
     elif all(file.startswith('common/src/') for file in files) and not any('.' in w for w in witnesses):
         recipe = 'common-unit'

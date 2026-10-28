@@ -19,6 +19,9 @@ metric() { curl -s http://127.0.0.1:9469/metrics | grep "^$1"; }
 
 ## 1. Встановлення
 
+Нижче — збірка з джерел. Пакет-кандидат (архів з інвентарем `deploy/candidate.json`, перевіркою
+SHA256 і командами `install`/`remove`) описано в [CANDIDATE.md](CANDIDATE.md).
+
 ```shell
 cd ebpf && cargo build --release --locked && cd ..
 cargo build --release --locked

@@ -235,16 +235,53 @@ ADR-0032 і далі називають ці шляхи як історію; т�
 | `.github/review-allowlist` | SUPERSEDED | ac8d7acd2dc6a10cd4ef8860117d31cd70a0e091 | .warrant/v3.json | рецензії від будь-якого логіна зі списку, зокрема людини, через GitHub |
 | `docs/contracts` | SUPERSEDED | 0c5a2f3a46adb4b13bab07cc76e884605f143752 | .warrant/records.jsonl | 80 JSON-контрактів і каталог пропозицій як файли; кожен контракт і кожне рішення — версія лінії в сторі (міграція `verify`: IDENTICAL) |
 
+## Записи 2026-10-28 (перед RC-1)
+
+Прибрано з дерева після `0f74ee6` (main після #74); об'єкти — під тегом `archive/2026-10-28-pre-rc1`
+(= `0f74ee6`). Рішення власника s0fractal 2026-10-28: очистити репозиторій до RC-1. Stargate
+заархівовано 2026-10-20 (репозиторій s0fractal/stargate); переносний обмін контрприкладами
+дублює Warrant 3, на якому репозиторій працює з ADR-0033. Контракти EXCHANGE-P1, EXCHANGE-H1 і
+EXCHANGE-R1 мають надгробки — версії своїх ліній зі станом `retired` (WITHDRAWN) у
+`.warrant/records.jsonl`. Рядки — як у таблиці вище.
+
+<!-- retired-objects archive/2026-10-28-pre-rc1: path | mode | git object at the tag | replacement | loss -->
+| `.github/workflows/stargate-shadow.yml` | ARCHIVED | ed150cc801f576df100ff2ff2092b14a9feb67a2 | — | перехресна перевірка правила ACK `delivery::Outbox` (черга, трасування, квитанції, наміри) замороженою моделлю Stargate і її запуск на замороженому дереві; обов'язкова перевірка `delivery` ruleset `protect-main` зникає разом із нею. Рідні тести `delivery.rs` і процесні регресії адаптерів лишаються |
+| `scripts/stargate_delivery_probe.rs` | ARCHIVED | 2656d06860c074b47a214a2f428c6f3cafcc3691 | — | зонд, що компілював `delivery.rs` окремо для моделі Stargate |
+| `scripts/check-delivery.sh` | ARCHIVED | 1d075d78255bd196899017431f67056f640d1dbf | — | збірка й прогін цього зонда; рецепт `delivery` у `scripts/task_inputs.py` прибрано з ним |
+| `docs/pilots` | ARCHIVED | f2ad9d9eabb5633bd649a27dbfe2bfb5b0a2da50 | — | реєстрація, результати й поправка пілоту доставки зі Stargate (13 і 18 випадків) як розповідь; Stargate заархівовано 2026-10-20 |
+| `scripts/counterexample-task.py` | SUPERSEDED | 03c0ad7ca41f2577ede2433d305bc7ab3e2bc37c | ADR-0033 | експорт, inspect і replay переносного пакета контрприкладу між репозиторіями (Warrant 2 пакет, вибраний одержувачем верифікатор, ізольований повтор); контрприклад тепер — запис Warrant 3 у сторі: `finding@1` проти голови рецензії або нова версія лінії контракту з рішенням |
+| `scripts/counterexample_worker.py` | SUPERSEDED | debbf61b1896e269b8e0f273d47bcbd0e096d024 | ADR-0033 | ізольований виконавець фаз дефект/виправлення/відновлення і його запис виконання |
+| `scripts/check-counterexample-isolation.py` | WITHDRAWN | 02e732a17103d6c8895926e271a23b406f443bc7 | — | перевірка реальної ізоляції bwrap (без HOME, ключів і мережі) на Linux |
+| `scripts/rehearse-counterexample-exchange.sh` | WITHDRAWN | 7a2f14b1fc170c96c26215f3fc7651f58fd0b045 | — | репетиція обміну між двома копіями з випущеним `warrant-rs` |
+| `scripts/test_counterexample_task.py` | SUPERSEDED | 5a1f3ef280351ecf6b16c478e05ad2e3d58b26b6 | ADR-0033 | свідки EXCHANGE-P1 (статус лише з виходу свідка, профіль ізоляції, прив'язка до пінів власника, `prior`-ланцюг відповіді) |
+| `scripts/test_counterexample_hostile_pack.py` | SUPERSEDED | 700086182050ae54390c7657ee21290d97efb52f | ADR-0033 | свідки EXCHANGE-H1 (ворожий пакет: чужі байти, колізії імен, невиконання отриманого Python) |
+| `scripts/test_counterexample_registry.py` | WITHDRAWN | ce2419b960bd0b48d0ccac98a82247cc23282606 | — | свідки EXCHANGE-R1 (реєстр Cargo в межах отриманого Cargo.lock) |
+| `scripts/test_exchange_gate_root.py` | WITHDRAWN | 078cab194be74f86f6297d78e76be29aead84bb5 | — | перевірка, що перевіряльник виробника лишається даними в одержувача |
+| `docs/COUNTEREXAMPLE-EXCHANGE.md` | SUPERSEDED | 62c85a83d460e378884e4ec4856988fc092edbc7 | ADR-0033 | план і опис пілоту переносного обміну контрприкладами |
+| `scripts/outbox-task.py` | ARCHIVED | bbacb63cb2665781e540894a13bb39f63d0c55f3 | — | обмежений контекст IPC-A1 для агента, що називав файли Stargate |
+| `scripts/test_outbox_task.py` | ARCHIVED | d3ecfd6adce704c85f803a77083a08705e44d46a | — | тести цього контексту |
+| `orchestrator/src/bin/sokol-suricata` | SUPERSEDED | 07a22ba35423f9ad2674589b770087eff31f65c0 | orchestrator/src/bin/interdict-suricata.rs | псевдонім одного злиття (ADR-0034) для векторів аргументів `ci.yml` main до перейменування |
+| `orchestrator/src/bin/sokol-crowdsec` | SUPERSEDED | 6830669819d9aa4403e62fb33464be58e17cee4b | orchestrator/src/bin/interdict-crowdsec.rs | псевдонім одного злиття (ADR-0034), як вище |
+
+Що втрачено разом: (1) незалежна від цього коду модель доставки — правило ACK тепер тримають лише
+рідні тести й процесні регресії адаптерів, мутанти `delivery.rs` не запускаються
+(`docs/MUTATION.md`); (2) відтворення контрприкладу одержувачем у його власній ізоляції з його
+власним верифікатором: перевірка `finding@1` у Warrant 3 — це повтор записаного тесту на
+названому коміті рецензентом, а не ізольований прогін отриманого пакета; (3) перевірка реальної
+ізоляції bwrap; (4) прив'язка реєстру Cargo до отриманого Cargo.lock.
+
 ## Перевірка
 
 `scripts/check-retired.sh` (у CI):
 - кожен ID знахідки (`F`, `R26-`, `R27-`, `N`, `T`), згаданий у коді чи документах,
   розшифровано вище;
 - жоден живий файл не посилається на прибраний шлях;
-- теги `archive/2026-09-29`, `archive/2026-10-05`, `archive/2026-10-12` і `archive/2026-10-28` на місці;
+- теги `archive/2026-09-29`, `archive/2026-10-05`, `archive/2026-10-12`, `archive/2026-10-28` і
+  `archive/2026-10-28-pre-rc1` на місці;
 - кожен рядок таблиці `retired-files`: файла немає в дереві, sha256 байтів у тезі збігається,
   втрата не порожня, заміна існує;
-- кожен рядок таблиці `retired-objects`: шляху немає в дереві, id об'єкта в тезі збігається,
+- кожен рядок таблиці `retired-objects`: шляху немає в дереві, id об'єкта в тезі, який називає
+  маркер таблиці, збігається,
   втрата не порожня, заміна існує.
 
 Перевірка відмовляє, якщо не знайшла жодного ID: порожня область не рахується як успіх.

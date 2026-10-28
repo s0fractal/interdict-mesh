@@ -20,7 +20,6 @@ env:
   CARGO_DENY_SHA256: 9f12ed4c49936e09b48bf862b595cde2fe64fcbd9d74dfacac6131ca824c8d5f
   KANI_VERSION: 0.68.0
   CARGO_MUTANTS_VERSION: 27.1.0
-  WARRANT_VERIFY_VERSION: 0.9.0
 
 jobs:
   # Mutants of the changed lines only (docs/MUTATION.md): each must be caught by a test or
@@ -263,15 +262,6 @@ jobs:
             grep -Fq "PASS live startup intent ${family}:" /tmp/sokol-cargo-test.log
           done
 
-      # Pinned Python witnesses that drive the released Warrant CLI (EXCHANGE-P1) skip without
-      # it; the gate runs pinned witnesses itself and a skip is not a pass. Installed once here
-      # for the gate and the integration step below.
-      - name: Released warrant-verify for the witnesses that need it
-        if: matrix.part == 'test'
-        run: |
-          cargo install --locked --version "$WARRANT_VERIFY_VERSION" --root "$RUNNER_TEMP/sokol-warrant" warrant-verify
-          echo "SOKOL_WARRANT_BIN=$RUNNER_TEMP/sokol-warrant/bin/warrant-rs" >> "$GITHUB_ENV"
-
       - name: Pinned witnesses unchanged without the owner's signature (ADR-0023)
         if: matrix.policy_checks && matrix.part == 'test'
         # The checker and the signers come from the base commit: a pull request that weakened
@@ -371,22 +361,12 @@ jobs:
           python3 scripts/test_gate_provenance.py
           python3 scripts/test_trust_root.py
           python3 scripts/test_sokol_dev.py
-          python3 scripts/test_exchange_gate_root.py
           python3 scripts/test_candidate.py
           python3 scripts/test_build_identity.py
           python3 scripts/test_support_bundle.py
           python3 scripts/test_operator_offline.py
           python3 scripts/test_check_retired.py
-          python3 scripts/test_counterexample_registry.py
           python3 scripts/test_check_monitoring.py
-          python3 scripts/test_outbox_task.py
-
-      - name: Portable counterexample and public Warrant integration regressions
-        if: matrix.part == 'test'
-        run: |
-          test -x "$SOKOL_WARRANT_BIN"
-          python3 scripts/test_counterexample_task.py
-          python3 scripts/test_counterexample_hostile_pack.py
 
       - name: CrowdSec stream recovery regression
         if: matrix.part == 'test'

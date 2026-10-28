@@ -1,4 +1,5 @@
-"""scripts/check-retired.sh, the retired-files (2026-10-12 on) and retired-objects (2026-10-28 on) tables.
+"""scripts/check-retired.sh, the retired-files (2026-10-12 on) and retired-objects (2026-10-28 on, each table
+at the tag its marker names) tables.
 
 Each case builds a small repository whose archive tags hold a file that was then retired, and
 breaks one rule of its table row: the file is back, the digest is not the tag's bytes, the loss
@@ -54,7 +55,8 @@ class RetiredFiles(unittest.TestCase):
         git("init", "-q")
         git("add", "-A")
         git("commit", "-qm", "before")
-        for tag in ("archive/2026-09-29", "archive/2026-10-05", "archive/2026-10-12", "archive/2026-10-28"):
+        for tag in ("archive/2026-09-29", "archive/2026-10-05", "archive/2026-10-12", "archive/2026-10-28",
+                    "archive/2026-10-28-pre-rc1"):
             git("tag", tag)
         tree = git("rev-parse", "HEAD:docs/old-dir").stdout.strip()
         self.objects = f"| `docs/old-dir` | SUPERSEDED | {tree} | ADR-0001 | the old files |"
@@ -140,6 +142,24 @@ class RetiredFiles(unittest.TestCase):
         (self.dir / "docs/old-dir").rmdir()
         self.with_row(ROW, self.objects.replace("the old files", "—"))
         self.assert_refused("docs/old-dir: a retirement names what is lost")
+
+    def test_each_retired_objects_table_is_read_at_the_tag_its_marker_names(self):
+        git = lambda *a: run(self.dir, "git", "-c", "user.name=t", "-c", "user.email=t@t", *a)
+        (self.dir / "docs/LATER.md").write_text("retired later\n")
+        git("add", "-A")
+        git("commit", "-qm", "later")
+        git("tag", "-f", "archive/2026-10-28-pre-rc1")
+        blob = git("rev-parse", "HEAD:docs/LATER.md").stdout.strip()
+        git("rm", "-q", "docs/LATER.md")
+        git("commit", "-qm", "retire later")
+        row = f"| `docs/LATER.md` | WITHDRAWN | {blob} | — | the later file |"
+        second = "\n\n<!-- retired-objects archive/2026-10-28-pre-rc1: path | mode | git object at the tag | replacement | loss -->\n"
+        self.with_row(ROW, self.objects + second + row)
+        r = self.check()
+        self.assertEqual(r.returncode, 0, r.stdout)
+        # In the first table the same row is read at archive/2026-10-28, which never held the file.
+        self.with_row(ROW, self.objects + "\n" + row)
+        self.assert_refused("docs/LATER.md: the object at archive/2026-10-28 is not")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """One bounded entry point to Sokol's existing evidence tools.
 
-challenge CASE; inventory/map/next; exchange <the existing counterexample-task.py arguments>.
+challenge CASE; inventory/map/next.
 A contract's witnesses run as cargo or unittest cases by name (its lineage in .warrant/records.jsonl).
 No annotation, imported report or diagram supplies an executable command.
 """
@@ -92,7 +92,6 @@ def main():
     for name in ('inventory', 'map', 'next'):
         sub.add_parser(name)
     sub.add_parser('challenge').add_argument('identity')
-    sub.add_parser('exchange').add_argument('arguments', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     try:
         if args.action in ('inventory', 'map', 'next'):
@@ -109,10 +108,7 @@ def main():
                          'limits': ['A task candidate is not authority to accept, sign or deploy it.']}
             emit(value)
             return 0 if value['binding'] == 'MATCH' else 1
-        if args.action == 'exchange':
-            command = [sys.executable, '-I', str(ROOT / 'scripts/counterexample-task.py'), *args.arguments]
-        else:
-            command = commands(args.action, args.identity)
+        command = commands(args.action, args.identity)
         # Existing owners enforce their input/output/run bounds and record their own reports.
         return subprocess.call(command, cwd=ROOT)
     except (ValueError, OSError, KeyError, TypeError, UnicodeError, subprocess.SubprocessError) as error:

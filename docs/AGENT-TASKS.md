@@ -1,4 +1,4 @@
-# Agent tasks: contracts, proofs and counterexamples
+# Agent tasks: contracts and proofs
 
 ## One entry point
 
@@ -8,21 +8,19 @@ the same contracts and declared witness locations; the map is not a compiler cal
 `challenge genesis` runs the existing
 calibrated Kani method, including its deliberate fault. These are explicit executions.
 
-`exchange` forwards caller arguments to the existing portable
-counterexample tool: the caller still chooses its verifier digest, trust, actor and key.
 No text in a contract's annotations, a map or an imported report becomes a recipe.
 Essential inventory/map output above 64 KiB is refused; select a contract instead.
 An inventory MATCH never establishes execution, semantic adequacy or deployment authority.
 The detailed owners and limits below apply unchanged.
 
-The recipient gate runs outside received source using its explicit-root interface. The
-producer's checker stays data, so a recipient does not replace bytes of its signed root.
-
 A contract is a lineage in `.warrant/records.jsonl` (ADR-0033); its row in
 [INVARIANTS.md](INVARIANTS.md) names its witnesses. Run them by name: Rust witnesses as a
-`cargo test --release --locked` filter (Linux), Python ones as unittest cases of their test file. `scripts/task_inputs.py` `prepare` gives the bounded context packet the
-counterexample exchange carries: the leaf version, the witnesses' bodies and whether they and the
-leaf match the owner's pins (`MATCH`) or not (`UNPINNED`); it leaves execution `UNKNOWN`.
+`cargo test --release --locked` filter (Linux), Python ones as unittest cases of their test file. `scripts/task_inputs.py` `prepare` gives a contract's bounded context
+packet: the leaf version, the witnesses' bodies and whether they and the leaf match the owner's
+pins (`MATCH`) or not (`UNPINNED`); it leaves execution `UNKNOWN`. A counterexample to a contract is
+a Warrant 3 record (a `finding@1` against a review head, or a new version of the lineage whose
+decision names it, ADR-0033); the portable counterexample exchange that carried such packets
+between repositories is retired ([RETIRED.md](RETIRED.md)).
 
 ## Snapshot and limits
 
@@ -47,7 +45,8 @@ is `LOCAL_CHECKOUT`; for a separately trusted file, put `--signers /path/to/sign
 subcommand. The tool does not discover authority independently or accept/sign any proposal.
 The invariant gate remains authoritative; this convenience tool cannot waive it.
 
-`python3 scripts/test_contract_task.py` exercises forged green reports, stale helper/config
-and inventory changes, missing/zero tests, imported commands, unsigned proposals, byte and
-process-time limits. The real delivery command and Linux unit witnesses are separate runtime
-checks; mocked test output in these regressions is not native execution evidence.
+`python3 scripts/test_task_inputs.py` exercises stale helper and inventory changes, symlinked and
+oversized inputs, unknown contracts, and the output and time bounds of the process runner;
+`python3 scripts/test_proof_task.py` and `python3 scripts/test_sokol_dev.py` the proof challenge
+and the entry point. Linux unit witnesses are separate runtime checks; mocked test output in these
+regressions is not native execution evidence.

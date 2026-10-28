@@ -73,8 +73,7 @@ on a rule here that does neither, and on a cited test, path or flag that does no
   `Serialize`, so it cannot be put on the wire.
 - Detector and trap input reaches the node through `delivery::Outbox` in ACK mode: a line is
   delivered when the node answered it, not when it was written. *Checked by:*
-  `unknown_reply_keeps_the_obligation_and_a_later_ack_retires_it` and the Stargate shadow
-  contract (`.github/workflows/stargate-shadow.yml`).
+  `unknown_reply_keeps_the_obligation_and_a_later_ack_retires_it`.
 - A parser of bytes the node does not control (in `common`) gets a Kani proof as well:
   [docs/VERIFICATION.md](docs/VERIFICATION.md). *Checked by:* CI's `kani` job for the proofs
   that exist; that a new parser has one is *review only*.
