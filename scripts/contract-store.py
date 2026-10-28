@@ -34,6 +34,46 @@ def tier_manifests(signers):
     return out
 
 
+MAX_BLOB_BYTES = 1024 * 1024
+
+
+def blob(name):
+    """A blob of .warrant/blobs by its sha256, or None when it is absent, oversized or not those bytes."""
+    if not isinstance(name, str) or len(name) != 64 or any(c not in '0123456789abcdef' for c in name):
+        return None
+    path = pin.ROOT / '.warrant/blobs' / name
+    if path.is_symlink() or not path.is_file():
+        return None
+    with path.open('rb') as stream:
+        data = stream.read(MAX_BLOB_BYTES + 1)
+    return data if len(data) <= MAX_BLOB_BYTES and hashlib.sha256(data).hexdigest() == name else None
+
+
+def carried_problems(signers: pathlib.Path) -> list:
+    """Every acceptance `carry` filed, re-verified from the manifest and signature it names: the tier's SSH
+    signature under `signers`, over a manifest that pins exactly the accepted version. The standard library
+    alone, as in witness-pin.py: the base gate runs this check's witnesses without warrant-graph."""
+    problems = []
+    versions = pin.store_records(pin.ROOT)
+    for i, r in sorted(versions.items()):
+        if r['kind'] != 'attest' or not r['body'].get('carried'):
+            continue
+        tier = r['body'].get('tier')
+        target = versions.get(r['body'].get('target'), {'body': {}})['body']
+        m, s = blob(r['body'].get('manifest')), blob(r['body'].get('signature'))
+        ok = tier in TIER_ACTOR and r['actor'] == TIER_ACTOR[tier] and m is not None and s is not None
+        if ok:
+            with tempfile.TemporaryDirectory() as tmp:
+                pathlib.Path(tmp, 'm').write_bytes(m)
+                pathlib.Path(tmp, 's').write_bytes(s)
+                ok = pin.verify_manifest(pathlib.Path(tmp, 'm'), pathlib.Path(tmp, 's'), signers,
+                                         'owner' if tier == 'owner' else 'agent')
+            ok = ok and json.loads(m).get(pin.CONTRACTS, {}).get(target.get('id')) == r['body']['target']
+        if not ok:
+            problems.append(f"acceptance {i[:12]} by {r['actor']}: no {tier} signature under {signers.name} pins its version")
+    return problems
+
+
 def check(signers: pathlib.Path, every_pin: bool = False) -> int:
     """The store as Warrant 3 assesses it under .warrant/v3.json (needs the pinned warrant-graph): canonical, no
     rejected line, no problem; every contract leaf accepted by its tier's signer (`carry` files that after a
@@ -55,27 +95,10 @@ def check(signers: pathlib.Path, every_pin: bool = False) -> int:
         if lin['schema'] == pin.SCHEMA and lin['leaf'] is not None and lin['effective'] != lin['leaf']:
             rid = snap.lines[lin['leaf']][0]['record']['body']['id']
             (problems if every_pin else notes).append(f"{rid}: its leaf version is not accepted in the store yet "
-                                                      "(scripts/witness-pin.py carry, after the tier's signature)")
+                                                      "(scripts/contract-store.py carry, after the tier's signature)")
     if sum(1 for lin in rep['lineages'].values() if lin['schema'] == pin.SCHEMA) != len(contracts):
         problems.append('store: a contract lineage the engine excludes or forks')
-    versions = {i: e[0]['record'] for i, e in snap.lines.items()}
-    for i, envs in sorted(snap.lines.items()):
-        r = envs[0]['record']
-        if r['kind'] != 'attest' or not r['body'].get('carried'):
-            continue
-        tier = r['body'].get('tier')
-        target = versions.get(r['body']['target'], {'body': {}})['body']
-        m, s = snap.blobs.get(r['body'].get('manifest')), snap.blobs.get(r['body'].get('signature'))
-        ok = tier in TIER_ACTOR and r['actor'] == TIER_ACTOR[tier] and m is not None and s is not None
-        if ok:
-            with tempfile.TemporaryDirectory() as tmp:
-                pathlib.Path(tmp, 'm').write_bytes(m)
-                pathlib.Path(tmp, 's').write_bytes(s)
-                ok = pin.verify_manifest(pathlib.Path(tmp, 'm'), pathlib.Path(tmp, 's'), signers,
-                                     'owner' if tier == 'owner' else 'agent')
-            ok = ok and json.loads(m).get(pin.CONTRACTS, {}).get(target.get('id')) == r['body']['target']
-        if not ok:
-            problems.append(f"acceptance {i[:12]} by {r['actor']}: no {tier} signature under {signers.name} pins its version")
+    problems += carried_problems(signers)
     for x in notes:
         print('note', x)
     for x in problems:

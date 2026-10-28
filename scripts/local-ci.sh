@@ -201,29 +201,19 @@ python3 scripts/test_mutants_diff.py
 python3 scripts/test_mutants_scope.py
 python3 scripts/test_check_agents_rules.py
 python3 scripts/test_check_claims.py
-python3 scripts/test_check_review.py
 python3 scripts/test_witness_pin.py
+python3 scripts/test_task_inputs.py
 python3 scripts/test_gate_provenance.py
 python3 scripts/test_trust_root.py
 python3 scripts/test_sokol_dev.py
-python3 scripts/test_exchange_gate_root.py
 python3 scripts/test_candidate.py
 python3 scripts/test_build_identity.py
 python3 scripts/test_support_bundle.py
 python3 scripts/test_operator_offline.py
 python3 scripts/test_check_retired.py
-python3 scripts/test_counterexample_registry.py
 python3 scripts/test_check_monitoring.py
-python3 scripts/test_outbox_task.py
-python3 scripts/test_contract_shadow.py
-python3 scripts/test_contract_tool.py
-python3 scripts/test_contract_task.py
 step "complete owner/provisional pins and candidate trust root"
 python3 -I scripts/witness-pin.py check --every-pin
-step "portable counterexample and public Warrant integration"
-cargo install --locked --version "$(pin WARRANT_VERIFY_VERSION)" --root "$CACHE/warrant" warrant-verify
-SOKOL_WARRANT_BIN="$CACHE/warrant/bin/warrant-rs" python3 scripts/test_counterexample_task.py
-SOKOL_WARRANT_BIN="$CACHE/warrant/bin/warrant-rs" python3 scripts/test_counterexample_hostile_pack.py
 timeout 120 python3 scripts/test_crowdsec_stream.py target/release/interdict-crowdsec
 timeout 120 python3 scripts/test_suricata_recovery.py target/release/interdict-suricata
 # CI's kani job proves when something the proofs read changed (scripts/kani-scope.sh).

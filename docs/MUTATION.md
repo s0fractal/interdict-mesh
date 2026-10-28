@@ -24,8 +24,10 @@ cargo mutants --iterate ...same arguments...
 
 The node set takes about two hours on 10 cores (each mutant rebuilds and runs about 450 unit
 tests); `common` about six minutes. `delivery.rs` is compiled into the adapters with
-`#[path]`, which cargo-mutants does not follow; its mutants are the Stargate shadow contract's
-(`.github/workflows/stargate-shadow.yml`).
+`#[path]`, which cargo-mutants does not follow: its mutants are not run. Its own unit tests and the
+adapters' process regressions (`scripts/test_suricata_recovery.py`, `scripts/test_crowdsec_stream.py`)
+cover it; the cross-check against Stargate's frozen delivery model was retired with Stargate
+([RETIRED.md](RETIRED.md)).
 
 A timeout counts as caught: the suite did not pass. A test that only times out is still a slow
 way to fail, so a bound is checked inside the loop that could break it

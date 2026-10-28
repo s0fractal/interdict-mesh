@@ -341,6 +341,7 @@ pub const OWN_RESERVE: usize = common::BLOCKLIST_CAPACITY as usize;
 
 /// Default known-claims share of one peer (ADR-0025): its claims held here, enforced or not.
 /// Its envelope bounds what it enforces (`max_active`); this bounds what it makes this node keep.
+#[cfg(test)]
 pub const PEER_MAX_KNOWN_DEFAULT: usize = common::BLOCKLIST_CAPACITY as usize;
 
 /// Why `adopt` refuses a claim of a peer that has used its known-claims share (ADR-0025).
@@ -2009,6 +2010,7 @@ impl<B: Blocklist> BlockTable<B> {
     }
 
     /// Blocks the kernel enforces (for metrics and Flowspec).
+    #[cfg(test)]
     pub fn active(&self) -> usize {
         self.applied.len()
     }
@@ -2106,11 +2108,6 @@ impl<B: Blocklist> BlockTable<B> {
     /// Digest of this node's own shared claims.
     pub fn digest(&self, now_ms: u64) -> String {
         self.digest_of(self.node_id, now_ms)
-    }
-
-    /// Marks the durable part as changed (e.g. after a failed write, to retry it).
-    pub fn mark_dirty(&mut self) {
-        self.dirty = true;
     }
 
     /// Whether the durable part changed since the last [`Self::take_persisted`].
