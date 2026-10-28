@@ -894,13 +894,15 @@ CARGO_SECTION = re.compile(r"^\[\[?([^\]]+)\]\]?\s*$")
 TARGET_SECTIONS = ("lib", "bin", "test", "bench", "example", "workspace")
 
 
-# Current pin fields. A change of rule gets a new field; the earlier fields stay in the manifest
-# as pinned, so the base branch's checker (which computes them) still accepts the change.
+# Current pin fields. A change of rule gets a new field; the earlier field stays in the manifest
+# as pinned until the base branch's checker (which computes it) no longer reads it: `sign` keeps
+# every field it does not compute. The fields of the rules before these were dropped before RC-1,
+# once main's checker read only these (docs/RETIRED.md).
 CLOSURES = "closures_v4"
 BUILD = "build_v3"
 TRUST = "trust_root_v2"
 # rows_v2 and contracts_v2 (ADR-0033): the tiers come from the store, and a contract's pin is its leaf
-# version's record id. `rows` and `contracts` stay as the last JSON-contract checker computed them.
+# version's record id.
 ROWS = "rows_v2"
 CONTRACTS = "contracts_v2"
 TRUST_PATHS = (".github/witness-signers", "scripts/witness-pin.py",
@@ -1057,9 +1059,8 @@ def compare(pinned: dict, now: dict, who: str) -> tuple[list[str], list[str]]:
     for w, where in pinned["witnesses"].items():
         if w in now["witnesses"] and now["witnesses"][w] != where:
             problems.append(f"witness {w} changed: its body is not the one the {who} pinned")
-    # closures (#21), closures_v2 (#22), closures_v3 (#40), build (#22), rows and contracts (ADR-0024) are
-    # earlier rules, kept frozen for checkers of those versions; closures_v4 follows Python imports of local
-    # modules, build_v2 adds the Rust toolchain file, build_v3 the base gate workflow.
+    # closures_v4 follows Python imports of local modules (the fourth rule since #21); build_v3 pins
+    # the Rust toolchain file and the base gate workflow besides the Cargo targets.
     closures = pinned.get(CLOSURES)
     if closures is None:
         if pinned["witnesses"]:
