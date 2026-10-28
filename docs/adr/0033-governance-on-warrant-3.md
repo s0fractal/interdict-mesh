@@ -30,10 +30,10 @@ pins, besides the witness bodies, closures, build and trust root, each owner-tie
 version by record id (`contracts_v2`) and its rendered row (`rows_v2`); the agent's provisional manifest
 does the same for its tier. `scripts/witness-pin.py check` reads the lineages from the store with the
 standard library alone (the base gate and a counterexample recipient run without Warrant) and refuses
-a leaf its tier has not pinned. After a signature, `witness-pin.py carry --actor claude --key …`
+a leaf its tier has not pinned. After a signature, `scripts/contract-store.py carry --actor claude --key …`
 files the acceptance it means as an attest by `s0fractal` (`agent`) with the manifest and signature as
 blobs, vouched for by a `migration@1` attest of `claude` (`migrator`), so the store's own assessment
-agrees; `witness-pin.py check-store` (CI, with warrant-graph) assesses the store and re-verifies every
+agrees; `scripts/contract-store.py check` (CI, with warrant-graph; outside the trust root) assesses the store and re-verifies every
 carried acceptance against its SSH signature. The owner's acts per contract change are the same as
 before: one re-signature and the merge.
 
@@ -70,6 +70,7 @@ and sokol-dev), `scripts/check-review.py`, their four test files,
 `.github/workflows/agent-review.yml`, `.github/review-allowlist`, the 80 contract files and the
 proposals directory of `docs/contracts/`; in `witness-pin.py` the JSON contract loader, per-row
 markers, proposals and `trust_root_v1` computation (docs/RETIRED.md, archive tag `archive/2026-10-28`).
+`scripts/contract-store.py` (Warrant-level check and `carry`) is new and outside the trust root.
 
 ## What is lost
 
@@ -93,7 +94,7 @@ markers, proposals and `trust_root_v1` computation (docs/RETIRED.md, archive tag
    needs Git history; only acceptances carried after the move keep their manifest and signature in
    the store.
 8. **Between a signature and `carry`** the store shows the new leaf as PENDING while the manifest pins
-   it; `check-store --every-pin` (a push to main) refuses that state, so carry precedes the merge.
+   it; `contract-store.py check --every-pin` (a push to main) refuses that state, so carry precedes the merge.
 9. **One extra act at this transition**: the base gate runs main's checker, which reads the old
    manifest fields, so the owner signs once with the new checker and once with main's (below).
 
@@ -123,4 +124,7 @@ does not compute.
 restores it; a new leaf version waits for the owner's signature; a forked lineage is refused; a later
 version without its reason is refused; a retired contract drops its row only with the owner's
 signature. Each was burned by a mutant of the check it names (in the pull request).
-`scripts/test_task_inputs.py` holds the bounded-input tests that moved with the helpers.
+`scripts/test_contract_store.py`: the migrated store passes; a carried owner acceptance whose
+signature does not verify is refused, and so is one whose manifest verifies but pins another version
+(each burned by a mutant of its check). `scripts/test_task_inputs.py` holds the bounded-input tests that
+moved with the helpers.

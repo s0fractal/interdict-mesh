@@ -306,13 +306,13 @@ jobs:
 
       # The store as Warrant 3 assesses it, and every acceptance carried from a signature
       # re-verified; on main every contract leaf is accepted (ADR-0033).
-      - name: The contract store under Warrant 3 (scripts/witness-pin.py check-store)
+      - name: The contract store under Warrant 3 (scripts/contract-store.py check)
         if: matrix.policy_checks && matrix.part == 'test'
         env:
           EVERY_PIN: ${{ github.event_name == 'push' && '--every-pin' || '' }}
         run: |
           # shellcheck disable=SC2086  # empty or one flag
-          python3 scripts/witness-pin.py check-store $EVERY_PIN
+          python3 scripts/contract-store.py check $EVERY_PIN
 
       - name: Cited evidence exists (tests in the compiler's list, metrics, flags, ADRs, paths)
         if: matrix.policy_checks && matrix.part == 'test'
@@ -360,6 +360,7 @@ jobs:
           python3 scripts/test_check_claims.py
           python3 scripts/test_witness_pin.py
           python3 scripts/test_task_inputs.py
+          python3 scripts/test_contract_store.py
           python3 scripts/test_gate_provenance.py
           python3 scripts/test_trust_root.py
           python3 scripts/test_sokol_dev.py

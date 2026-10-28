@@ -93,10 +93,10 @@ on a rule here that does neither, and on a cited test, path or flag that does no
   reason (a counterexample, a measurement, a requirement), run `scripts/witness-pin.py
   regenerate`, and stop: accepting it is the tier's signature over the manifest that pins the
   new leaf (the owner's `witness-pin.py sign`, ADR-0023; a provisional row's `sign-provisional`,
-  ADR-0028), after which `witness-pin.py carry` files that acceptance in the store (ADR-0033).
+  ADR-0028), after which `scripts/contract-store.py carry` files that acceptance in the store (ADR-0033).
   A pinned witness is not weakened, renamed or dropped either; if one is in the way, file a
   version and stop. *Checked by:* `scripts/witness-pin.py check`, run from the base branch in CI,
-  and `scripts/witness-pin.py check-store` (`scripts/test_witness_pin.py` for the checker).
+  and `scripts/contract-store.py check` (`scripts/test_witness_pin.py` for the checker).
 - A retired subject stays retired. *Checked by:* `scripts/check-retired.sh` (see
   [Removing things](#removing-things)).
 

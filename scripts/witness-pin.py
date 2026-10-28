@@ -6,7 +6,8 @@ tests what the row claims: a witness can be weakened under its old name and stil
 This pins, for every invariant row, its statement, its list of witnesses and the normalized
 body of each witness, in docs/witness-manifest.json signed by the owner (ssh-keygen -Y). A row
 is rendered from its contract: a sokol-contract@1 lineage in .warrant/records.jsonl, whose leaf
-version the tier's manifest pins by record id (provisional rows: the agent's, ADR-0028).
+version the tier's manifest pins by record id (provisional rows: the agent's, ADR-0028);
+scripts/contract-store.py keeps the store's own assessment in step with those signatures.
 
     witness-pin.py check [--signers FILE] [--every-pin] [--executed CARGO_TEST_LOG]
         # CI: exit 1 on an unsigned change; with --every-pin (a push to main) also on anything
@@ -15,10 +16,6 @@ version the tier's manifest pins by record id (provisional rows: the agent's, AD
     witness-pin.py sign --key PRIVATE_KEY   # owner: re-pin the current tree and sign it
     witness-pin.py sign-provisional --key AGENT_KEY
                                             # agent: pin the provisional rows (ADR-0028)
-    witness-pin.py carry --actor A --key SEED
-                                            # after a signature: its acceptances into the store
-    witness-pin.py check-store [--signers FILE] [--every-pin]
-                                            # CI: the store under Warrant 3 (needs warrant-graph)
     witness-pin.py regenerate               # render docs/INVARIANTS.md rows from the store
     witness-pin.py closure WITNESS          # the test items pinned with a witness
     witness-pin.py --root CANDIDATE check   # trusted checker, candidate bytes left intact
@@ -42,8 +39,6 @@ import re
 import stat
 import subprocess
 import sys
-import tempfile
-import time
 import unicodedata
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -71,7 +66,6 @@ def git_files(pattern: str) -> list[pathlib.Path]:
 MAX_CONTRACTS = 256
 CONTRACT_ID = re.compile(r'[A-Z][A-Z0-9]*-[A-Z0-9-]+')
 SCHEMA = 'sokol-contract@1'
-TIER_ACTOR = {'owner': 's0fractal', 'provisional': 'agent'}
 
 
 def contract_row(contract: dict) -> str:
@@ -142,7 +136,8 @@ def record_id(record: dict) -> str:
 def store_records(root: pathlib.Path) -> dict:
     """{id: record} of .warrant/records.jsonl, read as data with the standard library alone: the base gate and a
     recipient's checker run without the Warrant package. Authenticity is not decided here: a leaf counts only
-    as the version a tier's SSH-signed manifest pins by this id (`check`); `check-store` assesses the store."""
+    as the version a tier's SSH-signed manifest pins by this id (`check`); scripts/contract-store.py
+    assesses the store."""
     path = root / '.warrant/records.jsonl'
     if any(p.is_symlink() for p in (path, path.parent)):
         raise ValueError('Symlink store refused')
@@ -1085,67 +1080,6 @@ def compare(pinned: dict, now: dict, who: str) -> tuple[list[str], list[str]]:
     return problems, notes
 
 
-def tier_manifests(signers: pathlib.Path):
-    """[(tier, manifest bytes, signature bytes)] of the manifests that verify under `signers`."""
-    out = []
-    for tier, manifest, signature, principal in (("owner", MANIFEST, SIGNATURE, "owner"),
-                                                ("provisional", PROVISIONAL, PROVISIONAL_SIG, "agent")):
-        if verify_manifest(manifest, signature, signers, principal):
-            out.append((tier, manifest.read_bytes(), signature.read_bytes()))
-    return out
-
-
-def check_store(signers: pathlib.Path, every_pin: bool = False) -> int:
-    """The store as Warrant 3 assesses it under .warrant/v3.json (needs the pinned warrant-graph): canonical, no
-    rejected line, no problem; every contract leaf accepted by its tier's signer (`carry` files that after a
-    signature; with --every-pin, a push to main, a leaf still waiting is a failure); and every acceptance `carry`
-    filed re-verified from the manifest and signature it names: the tier's SSH signature under `signers`,
-    pinning exactly that version. The acceptances the migration derived from Git history are vouched for by its
-    replay at the commit that added the store (ADR-0033)."""
-    from warrant.engine import assess
-    from warrant.store import Store
-    doc = json.loads((ROOT / '.warrant/v3.json').read_text())
-    snap = Store(ROOT / '.warrant').snapshot()
-    rep = assess(snap, doc['trust'], doc['profile'])
-    problems, notes = [], []
-    if rep['problems'] or rep['rejected'] or not rep['canonical']:
-        problems.append('store: ' + json.dumps({'problems': rep['problems'][:5], 'rejected': sorted(rep['rejected'])[:5],
-                                                'canonical': rep['canonical']}))
-    contracts = load_contracts(ROOT)
-    for lin in rep['lineages'].values():
-        if lin['schema'] == SCHEMA and lin['leaf'] is not None and lin['effective'] != lin['leaf']:
-            rid = snap.lines[lin['leaf']][0]['record']['body']['id']
-            (problems if every_pin else notes).append(f"{rid}: its leaf version is not accepted in the store yet "
-                                                      "(scripts/witness-pin.py carry, after the tier's signature)")
-    if sum(1 for lin in rep['lineages'].values() if lin['schema'] == SCHEMA) != len(contracts):
-        problems.append('store: a contract lineage the engine excludes or forks')
-    versions = {i: e[0]['record'] for i, e in snap.lines.items()}
-    for i, envs in sorted(snap.lines.items()):
-        r = envs[0]['record']
-        if r['kind'] != 'attest' or not r['body'].get('carried'):
-            continue
-        tier = r['body'].get('tier')
-        target = versions.get(r['body']['target'], {'body': {}})['body']
-        m, s = snap.blobs.get(r['body'].get('manifest')), snap.blobs.get(r['body'].get('signature'))
-        ok = tier in TIER_ACTOR and r['actor'] == TIER_ACTOR[tier] and m is not None and s is not None
-        if ok:
-            with tempfile.TemporaryDirectory() as tmp:
-                pathlib.Path(tmp, 'm').write_bytes(m)
-                pathlib.Path(tmp, 's').write_bytes(s)
-                ok = verify_manifest(pathlib.Path(tmp, 'm'), pathlib.Path(tmp, 's'), signers,
-                                     'owner' if tier == 'owner' else 'agent')
-            ok = ok and json.loads(m).get(CONTRACTS, {}).get(target.get('id')) == r['body']['target']
-        if not ok:
-            problems.append(f"acceptance {i[:12]} by {r['actor']}: no {tier} signature under {signers.name} pins its version")
-    for x in notes:
-        print('note', x)
-    for x in problems:
-        print('FAIL', x)
-    if not problems:
-        print(f"ok   store: {len(snap.lines)} records, {len(contracts)} contract lineages, basis {rep['basis']}")
-    return 1 if problems else 0
-
-
 def check(signers: pathlib.Path, every_pin: bool = False, executed_log: pathlib.Path | None = None,
           python_log_path: pathlib.Path | None = None) -> int:
     now, agent_now = current("owner"), current("provisional")
@@ -1249,46 +1183,6 @@ def sign(key: str, tier: str = "owner") -> int:
     return 0
 
 
-def carry(actor: str, key: str) -> int:
-    """After a signer pinned new leaf versions (`sign`, `sign-provisional`): file the acceptance each
-    pin means as an attest by the tier's actor (s0fractal, agent) in the store, unsigned in Warrant
-    terms, with the manifest and signature as blobs, and vouch for them with one migration@1 attest by
-    `actor` (a `migrator` in .warrant/v3.json). `check` re-verifies each from its blobs; the voucher
-    only makes the store's own assessment agree with the signatures (ADR-0033)."""
-    from warrant import jcs as C
-    from warrant import records as R
-    from warrant.repo import Repo, load_key
-    recs = store_records(ROOT)
-    done = {(r["actor"], r["body"]["target"]) for r in recs.values() if r["kind"] == "attest"}
-    at = int(time.time())
-    attests, blobs = [], []
-    for tier, m, s in tier_manifests(SIGNERS):
-        for rid, v in sorted(json.loads(m).get(CONTRACTS, {}).items()):
-            if (TIER_ACTOR[tier], v) in done:
-                continue
-            if recs.get(v, {}).get("body", {}).get("id") != rid:
-                print(f"FAIL {rid}: the {tier} manifest pins {v[:12]}, which is not a version of {rid} in the store")
-                return 1
-            body = {"target": v, "verdict": "accept", "tier": tier, "carried": True,
-                    "manifest": hashlib.sha256(m).hexdigest(), "signature": hashlib.sha256(s).hexdigest()}
-            attests.append(R.record("attest", TIER_ACTOR[tier], at, body, refs=[v, body["manifest"], body["signature"]]))
-            blobs += [m, s]
-    if not attests:
-        print("nothing to carry: every pinned leaf is accepted in the store")
-        return 0
-    repo = Repo(ROOT)
-    mapping = C.canon({"migration": "sokol-witness/carry@1", "map": [[R.rid(r), [r["body"]["manifest"], r["body"]["signature"]], []]
-                                                                    for r in attests]})
-    for data in blobs + [mapping]:
-        repo.store.put_blob(data)
-    repo.store.add_lines([R.line(r)[1] for r in attests])
-    maph = hashlib.sha256(mapping).hexdigest()
-    repo.file(actor, load_key(key, ROOT), [R.record("attest", actor, at, {"target": maph, "verdict": "migrated",
-                                                                          "records": len(attests)}, R.MIGRATION, refs=[maph])])
-    print(f"carried {len(attests)} acceptance(s), vouched for by {actor}")
-    return 0
-
-
 if __name__ == "__main__":
     args = sys.argv[1:]
     if args[:1] == ['--root'] and len(args) >= 3:
@@ -1298,11 +1192,6 @@ if __name__ == "__main__":
         sys.exit(sign(args[args.index("--key") + 1]))
     if args[:1] == ["sign-provisional"] and "--key" in args:
         sys.exit(sign(args[args.index("--key") + 1], "provisional"))
-    if args[:1] == ["carry"] and "--actor" in args and "--key" in args:
-        sys.exit(carry(args[args.index("--actor") + 1], args[args.index("--key") + 1]))
-    if args[:1] == ["check-store"]:
-        sys.exit(check_store(pathlib.Path(args[args.index("--signers") + 1]) if "--signers" in args else SIGNERS,
-                             every_pin="--every-pin" in args))
     if args[:1] == ["regenerate"]:
         INVARIANTS.write_text(regenerate(INVARIANTS.read_text(), ROOT))
         generated_invariants(INVARIANTS.read_text(), ROOT)
