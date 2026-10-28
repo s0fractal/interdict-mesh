@@ -724,6 +724,27 @@ fn deliver(outbox: &mut delivery::Outbox, socket: &Path) {
     }
 }
 
+/// Policy refusals since the last report, as log lines; admission itself happened in the gate.
+fn log_refusals(refused: RefusalCounts, max_signals_per_sec: u32) {
+    if refused.cooldown > 0 {
+        log::warn!("[interdict-suricata] {} alerts skipped: source cooldown active (policy admission, not delivery)", refused.cooldown);
+    }
+    if refused.rate > 0 {
+        log::warn!(
+            "[interdict-suricata] {} alerts skipped: policy rate limit reached ({} admissions per fixed one-second window)",
+            refused.rate,
+            max_signals_per_sec
+        );
+    }
+    if refused.capacity > 0 {
+        log::warn!(
+            "[interdict-suricata] {} alerts skipped: cooldown memory full ({} addresses)",
+            refused.capacity,
+            COOLDOWN_CAP
+        );
+    }
+}
+
 fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
     let args = Args::parse();
@@ -827,23 +848,7 @@ fn main() {
             Err(e) => log::error!("[interdict-suricata] reading {}: {}", args.eve.display(), e),
         }
         if let Some(refused) = diagnostics.take(Instant::now(), gate.refusals) {
-            if refused.cooldown > 0 {
-                log::warn!("[interdict-suricata] {} alerts skipped: source cooldown active (policy admission, not delivery)", refused.cooldown);
-            }
-            if refused.rate > 0 {
-                log::warn!(
-                    "[interdict-suricata] {} alerts skipped: policy rate limit reached ({} admissions per fixed one-second window)",
-                    refused.rate,
-                    args.max_signals_per_sec
-                );
-            }
-            if refused.capacity > 0 {
-                log::warn!(
-                    "[interdict-suricata] {} alerts skipped: cooldown memory full ({} addresses)",
-                    refused.capacity,
-                    COOLDOWN_CAP
-                );
-            }
+            log_refusals(refused, args.max_signals_per_sec);
         }
         deliver(&mut outbox, &args.ipc_socket);
         while queued_at.len() > outbox.pending() {
@@ -2111,6 +2116,62 @@ mod tests {
             admitted.len(),
             1,
             "one host admitted twice within its cooldown: {admitted:?}"
+        );
+    }
+
+    #[test]
+    fn deliver_sends_the_queued_alert_and_retires_it_on_the_nodes_answer() {
+        use std::io::{BufRead, BufReader, Write};
+        let dir =
+            std::env::temp_dir().join(format!("interdict-suricata-deliver-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("ipc.sock");
+        let listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
+        // A deliver that never connects fails the test at the deadline instead of hanging it.
+        listener.set_nonblocking(true).unwrap();
+        let seen = std::thread::spawn(move || {
+            let deadline = Instant::now() + Duration::from_secs(10);
+            let stream = loop {
+                match listener.accept() {
+                    Ok((stream, _)) => break stream,
+                    Err(_) if Instant::now() < deadline => {
+                        std::thread::sleep(Duration::from_millis(10))
+                    }
+                    Err(_) => return Vec::new(),
+                }
+            };
+            stream.set_nonblocking(false).unwrap();
+            let mut answers = stream.try_clone().unwrap();
+            let mut seen = Vec::new();
+            for line in BufReader::new(stream).lines() {
+                let Ok(line) = line else { break };
+                let answer = if line == "ACK" {
+                    "OK ack"
+                } else {
+                    seen.push(line);
+                    "OK applied"
+                };
+                if answers.write_all(format!("{answer}\n").as_bytes()).is_err() {
+                    break;
+                }
+            }
+            seen
+        });
+        let mut outbox = delivery::Outbox::new(&path, 16);
+        outbox
+            .push("SIGNAL:suricata|203.0.113.7|-|sid:1 test")
+            .unwrap();
+        deliver(&mut outbox, &path);
+        let pending = outbox.pending();
+        drop(outbox);
+        let seen = seen.join().unwrap();
+        std::fs::remove_dir_all(dir).unwrap();
+        assert_eq!(pending, 0, "the answered alert is retired");
+        assert_eq!(seen.len(), 1, "{seen:?}");
+        assert!(
+            seen[0].ends_with(":suricata|203.0.113.7|-|sid:1 test"),
+            "{seen:?}"
         );
     }
 }

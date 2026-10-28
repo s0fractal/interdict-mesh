@@ -85,13 +85,26 @@ exclude_re = [
     # push_telemetry writes to the operator's telemetry socket, which no unit test opens; the
     # XDP smoke checks that the operator sees the node by its heartbeat, sent through it.
     "main.rs:\\d+:\\d+: replace push_telemetry with \\(\\)$",
-    # The CrowdSec adapter's process loop: scripts/test_crowdsec_stream.py (a CI step) runs the
+    # The CrowdSec adapter's process entry: scripts/test_crowdsec_stream.py (a CI step) runs the
     # binary between a local LAPI and a local node socket and asserts every command the node
-    # reads, so a main or a deliver that sends nothing fails it. Its LAPI request is unit-tested
-    # (a_poll_returns_the_lapi_body_and_names_the_key_and_the_adapter).
+    # reads. Its parts are unit-tested: the LAPI request
+    # (a_poll_returns_the_lapi_body_and_names_the_key_and_the_adapter) and delivery
+    # (deliver_sends_the_queued_decision_and_retires_it_on_the_nodes_answer).
     "bin/interdict-crowdsec.rs:\\d+:\\d+: replace main with \\(\\)$",
-    "bin/interdict-crowdsec.rs:\\d+:\\d+: replace deliver with \\(\\)$",
-    # Every `>` in the adapter's main guards only a log line (skipped, deleted, expired and
-    # dropped counts); what is queued and sent does not depend on it.
-    "bin/interdict-crowdsec.rs:\\d+:\\d+: replace > with (==|<|>=) in main$",
+    # The adapters' log-only helpers: what a batch skipped (CrowdSec) and which policy refusals
+    # happened (Suricata) are logged there and nowhere decided; queueing and sending do not read them.
+    "bin/interdict-crowdsec.rs:\\d+:\\d+: .* in log_batch$",
+    "bin/interdict-crowdsec.rs:\\d+:\\d+: replace log_batch with \\(\\)$",
+    "bin/interdict-suricata.rs:\\d+:\\d+: .* in log_refusals$",
+    "bin/interdict-suricata.rs:\\d+:\\d+: replace log_refusals with \\(\\)$",
+    # The two `!` in Suricata's deliver guard its final log arms only (the first failure of a
+    # streak, the recovery); the flush and its outcomes come before and do not depend on them
+    # (deliver_sends_the_queued_alert_and_retires_it_on_the_nodes_answer).
+    "bin/interdict-suricata.rs:\\d+:\\d+: replace match guard !was_failing with (true|false) in deliver$",
+    "bin/interdict-suricata.rs:\\d+:\\d+: delete ! in deliver$",
+    # Process entries of the operator console and the Suricata adapter: the XDP smoke starts
+    # interdict-ctl and checks its API and the node's heartbeat in it; scripts/test_suricata_recovery.py
+    # (a CI step) runs interdict-suricata against a local node socket and checks what it forwards.
+    "bin/interdict-ctl.rs:\\d+:\\d+: replace main -> std::io::Result<\\(\\)> with Ok\\(\\(\\)\\)$",
+    "bin/interdict-suricata.rs:\\d+:\\d+: replace main with \\(\\)$",
 ]

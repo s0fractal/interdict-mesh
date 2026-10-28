@@ -353,6 +353,31 @@ fn signal_pause(rate: NonZeroU32) -> Duration {
     Duration::from_nanos(1_000_000_000u64.div_ceil(u64::from(rate.get())))
 }
 
+/// What the batch skipped and retracts, as log lines; nothing queued or sent depends on them.
+fn log_batch(batch: &Batch) {
+    if batch.skipped_origin + batch.skipped_not_ban + batch.skipped_scope > 0 {
+        log::info!(
+            "[interdict-crowdsec] skipped {} other-origin, {} non-ban, {} non-address decisions",
+            batch.skipped_origin,
+            batch.skipped_not_ban,
+            batch.skipped_scope
+        );
+    }
+    if batch.deleted + batch.deleted_skipped > 0 {
+        log::info!(
+            "[interdict-crowdsec] {} deleted decisions parsed as retractions, {} not forwarded ones skipped",
+            batch.deleted,
+            batch.deleted_skipped
+        );
+    }
+    if batch.skipped_duration > 0 {
+        log::warn!(
+            "[interdict-crowdsec] skipped {} invalid/expired or unidentifiable timed decisions",
+            batch.skipped_duration
+        );
+    }
+}
+
 fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
     let args = Args::parse();
@@ -378,26 +403,9 @@ fn main() {
             match poll(&args, startup).and_then(|body| batch_from(&body, &args.origins)) {
                 Ok(batch) => {
                     startup = false;
-                    if batch.skipped_origin + batch.skipped_not_ban + batch.skipped_scope > 0 {
-                        log::info!(
-                            "[interdict-crowdsec] skipped {} other-origin, {} non-ban, {} non-address decisions",
-                            batch.skipped_origin,
-                            batch.skipped_not_ban,
-                            batch.skipped_scope
-                        );
-                    }
-                    if batch.deleted + batch.deleted_skipped > 0 {
-                        log::info!(
-                            "[interdict-crowdsec] {} deleted decisions parsed as retractions, {} not forwarded ones skipped",
-                            batch.deleted,
-                            batch.deleted_skipped
-                        );
-                    }
+                    log_batch(&batch);
                     // Queued, not yet delivered: the outbox keeps them until the node answers, so a
                     // batch fetched while the node is down is not lost.
-                    if batch.skipped_duration > 0 {
-                        log::warn!("[interdict-crowdsec] skipped {} invalid/expired or unidentifiable timed decisions", batch.skipped_duration);
-                    }
                     let lost = outbox.lost;
                     for (index, line) in batch.signals.iter().enumerate() {
                         let queued = match batch.deadlines.get(&index) {
@@ -808,6 +816,68 @@ mod tests {
         assert!(
             request.contains("\r\nuser-agent: interdict-crowdsec\r\n"),
             "{request}"
+        );
+    }
+
+    #[test]
+    fn deliver_sends_the_queued_decision_and_retires_it_on_the_nodes_answer() {
+        use std::io::{BufRead, BufReader, Write};
+        let dir =
+            std::env::temp_dir().join(format!("interdict-crowdsec-deliver-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("ipc.sock");
+        let listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
+        // A deliver that never connects fails the test at the deadline instead of hanging it.
+        listener.set_nonblocking(true).unwrap();
+        let seen = std::thread::spawn(move || {
+            let deadline = Instant::now() + Duration::from_secs(10);
+            let stream = loop {
+                match listener.accept() {
+                    Ok((stream, _)) => break stream,
+                    Err(_) if Instant::now() < deadline => {
+                        std::thread::sleep(Duration::from_millis(10))
+                    }
+                    Err(_) => return Vec::new(),
+                }
+            };
+            stream.set_nonblocking(false).unwrap();
+            let mut answers = stream.try_clone().unwrap();
+            let mut seen = Vec::new();
+            for line in BufReader::new(stream).lines() {
+                let Ok(line) = line else { break };
+                let answer = if line == "ACK" {
+                    "OK ack"
+                } else {
+                    seen.push(line);
+                    "OK applied"
+                };
+                if answers.write_all(format!("{answer}\n").as_bytes()).is_err() {
+                    break;
+                }
+            }
+            seen
+        });
+        let mut outbox = delivery::Outbox::new(&path, 16);
+        outbox
+            .push("SIGNAL:crowdsec|203.0.113.9|-|test ban")
+            .unwrap();
+        deliver(
+            &mut outbox,
+            &path,
+            Duration::ZERO,
+            Instant::now(),
+            Duration::from_secs(60),
+        );
+        let pending = outbox.pending();
+        drop(outbox);
+        let seen = seen.join().unwrap();
+        std::fs::remove_dir_all(dir).unwrap();
+        assert_eq!(pending, 0, "the answered decision is retired");
+        assert_eq!(seen.len(), 1, "{seen:?}");
+        assert!(
+            seen[0].ends_with(":crowdsec|203.0.113.9|-|test ban"),
+            "{seen:?}"
         );
     }
 }

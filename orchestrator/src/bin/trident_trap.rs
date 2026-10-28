@@ -1011,4 +1011,13 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn the_node_socket_comes_from_the_environment_or_the_default() {
+        std::env::set_var("INTERDICT_IPC_SOCKET", "/run/elsewhere/node.sock");
+        let named = ipc_socket_path();
+        std::env::remove_var("INTERDICT_IPC_SOCKET");
+        assert_eq!(named, "/run/elsewhere/node.sock");
+        assert_eq!(ipc_socket_path(), "/run/interdict.sock");
+    }
 }

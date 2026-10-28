@@ -2353,4 +2353,25 @@ mod tests {
             Err("group interdict-no-such-group does not exist".to_string())
         );
     }
+
+    #[test]
+    fn an_operator_token_shorter_than_16_characters_is_refused() {
+        std::env::set_var("INTERDICT_OPERATOR_TOKEN", "fifteen-chars-x");
+        let short = operator_token();
+        std::env::set_var("INTERDICT_OPERATOR_TOKEN", "sixteen-chars-xy");
+        let enough = operator_token();
+        std::env::remove_var("INTERDICT_OPERATOR_TOKEN");
+        let generated = operator_token();
+        assert_eq!(
+            short,
+            Err("INTERDICT_OPERATOR_TOKEN must be at least 16 characters".to_string())
+        );
+        assert_eq!(enough, Ok("sixteen-chars-xy".to_string()));
+        let generated = generated.unwrap();
+        assert_eq!(generated.len(), 32);
+        assert!(
+            generated.bytes().all(|b| b.is_ascii_hexdigit()),
+            "{generated}"
+        );
+    }
 }
