@@ -37,7 +37,8 @@
 #              agree on the active blocks, every audit chain must verify, no node may have
 #              panicked, no block may still be pending; memory growth after the first 5 minutes
 #              is reported. SOAK_PLATEAU=1 also judges RSS and fds level per node (a run without
-#              restarts, ADR-0031 rule 5b). Block TTL: $TTL, default 300 s.
+#              restarts, ADR-0031 rule 5b); SOAK_DISTINCT=N cycles the signals over N addresses.
+#              Block TTL: $TTL, default 300 s.
 #
 # recover:     recovery contract (T2, docs/RETIRED.md). Node 1's link is held to
 #              $RECOVER_RATE (8mbit) and it gets <signals> (30000) detector events at the IPC rate,
@@ -436,7 +437,10 @@ soak)
             # One signal in ten repeats the previous event id (a resend): the node must dedup it.
             [ $((RANDOM % 10)) = 0 ] || k=$((k + 1))
             printf '%s,%s,%s\n' "$((SECONDS - start))" "$i" "$k" >>"$TRACE"
-            printf 'SIGNAL#soak-%s:soak|100.%s.%s.%s|-|soak\n' "$k" $((64 + k / 65536 % 8)) $((k / 256 % 256)) $((k % 256)) \
+            # SOAK_DISTINCT=N cycles the targets over N addresses, so every bounded table the
+            # signals fill (strikes, events: BLOCKLIST_CAPACITY) reaches its steady state early.
+            j=$k; [ -n "${SOAK_DISTINCT:-}" ] && j=$((k % SOAK_DISTINCT))
+            printf 'SIGNAL#soak-%s:soak|100.%s.%s.%s|-|soak\n' "$k" $((64 + j / 65536 % 8)) $((j / 256 % 256)) $((j % 256)) \
                 | in_ns "$i" nc -U -q0 "$WORK/n$i/ipc.sock" >/dev/null 2>&1 || true
         done
         if [ $SECONDS -ge $next_restart ]; then

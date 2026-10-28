@@ -66,6 +66,15 @@ class Profiles(unittest.TestCase):
         for phase in campaign.PROFILES['rc1']:
             self.assertGreater(int(phase['env']['TTL']), 90 + 30, phase['name'])
 
+    def test_the_plateau_cycles_its_targets_so_bounded_tables_fill_before_the_first_third(self):
+        # Every new target takes a strike slot until BLOCKLIST_CAPACITY (65 536); with ever-new
+        # addresses RSS grows for hours by design and a leak cannot be told from a filling table.
+        plateau = campaign.PROFILES['rc1'][1]
+        distinct = int(plateau['env']['SOAK_DISTINCT'])
+        self.assertLessEqual(distinct, 4096)
+        # Up to 5 signals/s: the targets are all seen within the first third (after 5 min warm-up).
+        self.assertLess(distinct / 5, (plateau['minutes'] * 60 - 300) / 3)
+
     def test_long_keeps_the_24_and_72_hour_phases(self):
         self.assertEqual([p['minutes'] for p in campaign.PROFILES['long']], [24 * 60, 72 * 60])
 

@@ -22,7 +22,8 @@ ROOT = Path(__file__).resolve().parents[1]
 PROFILES = {
     'rc1': [{'name': 'chaos', 'minutes': 60, 'env': {'RESTART_EVERY': '60', 'CUT_EVERY': '90', 'TTL': '180'}},
             {'name': 'plateau', 'minutes': 120,
-             'env': {'RESTART_EVERY': '86400', 'CUT_EVERY': '300', 'TTL': '180', 'SOAK_PLATEAU': '1'}}],
+             'env': {'RESTART_EVERY': '86400', 'CUT_EVERY': '300', 'TTL': '180', 'SOAK_PLATEAU': '1',
+                     'SOAK_DISTINCT': '4096'}}],
     'long': [{'name': '24h', 'minutes': 24 * 60, 'env': {}}, {'name': '72h', 'minutes': 72 * 60, 'env': {}}],
 }
 # Host maintenance that restarts services under test; stopped and masked before a campaign.
