@@ -33,7 +33,9 @@ spans=$(grep -ohE '`[^`]+`' "${DOCS[@]}" | tr -d '`')
 # Metrics: any interdict_* name inside a code span (with labels or in an expression), not a path.
 # sokol_ is the former prefix (ADR-0034): a measurement README keeps the name it measured and is
 # checked as its interdict_ successor; anywhere else a sokol_ name is a stale citation.
+# shellcheck disable=SC2016  # the backticks are literal
 measured=$(grep -ohE '`[^`]+`' docs/measurements/*/README.md | tr -d '`')
+# shellcheck disable=SC2016
 current=$(for d in "${DOCS[@]}"; do [[ $d == docs/measurements/* ]] || grep -ohE '`[^`]+`' "$d"; done | tr -d '`')
 for m in $(echo "$current" | grep -oE '(^|[^/a-z0-9_])sokol_[a-z0-9_]+' | grep -oE 'sokol_[a-z0-9_]+' | sort -u); do
     n_metrics=$((n_metrics + 1))
