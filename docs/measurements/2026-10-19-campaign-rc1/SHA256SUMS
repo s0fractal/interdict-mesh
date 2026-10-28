@@ -1,0 +1,14 @@
+# sha256 of the original files on the lab VM (sokol-lab), read with sudo on 2026-10-20.
+# console-tail.log files are the last 200 lines of the console.log named here; they have no
+# checksum of their own. Everything else was copied byte for byte (the same sums on both sides).
+2e9382005ab1f7378f084985dd90fc1a2728839c5a0b6540a8e75b3f0284cf86  /var/lib/sokol-campaigns/industrial-20261015/report.json
+2a263e7b1fafc4e3f571c3708d413c26cb799c88bcc050a3f68cd4d2cece6304  /var/lib/sokol-campaigns/industrial-20261015/24/console.log
+7a19898592dccd0304e7707e06dace99d56a13c5359209208dfc0114e50a0e52  /var/lib/sokol-campaigns/industrial-20261015/24/soak.csv
+beeab650d41eb922d3e745a1b527b38de41343acb62c5e2ec33f269a0ed6c028  /home/s0fractal.guest/rc1-campaign-8399e3f-failed/report.json
+e4ea196158fffcccdb969aed48a26cea6e0b53708b3ec15f5f3da2296604ae54  /home/s0fractal.guest/rc1-campaign-8399e3f-failed/24/console.log  (258 lines; tail kept)
+49d9597a65f1f3656dbaa29ddbe4aea39b6f6ce07e80e20ee736e0f73d0ac0eb  /home/s0fractal.guest/rc1-campaign/report.json
+60cf9554b4b6d1d2a01335ff4aaedf464b9aa7ce0e2c10cd6d6f8ed9b26d30ea  /home/s0fractal.guest/rc1-campaign/24/console.log  (252 lines; tail kept)
+7d7438cd04ad484eeec2e1e7a8aed748dd1858e1ac707e6fcef6f2fd048accd8  /home/s0fractal.guest/rc1-campaign/24/soak.csv
+12366f41188611328fe7ccce046a358ff7251b064a8c8fb56944cc99c33a0658  /home/s0fractal.guest/rc1-campaign/72/console.log  (702 lines; tail kept)
+e145940beb909bd735221f7c9366c238ae308706e50aab39139eaacc86aca43d  /home/s0fractal.guest/rc1-campaign/72/soak.csv
+8f22687dd32d0d6d2ef88718347e4e65af566b3457e68d187fba7382237e0ac6  /home/s0fractal.guest/rc1-bin/candidate-aarch64.tar.gz  (not copied: 6.5 MB; its record is candidate-aarch64.json)

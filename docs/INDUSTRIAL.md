@@ -10,8 +10,8 @@ it is not an acceptance, verification result or deployment permission.
 | 2 | One bounded model entry point over existing contract/proof/exchange tools | real IPC-A1 native report: offline UNKNOWN/MATCH; replay REPLAYED_PASS/MATCH | LOCAL_VALIDATION |
 | 3 | Complete installable candidate, identity, SBOM/provenance | package-only install; real `e222b10 -> 6585af6 -> e222b10` systemd/veth rehearsal, 0 failures/deviations; hosted provenance pending | LOCAL_VALIDATION |
 | 4 | Operational status, incident visibility, offline operator, support | native workspace + Clippy; persistent-partition promtool negative control, offline JS and bounded collector controls | LOCAL_VALIDATION |
-| 5 | Compatibility and long failure campaigns | actual different-source rollback; all 15 changed-line mutants accounted for; two calibrated native fuzz targets; full-crate sweep and 24h/72h campaigns pending | IN_PROGRESS |
-| 6 | Measured CI cost with preserved discrimination | one-run baseline and fail-closed mutation input selector; hosted after-change measurement pending | IN_PROGRESS |
+| 5 | Compatibility and long failure campaigns | actual different-source rollback; all 15 changed-line mutants accounted for; two calibrated native fuzz targets; three VM campaigns launched 2026-10-15…20 and every one stopped by the harness ([evidence](measurements/2026-10-19-campaign-rc1/README.md): 27 min unrecorded abort; 23.2 h node-log limit, PR #58; 24 h LIMITED_PASS then 72 h `du` abort at 69.3 h, PR #59 merged 2026-10-20); no campaign result on a candidate digest; full-crate sweep pending | FAILED_HARNESS |
+| 6 | Measured CI cost with preserved discrimination | one-run baseline (3,138 job-seconds) and fail-closed mutation input selector merged (PR #55); the hosted after-change measurement was never taken | NOT_MEASURED |
 
 Changes are developed in complete reviewable PR packages. The trusted checker and
 signer configuration are owner authority. The first trust bootstrap needs the
@@ -38,14 +38,18 @@ Native tests, required checks, Kani scope and the base witness gate remain intac
 unknown-base refusal. Actual savings require a new hosted measurement.
 
 On a disposable systemd VM, `scripts/campaign.py --binary ABSOLUTE_BINARY
---monitor ABSOLUTE_MONITOR --output NEW_DIRECTORY` launches 24h and then 72h,
-only if the first phase passes. Invoke with root. Keep the committed source
+--monitor ABSOLUTE_MONITOR --output NEW_DIRECTORY [--profile rc1|long]` first stops
+and masks the VM's apt timers and unattended-upgrades, then runs the profile's phases,
+each only if the previous one passed: `rc1` (default) a 60 min chaos phase and a 120 min
+plateau phase without restarts; `long` 24h and then 72h (ADR-0031 rule 5). Invoke with root. Keep the committed source
 checkout frozen for the entire experiment and put binaries/output outside
 `/tmp` and `/var/tmp`, which PrivateTmp hides. The unit has 4 GiB memory, 4 GiB
-temporary storage, 256 tasks, 200% CPU, 128 MiB per file and a 96.5h wall limit.
+temporary storage, 256 tasks, 200% CPU, 128 MiB per file and a wall limit of the
+profile's phases plus 30 min each.
 These limits change the measured environment. The seeded event trace records
 choices, not a deterministic OS schedule. Existing soak assertions check active
-count convergence, audits and unexpected exits; RSS growth has no accepted SLO.
+count convergence, audits, unexpected exits and that no block is still pending; the
+plateau phase also judges RSS (at most 10 % between the first and last third) and fds.
 LIMITED_PASS is an experiment result, not production admission. A hard unit kill
 may leave RUNNING in the receipt: read the named unit's result with systemctl,
 inspect namespace leftovers, and retain that uncertainty rather than declaring

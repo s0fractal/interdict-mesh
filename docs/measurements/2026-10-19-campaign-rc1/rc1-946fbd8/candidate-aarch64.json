@@ -1,0 +1,6 @@
+{
+  "admission": "NOT_ADMITTED",
+  "archive": "/home/s0fractal.guest/rc1-bin/candidate-aarch64.tar.gz",
+  "sha256": "8f22687dd32d0d6d2ef88718347e4e65af566b3457e68d187fba7382237e0ac6",
+  "source_commit": "946fbd8d7fb23c54c2474fd64dbc2cace0cb73b2"
+}
