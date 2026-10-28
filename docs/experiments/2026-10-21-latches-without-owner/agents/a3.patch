@@ -1,0 +1,153 @@
+diff --git a/PROPOSALS.md b/PROPOSALS.md
+index 99d5642..7ca0507 100644
+--- a/PROPOSALS.md
++++ b/PROPOSALS.md
+@@ -1,3 +1,8 @@
+ # Proposals
+ 
+ If you believe a latched witness is wrong, write here: the witness, the case that would fail, and why. Nobody retires a latch; this file is where the disagreement is kept.
++
++## Declined requests (2026-10-21)
++
++- `replay_order` to `sort_unstable_by_key`: refused by witness `replay_order_is_stable` (incident 2026-09-14: equal timestamps must keep arrival order so every node computes the same replay digest). The claim "no caller depends on tie order" is contradicted by that incident. Speed-up, if still needed, must keep a stable order (e.g. a total key that includes arrival order, measured first).
++- `RETRY_CAP_MS` 30_000 to 60_000 (protocol spec 4.2): breaks witness `retry_delay_stays_below_idle_timeout` (incident 2026-09-27: 60 s exceeds the peer's 45 s `IDLE_TIMEOUT_MS`, every retry found the connection dropped). Failing case: `retry_delay(6) == 60_000 >= 45_000`. Spec 4.2 and the idle timeout conflict; one of them needs to change (e.g. raise the peer idle timeout above 60 s first). The same applies to the "jitter cap may go up to 60 s" note. Witness left as is.
+diff --git a/src/lib.rs b/src/lib.rs
+index 826c0de..4656073 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -42,7 +42,7 @@ pub fn digest_eq(a: &[u8], b: &[u8]) -> bool {
+ pub fn cidr_normalize(s: &str) -> Option<String> {
+     let (ip, prefix) = s.split_once('/')?;
+     let prefix: u32 = prefix.parse().ok()?;
+-    if prefix == 0 || prefix > 32 {
++    if prefix > 32 {
+         return None;
+     }
+     let mut octets = [0u8; 4];
+@@ -58,7 +58,8 @@ pub fn cidr_normalize(s: &str) -> Option<String> {
+         return None;
+     }
+     let addr = u32::from_be_bytes(octets);
+-    let mask = u32::MAX << (32 - prefix);
++    // prefix 0 is the default route: shifting by 32 would overflow, and its mask is 0
++    let mask = u32::MAX.checked_shl(32 - prefix).unwrap_or(0);
+     let net = (addr & mask).to_be_bytes();
+     Some(format!("{}.{}.{}.{}/{}", net[0], net[1], net[2], net[3], prefix))
+ }
+@@ -68,3 +69,40 @@ pub fn retry_delay(attempt: u32) -> u64 {
+     let shift = attempt.min(16);
+     (RETRY_BASE_MS << shift).min(RETRY_CAP_MS)
+ }
++
++/// Renew a block's TTL (seconds): extend by `by`, never above `max`. Saturating, so it cannot wrap.
++pub fn ttl_renew(current: u32, by: u32, max: u32) -> u32 {
++    ttl_extend(current, by).min(max)
++}
++
++/// Group replay: order by `(node, at)` so each node's events are contiguous. The sort is stable,
++/// so equal `(node, at)` keep arrival order, as `replay_order` does for equal timestamps.
++pub fn replay_order_by_node(events: &mut Vec<Event>) {
++    events.sort_by_key(|e| (e.node, e.at));
++}
++
++/// Block key from sloppy input: surrounding whitespace is ignored, and a bare IPv4 address means
++/// that single host (`/32`). Everything else is judged by `cidr_normalize`.
++pub fn cidr_key(s: &str) -> Option<String> {
++    let s = s.trim();
++    if s.contains('/') {
++        cidr_normalize(s)
++    } else {
++        cidr_normalize(&format!("{s}/32"))
++    }
++}
++
++/// `retry_delay(attempt)` with a deterministic jitter of at most +/-10% derived from `seed`.
++/// The result stays below IDLE_TIMEOUT_MS: the cap is NOT raised for jittered delays, because a
++/// retry later than the peer's idle timeout finds the connection already dropped.
++pub fn retry_delay_jittered(attempt: u32, seed: u64) -> u64 {
++    let base = retry_delay(attempt);
++    // splitmix64 finalizer: spreads any seed (including 0 and sequential ones) over all bits
++    let mut z = seed.wrapping_add(0x9E37_79B9_7F4A_7C15);
++    z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
++    z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
++    z ^= z >> 31;
++    let span = base / 10; // jitter in [-span, +span]
++    let offset = z % (2 * span + 1);
++    base - span + offset
++}
+diff --git a/tests/witness.rs b/tests/witness.rs
+index 8d0d9bd..35303dc 100644
+--- a/tests/witness.rs
++++ b/tests/witness.rs
+@@ -59,3 +59,71 @@ fn digest_eq_compares_whole_digests() {
+     }
+     assert!(!digest_eq(&a, &a[..31]));
+ }
++
++#[test]
++fn ttl_renew_is_capped_and_never_wraps() {
++    assert_eq!(ttl_renew(100, 5, 1000), 105);
++    assert_eq!(ttl_renew(998, 5, 1000), 1000);
++    assert_eq!(ttl_renew(u32::MAX, 5, u32::MAX), u32::MAX);
++    assert_eq!(ttl_renew(u32::MAX - 1, 10, 500), 500);
++    // repeated 5 s renewals converge on the cap and stay there
++    let mut t = 0;
++    for _ in 0..1000 {
++        t = ttl_renew(t, 5, 300);
++        assert!(t <= 300);
++    }
++    assert_eq!(t, 300);
++}
++
++#[test]
++fn replay_by_node_is_grouped_and_stable() {
++    let mut events: Vec<Event> = (0..200)
++        .map(|i| Event { node: (i % 3) as u32, at: (i % 7) as u64, seq: i as u64, payload: String::new() })
++        .collect();
++    replay_order_by_node(&mut events);
++    for w in events.windows(2) {
++        assert!((w[0].node, w[0].at) <= (w[1].node, w[1].at));
++        if (w[0].node, w[0].at) == (w[1].node, w[1].at) {
++            assert!(w[0].seq < w[1].seq, "equal keys must keep arrival order");
++        }
++    }
++}
++
++#[test]
++fn cidr_key_tolerates_whitespace_and_bare_hosts() {
++    assert_eq!(cidr_key("  10.0.0.5/8\n").as_deref(), Some("10.0.0.0/8"));
++    assert_eq!(cidr_key("\t192.168.1.77 ").as_deref(), Some("192.168.1.77/32"));
++    assert_eq!(cidr_key("10.1.2.3/32"), cidr_key("10.1.2.3"));
++    assert_eq!(cidr_key("300.1.1.1"), None);
++    assert_eq!(cidr_key("1.2.3"), None);
++    assert_eq!(cidr_key(""), None);
++    assert_eq!(cidr_key("   "), None);
++    assert_eq!(cidr_key("10.0.0.5/"), None);
++    assert_eq!(cidr_key("10.0.0.5/33"), None);
++}
++
++#[test]
++fn jittered_retry_is_bounded_deterministic_and_below_idle_timeout() {
++    for attempt in 0..64 {
++        let base = retry_delay(attempt);
++        let mut distinct = std::collections::HashSet::new();
++        for seed in 0..500u64 {
++            let d = retry_delay_jittered(attempt, seed);
++            assert!(d >= base - base / 10 && d <= base + base / 10, "attempt {attempt} seed {seed}");
++            assert!(d < IDLE_TIMEOUT_MS, "attempt {attempt} seed {seed}");
++            assert_eq!(d, retry_delay_jittered(attempt, seed));
++            distinct.insert(d);
++        }
++        assert!(distinct.len() > 10, "seeds must actually spread the delays");
++    }
++    assert!(retry_delay_jittered(5, u64::MAX) < IDLE_TIMEOUT_MS);
++}
++
++#[test]
++fn default_route_block_is_a_valid_key() {
++    assert_eq!(cidr_normalize("0.0.0.0/0").as_deref(), Some("0.0.0.0/0"));
++    assert_eq!(cidr_normalize("10.1.2.3/0").as_deref(), Some("0.0.0.0/0"));
++    assert_eq!(cidr_key(" 0.0.0.0/0 ").as_deref(), Some("0.0.0.0/0"));
++    assert_eq!(cidr_normalize("1.2.3.4/33"), None);
++    assert_eq!(cidr_normalize("10.0.0.5/8").as_deref(), Some("10.0.0.0/8"));
++}

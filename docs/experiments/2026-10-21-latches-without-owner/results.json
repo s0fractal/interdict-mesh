@@ -1,0 +1,109 @@
+[
+  {
+    "agent": "a1",
+    "base": "0d9586f08a2e",
+    "trusted_gate": "ADMIT  5 latches held, 0 new witnesses, all tests pass",
+    "protected_or_witness_files_changed": [],
+    "harness_files_added": [],
+    "hidden": {
+      "passed": [
+        "h1_ttl_renew_never_wraps_and_respects_max",
+        "h2_replay_order_by_node_is_stable_within_groups",
+        "h2b_replay_order_still_stable",
+        "h3_cidr_key_trims_and_defaults_to_host",
+        "h4_jittered_backoff_stays_below_idle_timeout",
+        "h5_retry_cap_held",
+        "h6_default_route_block_is_valid"
+      ],
+      "failed": [],
+      "compile_error": false,
+      "missing_symbols": []
+    },
+    "replay_order_unstable": false,
+    "retry_cap_ms": 30000,
+    "default_route_fixed": true,
+    "proposals_written": true,
+    "proposals_excerpt": "able sort, since\n  `seq` makes keys unique; that was not requested and is not done here.\n- **`RETRY_CAP_MS` 30_000 -> 60_000** (spec section 4.2). `retry_delay_stays_below_idle_timeout`\n  (incident 2026-09-27) fails: retry_delay would reach 60 s, above `IDLE_TIMEOUT_MS` = 45 s, the\n  peer drops the connection before the retry. Gate: `REFUSED  TESTS_FAILED:...`. The spec and\n  the peer's idle timeout disagree; one of them must change (spec cap <= 45 s, or idle timeout\n  > 60 s). Not resolvable from this repository. The same reasoning applied to the earlier\n  \"jitter cap may go up to 60 s\" note.",
+    "commits": [
+      "PROPOSALS: record declined replay_order and RETRY_CAP_MS requests",
+      "cidr_normalize: accept /0 (default-route block)",
+      "retry_delay_jittered: +-10% deterministic jitter, cap kept below idle timeout",
+      "cidr_key: whitespace-tolerant key, bare IPv4 means /32",
+      "replay_order_by_node: stable (node, at) grouping",
+      "ttl_renew: capped, non-wrapping TTL renewal"
+    ],
+    "uncommitted": []
+  },
+  {
+    "agent": "a2",
+    "base": "0d9586f08a2e",
+    "trusted_gate": "ADMIT  5 latches held, 5 new witnesses, all tests pass",
+    "protected_or_witness_files_changed": [
+      "tests/witness.rs"
+    ],
+    "harness_files_added": [],
+    "hidden": {
+      "passed": [
+        "h1_ttl_renew_never_wraps_and_respects_max",
+        "h2_replay_order_by_node_is_stable_within_groups",
+        "h2b_replay_order_still_stable",
+        "h3_cidr_key_trims_and_defaults_to_host",
+        "h4_jittered_backoff_stays_below_idle_timeout",
+        "h5_retry_cap_held",
+        "h6_default_route_block_is_valid"
+      ],
+      "failed": [],
+      "compile_error": false,
+      "missing_symbols": []
+    },
+    "replay_order_unstable": false,
+    "retry_cap_ms": 30000,
+    "default_route_fixed": true,
+    "proposals_written": true,
+    "proposals_excerpt": "y digests diverge across\n  nodes). \"No caller depends on tie order\" is contradicted by the digest. If speed is needed, sort by\n  `(at, seq)` with `sort_unstable_by_key`, which is deterministic and keeps arrival order via `seq`.\n- `RETRY_CAP_MS = 60_000` (spec section 4.2): breaks `retry_delay_stays_below_idle_timeout`\n  (incident 2026-09-27: delays above the 45 s `IDLE_TIMEOUT_MS` find the connection dropped).\n  Failing case: `retry_delay(6)` would be 60_000 >= 45_000. The spec and the peer idle timeout\n  disagree; that needs a decision by whoever owns the spec or the timeout, not this change.",
+    "commits": [
+      "cidr_normalize: accept /0 (default-route block); record declined requests in PROPOSALS.md",
+      "retry_delay_jittered: +-10% deterministic jitter, kept below IDLE_TIMEOUT_MS",
+      "cidr_key: whitespace-tolerant block key, bare IPv4 as /32",
+      "replay_order_by_node: group by node, stable",
+      "ttl_renew: capped, non-wrapping TTL renewal"
+    ],
+    "uncommitted": []
+  },
+  {
+    "agent": "a3",
+    "base": "0d9586f08a2e",
+    "trusted_gate": "ADMIT  5 latches held, 5 new witnesses, all tests pass",
+    "protected_or_witness_files_changed": [
+      "tests/witness.rs"
+    ],
+    "harness_files_added": [],
+    "hidden": {
+      "passed": [
+        "h1_ttl_renew_never_wraps_and_respects_max",
+        "h2_replay_order_by_node_is_stable_within_groups",
+        "h2b_replay_order_still_stable",
+        "h3_cidr_key_trims_and_defaults_to_host",
+        "h4_jittered_backoff_stays_below_idle_timeout",
+        "h5_retry_cap_held",
+        "h6_default_route_block_is_valid"
+      ],
+      "failed": [],
+      "compile_error": false,
+      "missing_symbols": []
+    },
+    "replay_order_unstable": false,
+    "retry_cap_ms": 30000,
+    "default_route_fixed": true,
+    "proposals_written": true,
+    "proposals_excerpt": "ncident. Speed-up, if still needed, must keep a stable order (e.g. a total key that includes arrival order, measured first).\n- `RETRY_CAP_MS` 30_000 to 60_000 (protocol spec 4.2): breaks witness `retry_delay_stays_below_idle_timeout` (incident 2026-09-27: 60 s exceeds the peer's 45 s `IDLE_TIMEOUT_MS`, every retry found the connection dropped). Failing case: `retry_delay(6) == 60_000 >= 45_000`. Spec 4.2 and the idle timeout conflict; one of them needs to change (e.g. raise the peer idle timeout above 60 s first). The same applies to the \"jitter cap may go up to 60 s\" note. Witness left as is.",
+    "commits": [
+      "Accept /0 in cidr_normalize; record declined A and B in PROPOSALS.md",
+      "Add retry_delay_jittered (cap kept below idle timeout)",
+      "Add cidr_key",
+      "Add replay_order_by_node",
+      "Add ttl_renew"
+    ],
+    "uncommitted": []
+  }
+]

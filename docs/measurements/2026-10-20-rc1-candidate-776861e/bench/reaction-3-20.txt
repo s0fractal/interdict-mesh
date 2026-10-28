@@ -1,0 +1,16 @@
+[2026-10-20T20:25:35Z INFO  orchestrator] Sokol-Core 0.1.0 (build 776861e3d0ce)
+[2026-10-20T20:25:35Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.ngkg2KfKfi/n1/node.key
+[2026-10-20T20:25:35Z INFO  orchestrator] Sokol-Core 0.1.0 (build 776861e3d0ce)
+[2026-10-20T20:25:35Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.ngkg2KfKfi/n2/node.key
+[2026-10-20T20:25:35Z INFO  orchestrator] Sokol-Core 0.1.0 (build 776861e3d0ce)
+[2026-10-20T20:25:35Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.ngkg2KfKfi/n3/node.key
+# nodes=3 netem='none' host=aarch64 cpus=10 kernel=6.8.0-147-generic
+# full mesh after 2s: 3/3 nodes see 2 peers
+signal -> node 1 stops the attacker: n=20 min=10 median=10 p95=11 max=13 (ms)
+signal -> a node stops the attacker: n=60 min=10 median=10 p95=11 max=13 (ms)
+unban  -> a node answers it again:   n=60 min=2 median=7 p95=14 max=17 (ms)
+legitimate pings: 110685 of 110685 answered; round x node without a clean stop or restore: 0
+PASS R1 node 1 stops within 500 ms
+PASS R2 every node stops within 3000 ms
+PASS R3 every node restored within 3000 ms
+PASS R4 legitimate loss <= 0.5 %
