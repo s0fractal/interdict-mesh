@@ -33,7 +33,8 @@
 #              a random node restarted every $RESTART_EVERY s (600), a random node cut off for
 #              30 s every $CUT_EVERY s (900).
 #              Every minute each node's RSS, fds, audit and state size, active and pending blocks
-#              and tick time go to $BENCH_OUT/soak.csv (or the work dir). At the end: the mesh must
+#              and tick time go to $BENCH_OUT/soak.csv (or the work dir); an RSS, fd count or state
+#              size the sampler could not read is left empty, never 0. At the end: the mesh must
 #              agree on the active blocks, every audit chain must verify, no node may have
 #              panicked, no block may still be pending; memory growth after the first 5 minutes
 #              is reported. Block TTL: $TTL, default 300 s; TTL_MAX sets --block-ttl-max (86400).
@@ -431,13 +432,15 @@ soak)
                 fi
                 continue
             fi
-            rss=$(awk '/VmRSS/ {print $2}' "/proc/$pid/status" 2>/dev/null || echo 0)
-            fds=$(ls "/proc/$pid/fd" 2>/dev/null | wc -l || echo 0)
+            # A value not read stays empty: as 0 it would look like a level the plateau passes
+            # (Codex finding d398137c on #76). A live node always holds open files.
+            rss=$(awk '/VmRSS/ {print $2}' "/proc/$pid/status" 2>/dev/null || true)
+            fds=$(ls "/proc/$pid/fd" 2>/dev/null | wc -l || true); fds=$((fds)); [ "$fds" -gt 0 ] || fds=""
             # A node rotating its audit log can remove a segment between the glob and du
             # (RC-1, 72 h phase: a restart at the sample's second ended the run at 69.3 h).
             audit=$(du -cb "$WORK/n$i"/audit.log* 2>/dev/null | tail -1 | cut -f1 || true)
-            state=$(stat -c %s "$WORK/n$i/audit.log.blocks.json" 2>/dev/null || echo 0)
-            echo "$t,$i,${rss:-0},$fds,${audit:-0},$state,$(metric "$i" 'interdict_blocks_active{family="ipv4"}'),$(metric "$i" interdict_blocks_pending),$(metric "$i" interdict_tick_seconds_max),$(metric "$i" interdict_p2p_active_peers)" >>"$CSV"
+            state=$(stat -c %s "$WORK/n$i/audit.log.blocks.json" 2>/dev/null || true)
+            echo "$t,$i,$rss,$fds,${audit:-0},$state,$(metric "$i" 'interdict_blocks_active{family="ipv4"}'),$(metric "$i" interdict_blocks_pending),$(metric "$i" interdict_tick_seconds_max),$(metric "$i" interdict_p2p_active_peers)" >>"$CSV"
         done
     }
     fail=0
@@ -536,7 +539,9 @@ soak)
     # that the tables are still filling by design. Each node's samples from then on are split
     # in thirds: the last third's RSS and state-file peaks may exceed the first third's by at
     # most 10 %, and its fd count at the end may not exceed the first third's peak (peer
-    # sockets come and go with cuts). Every sample of the run must lie within the ceilings.
+    # sockets come and go with cuts). Every sample of the run must lie within the ceilings, and
+    # every judged sample must have been read: by then the node holds memory, files and a state
+    # file with the saturation's event ids, so an empty or zero value is no measurement.
     if [ "${SOAK_PLATEAU:-0}" = 1 ]; then
         FORGET_GRACE_S=600
         settled=$(( ${TTL_MAX:-86400} > ${TTL:-3600} ? ${TTL_MAX:-86400} : ${TTL:-3600} ))
@@ -546,6 +551,9 @@ soak)
             BEGIN { m = split(bases, b, " "); for (q = 1; q <= m; q++) { split(b[q], kv, ":"); base[kv[1]] = kv[2] } }
             NR > 1 && rbound != "" && $3 > base[$2] + rbound { print "FAIL plateau: node " $2 " RSS " $3 " kB at t=" $1 " s is above its ceiling " base[$2] + rbound " kB"; over = 1 }
             NR > 1 && scap != "" && $6 > scap { print "FAIL plateau: node " $2 " state file " $6 " bytes at t=" $1 " s is above the ceiling " scap; over = 1 }
+            NR > 1 && $1 >= from && $3 !~ /^[1-9][0-9]*$/ && !nr[$2]++ { print "FAIL plateau: node " $2 " RSS not observed at t=" $1 " s"; over = 1 }
+            NR > 1 && $1 >= from && $4 !~ /^[1-9][0-9]*$/ && !nf[$2]++ { print "FAIL plateau: node " $2 " fds not observed at t=" $1 " s"; over = 1 }
+            NR > 1 && $1 >= from && $6 !~ /^[1-9][0-9]*$/ && !ns[$2]++ { print "FAIL plateau: node " $2 " state file not observed at t=" $1 " s"; over = 1 }
             NR > 1 && $1 >= from { n = $2; c[n]++; r[n, c[n]] = $3; f[n, c[n]] = $4; s[n, c[n]] = $6 }
             END { bad = over; if (length(c) == 0) { print "FAIL plateau: no samples after t=" from " s (the run is too short to judge)"; exit 1 }
                   for (n in c) {

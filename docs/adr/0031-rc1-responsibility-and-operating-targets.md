@@ -142,7 +142,9 @@ claims were held to their ends, fixed in ADR-0025's amendment of 2026-10-29.
 3. **Judge from t = 1 320 s** (98 one-minute samples per node): the last third's RSS and
    state-file peaks within 10 % of the first third's, fds not above the first third's peak;
    every sample's RSS within the node's own pre-load RSS + the derived bound, and the state
-   file within the derived ceiling. The bound and the ceiling are computed by `campaign.py` from
+   file within the derived ceiling. A judged RSS, fd count or state size the sampler could not
+   read, left empty or zero, fails the plateau: it is no level (`scripts/test_mesh_plateau.py`,
+   Codex finding d398137c on #76). The bound and the ceiling are computed by `campaign.py` from
    the bounds in the code and the measured per-entry costs
    (`docs/measurements/2026-10-29-memory-at-bounds/bounds.json`; `scripts/test_campaign.py`
    refuses it when a bound changed): 518 MiB for every table at its bound + 2.8 MB of replay

@@ -345,6 +345,7 @@ jobs:
           python3 scripts/test_pre_push_env.py
           python3 scripts/test_runbook_preflight.py
           python3 scripts/test_mesh_preflight.py
+          python3 scripts/test_mesh_plateau.py
           python3 scripts/test_campaign.py
           python3 scripts/test_bounded_log.py
           python3 scripts/test_ast_dump_stable.py
