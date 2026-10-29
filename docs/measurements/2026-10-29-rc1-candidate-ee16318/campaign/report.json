@@ -1,0 +1,72 @@
+{
+  "profile": "sokol.vm-campaign.v2",
+  "campaign": "rc1",
+  "status": "LIMITED_PASS",
+  "unit": "sokol-campaign-1793279357021931758",
+  "source_commit": "ee16318a3dc92d5238afc99f45b23a035bcec158",
+  "bench_sha256": "dc8547c14bf25fb67b377aa76015bbb69016cb957ae2ee34e29b2784346929c7",
+  "binary_sha256": "42c3047b8929c955af83d67635cd7157934cff6ab7fd57220b4ce4c6ec53d5bf",
+  "monitor_sha256": "99d74a8cf8240cf37c5bf2fe15be66e69ae357e6fdbab9c24afd681a262a6592",
+  "vm": "apple",
+  "seed": 1729,
+  "plan": [
+    {
+      "name": "chaos",
+      "minutes": 60,
+      "env": {
+        "RESTART_EVERY": "60",
+        "CUT_EVERY": "90",
+        "TTL": "180"
+      }
+    },
+    {
+      "name": "plateau",
+      "minutes": 120,
+      "env": {
+        "RESTART_EVERY": "86400",
+        "CUT_EVERY": "300",
+        "TTL": "180",
+        "TTL_MAX": "720",
+        "SOAK_DISTINCT": "256",
+        "SOAK_SATURATE": "69632",
+        "SOAK_PLATEAU": "1",
+        "SOAK_RSS_BOUND_KB": "536345",
+        "SOAK_STATE_CEILING_BYTES": "239039621"
+      }
+    }
+  ],
+  "quieted": {
+    "apt-daily.timer": "masked",
+    "apt-daily-upgrade.timer": "masked",
+    "unattended-upgrades.service": "masked"
+  },
+  "limits": {
+    "memory_bytes": 4294967296,
+    "tasks": 256,
+    "cpu_percent": 200,
+    "tmp_bytes": 4294967296,
+    "file_bytes": 134217728,
+    "runtime_seconds": 14400
+  },
+  "admission": "NOT_ADMITTED",
+  "hardware": "NOT_QUALIFIED",
+  "scope": "mesh soak assertions; the plateau phase saturates the per-event memories and judges RSS, state file and fds per node against level and the derived ceilings",
+  "phases": [
+    {
+      "name": "chaos",
+      "minutes": 60,
+      "status": "LIMITED_PASS",
+      "started_unix": 1793279357.4660122,
+      "returncode": 0,
+      "finished_unix": 1793283050.1118114
+    },
+    {
+      "name": "plateau",
+      "minutes": 120,
+      "status": "LIMITED_PASS",
+      "started_unix": 1793283050.1150222,
+      "returncode": 0,
+      "finished_unix": 1793290438.1540802
+    }
+  ]
+}

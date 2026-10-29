@@ -60,7 +60,8 @@ success. The launcher refuses a physical host or container. Do not run other
 mesh experiments concurrently; the bench's lock and preflight enforce ownership.
 
 Responder, SLO/RPO/RTO, support horizon and the RC admission rule: ADR-0031 (the owner is
-responsible; models review it per RC). Physical NIC/router qualification and an admitted RC
-remain evidence still to produce.
+responsible; models review it per RC). RC-1's admission record is
+`docs/measurements/2026-10-29-rc1-candidate-ee16318` (rules 1–6 on one aarch64 archive digest; the
+owner's signed tag admits it). Physical NIC/router qualification remains evidence still to produce.
 VM success does not qualify hardware. A launched long campaign is RUNNING until
 it has completed; a tool without a reproduced counterexample is not calibrated.

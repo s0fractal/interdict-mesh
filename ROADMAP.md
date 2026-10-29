@@ -85,11 +85,14 @@ native-NIC і не польовий пілот.
 
 ## Що далі
 
-0. **RC-1 кампанії (умова 5 ADR-0031) — не виконано.** Три запуски 2026-10-15…20 на VM зупинив
-   harness, не вузол; evidence і стан у [docs/measurements/2026-10-19-campaign-rc1](docs/measurements/2026-10-19-campaign-rc1/README.md).
-   Обидва дефекти harness злито (PR #58, #59). Четвертий запуск, на `776861e`, обірвав на 6,47 год
-   apt-таймер VM. З 2026-10-28 правило 5 для RC-1 — дві стиснуті фази (`--profile rc1`, три
-   години), обслуговування VM маскується перед стартом; добова й 72-годинна кампанії — для RC-2.
+0. **RC-1: rules 1–6 of ADR-0031 hold on the aarch64 archive `03bae666…` of `ee16318`; admitted by the
+   owner's signed tag `v0.1.0-rc.1`.** Campaign `--profile rc1` LIMITED_PASS (chaos 60 min, plateau
+   120 min), S1–S7 and `restart` within the targets, runbook rehearsal from the package with an
+   attested upgrade/rollback build: [docs/measurements/2026-10-29-rc1-candidate-ee16318](docs/measurements/2026-10-29-rc1-candidate-ee16318/README.md).
+   The earlier runs (2026-10-15…21, stopped by the harness and the VM's apt timer) are in
+   [2026-10-19-campaign-rc1](docs/measurements/2026-10-19-campaign-rc1/README.md) and
+   [2026-10-20-rc1-candidate-776861e](docs/measurements/2026-10-20-rc1-candidate-776861e/README.md).
+   The daily and 72-hour campaigns are for RC-2.
 0a. **RC-2: the state write at the bounds within S7** (ADR-0031, amendment 2026-10-29; an RC-2
    admission condition, owner decision 2026-10-29). With every block-table bound full,
    `take_persisted` holds the table lock 0.57 s inside the tick (S7: 500 ms); RC-1 names it as a

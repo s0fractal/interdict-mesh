@@ -1,0 +1,16 @@
+[2026-10-29T16:15:11Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:15:11Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.jziCWWFnfU/n1/node.key
+[2026-10-29T16:15:11Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:15:11Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.jziCWWFnfU/n2/node.key
+[2026-10-29T16:15:11Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:15:11Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.jziCWWFnfU/n3/node.key
+# nodes=3 netem='none' host=aarch64 cpus=10 kernel=6.8.0-147-generic
+# full mesh after 2s: 3/3 nodes see 2 peers
+signal -> node 1 stops the attacker: n=20 min=10 median=10 p95=11 max=12 (ms)
+signal -> a node stops the attacker: n=60 min=10 median=10 p95=12 max=12 (ms)
+unban  -> a node answers it again:   n=60 min=3 median=10 p95=15 max=17 (ms)
+legitimate pings: 104295 of 104295 answered; round x node without a clean stop or restore: 0
+PASS R1 node 1 stops within 500 ms
+PASS R2 every node stops within 3000 ms
+PASS R3 every node restored within 3000 ms
+PASS R4 legitimate loss <= 0.5 %
