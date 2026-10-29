@@ -91,24 +91,28 @@ issuer's share here: a peer that escalates on 6 554 addresses ten times within a
 
 **Decision.** When a retraction by a claim's own issuer is recorded (a live retraction, a
 snapshot's retraction list, a superseding claim, an operator lift of this node's own claim),
-the held claim is forgotten at once: it leaves `claims`, its target's index, its issuer's count
-and its lease record. Its retraction record stays, until `FORGET_GRACE` past the claim's end as
+the held claim is forgotten at once: it leaves `claims`, its target's index and its issuer's
+count. Its retraction record stays, until `FORGET_GRACE` past the claim's end as
 before (R26-03), and answers for every later copy: `adopt` answers `Held("retracted")` without
 holding it, before any capacity or share check. A restore skips an own claim that a restored
-record retracts (state files written before this change). A peer's claim lifted only by this
-node's operator stays held: its issuer still asserts it, and dropping it would make the
-digests differ and the snapshots repeat.
+record retracts (state files written before this change). A peer claim's lease record stays to
+its own horizon (ADR-0003, R26-07): a peer's retraction is not saved here, so after a restart
+that record is what still keeps a resent copy from a second lease (Codex finding 86291d96 on
+#76, against a first form of this change that dropped it). Own claims have no lease record.
+A peer's claim lifted only by this node's operator stays held: its issuer still asserts it, and
+dropping it would make the digests differ and the snapshots repeat.
 
 ADR-0001 (only the issuer retracts mesh-wide), ADR-0014 (an outcome names the earliest claim in
 force, which a retracted claim never is) and ADR-0019 (a shortened block is reissued before the
 old claims are retracted) are unchanged. Accounting: a held claim leaves `claims` in one
 function, `forget_held` (its end, an operator claim lifted, a retraction by its issuer).
 
-**Effect** (the same model, node 1 at 45 min): claims 4 611 → 768, heap 4.58 → 2.36 MB, state
-file 891 → 491 KB.
+**Effect** (the same model, node 1 at 45 min): claims 4 611 → 768, heap 4.58 → 2.83 MB, state
+file 891 → 740 KB.
 
-**Checked by:** `a_claim_its_issuer_took_back_holds_no_share_and_no_lease_here`,
+**Checked by:** `a_claim_its_issuer_took_back_holds_no_share_here`,
 `a_superseded_or_lifted_own_claim_leaves_the_table_and_the_state_file`,
 `a_retracted_own_claim_in_an_older_state_file_is_not_held_again`; each failed on its
-assertion before the change. `a_plain_lift_needs_no_free_claim_slot` (NODE-R2) now asserts the
+assertion before the change. `a_peer_claim_its_issuer_took_back_gets_no_second_lease_after_a_restart`
+(LEASE-C1) failed on its assertion against the first form. `a_plain_lift_needs_no_free_claim_slot` (NODE-R2) now asserts the
 slot the lifted claim frees.

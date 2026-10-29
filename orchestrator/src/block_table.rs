@@ -1213,8 +1213,9 @@ impl<B: Blocklist> BlockTable<B> {
 
     /// A claim its issuer took back can never count again (ADR-0001), so it is not held: only
     /// its retraction record stays, until FORGET_GRACE past the claim's end, and answers for
-    /// every later copy (ADR-0025, amendment 2026-10-29). Its lease record goes too: the
-    /// retraction record covers the same horizon.
+    /// every later copy (ADR-0025, amendment 2026-10-29). A peer claim's lease record stays to
+    /// its own horizon: a peer's retraction is not saved here, so after a restart that record is
+    /// what still caps a resent copy (ADR-0003, R26-07). Own claims have no lease record.
     fn forget_retracted(&mut self, id: &ClaimId, issuer: u64) {
         if !self.retracted_by_issuer(id, issuer) {
             return;
@@ -1222,9 +1223,6 @@ impl<B: Blocklist> BlockTable<B> {
         // This node's own claims are retracted only where the caller marks the table dirty
         // (a superseding claim, a detector retraction, an operator lift).
         self.forget_held(id);
-        if self.lease_ends.remove(id).is_some() {
-            self.dirty = true;
-        }
     }
 
     fn forget_known(&mut self, issuer: u64) {
@@ -5073,6 +5071,27 @@ mod tests {
         }
     }
 
+    /// A peer's retraction is not saved here, so the lease record of the claim it took back is
+    /// what still caps a copy resent after a restart (Codex finding 86291d96 on #76).
+    #[test]
+    fn a_peer_claim_its_issuer_took_back_gets_no_second_lease_after_a_restart() {
+        let mut t = table(1, 64);
+        let target = ip("203.0.113.126");
+        let mut c = peer_claim(2, "203.0.113.126", T0);
+        c.expires_ms = Some(T0 + 3600 * S);
+        assert_eq!(t.adopt(c.clone(), true, T0), Adoption::Enforced);
+        t.retract(2, &[c.id()], T0 + S);
+        assert!(!t.is_blocked(target));
+        let mut t = restarted(t, T0 + 2 * S);
+        let later = T0 + ms(POLICY.max) + S;
+        let again = t.adopt(c, true, later);
+        assert!(
+            !t.is_blocked(target),
+            "a second lease past the first cap after a restart ({again:?})"
+        );
+        assert_eq!(again, Adoption::Held("expired"));
+    }
+
     /// A lease record's end moves earlier with a shorter cap, and the change is saved (the
     /// table is dirty); a later, longer cap leaves it where it is (`common::lease`).
     #[test]
@@ -5398,9 +5417,9 @@ mod tests {
     /// ADR-0025 amendment 2026-10-29: a claim its issuer superseded is forgotten once the
     /// retraction arrives, so a peer escalating on a target does not fill its share here with
     /// claims that can never count again (3 843 of 4 611 claims after 45 min of the 256-address
-    /// soak were such claims).
+    /// soak were such claims). Its lease record stays to its own horizon (ADR-0003).
     #[test]
-    fn a_claim_its_issuer_took_back_holds_no_share_and_no_lease_here() {
+    fn a_claim_its_issuer_took_back_holds_no_share_here() {
         let two = Envelope {
             max_known: 2,
             ..Envelope::unlimited(POLICY.max)
@@ -5425,12 +5444,13 @@ mod tests {
             "the superseded claim is still held"
         );
         assert_eq!(t.known_of(2), 1);
-        assert!(t.dirty(), "its lease record left the state");
-        assert!(t
-            .take_persisted(T0 + 11 * S)
-            .peer_ends
-            .iter()
-            .all(|(id, _, _)| *id != first.id()));
+        assert!(
+            t.take_persisted(T0 + 11 * S)
+                .peer_ends
+                .iter()
+                .any(|(id, _, _)| *id == first.id()),
+            "its lease record left the state"
+        );
         assert!(t.is_blocked(ip("203.0.113.30")));
         assert_eq!(
             t.adopt(peer_claim(2, "203.0.113.31", T0), true, T0 + 11 * S),
