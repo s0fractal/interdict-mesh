@@ -10,7 +10,9 @@ publish secrets, customer traffic or a live exploit in a public issue.
 The owner, `s0fractal`, is the responsible release owner and incident responder.
 Operating targets, the RC admission rule, the support horizon and a response target
 (7 days, not yet measured) are in [ADR-0031](docs/adr/0031-rc1-responsibility-and-operating-targets.md).
-No RC has been admitted yet; native-NIC/router qualification and the field pilot are pending.
+RC-1 was admitted on 2026-10-29 (signed tag `v0.1.0-rc.1`, aarch64 archive digest in
+[its record](docs/measurements/2026-10-29-rc1-candidate-ee16318/README.md)); security fixes go to the
+latest RC only (ADR-0031). Native-NIC/router qualification and the field pilot are pending.
 
 ## System and boundaries
 
