@@ -49,7 +49,10 @@ profile's phases plus 30 min each.
 These limits change the measured environment. The seeded event trace records
 choices, not a deterministic OS schedule. Existing soak assertions check active
 count convergence, audits, unexpected exits and that no block is still pending; the
-plateau phase also judges RSS (at most 10 % between the first and last third) and fds.
+plateau phase first fills each node's event memory past its bound, keeps claims short
+(`--block-ttl-max` 720 s), and from t = 1 320 s judges RSS and the state file (at most 10 %
+between the first and last third, and within ceilings derived from the bounds) and fds
+(ADR-0031, amendment 2026-10-29).
 LIMITED_PASS is an experiment result, not production admission. A hard unit kill
 may leave RUNNING in the receipt: read the named unit's result with systemctl,
 inspect namespace leftovers, and retain that uncertainty rather than declaring

@@ -141,6 +141,52 @@ I/O-помилка не доводить пошкодження. `OK` не пі�
 - `deploy/grafana/interdict-dashboard.json` — імпорт у Grafana. Ряди: стан вузлів, фаза 0
   («відкинув би»), рішення й наслідки, меш, ресурси.
 
+### Memory and the state file at the bounds
+
+Every table a detector or a peer fills has a count bound (ADR-0013, ADR-0025), so the node's
+memory and its state file have ceilings. They are derived from the bounds and the measured cost
+of one entry (`measure_memory_at_bounds`, `measure_memory_at_all_bounds`; aarch64, glibc 2.39,
+[2026-10-29](measurements/2026-10-29-memory-at-bounds/README.md)):
+
+| Table | Bound | Kept for | Heap per entry | State file per entry | At the bound: heap / file |
+|---|---|---|---|---|---|
+| Detector event ids | 65 536 | 24 h | 74 B | 48 B | 4.8 MB / 3.1 MB |
+| Strikes (TTL escalation) | 65 536 addresses | 24 h | 114 B | not saved | 7.5 MB / 0 |
+| Reasons of own blocks (ADR-0019) | 65 536 addresses × 8 | the block's end | 52 B | 50 B | 27 MB / 26 MB |
+| Claims, own and peers' | 262 144 | the claim's end | 737 B (4-byte reason) to 1 245 B (512-byte) | 119–627 B, own only | up to 326 MB / 164 MB |
+| Retraction records | 262 144 | claim's end + 600 s | 218 B | 80 B, own only | 57 MB / 21 MB |
+| Lease records of peers' claims | 262 144 | claim's end + 600 s | 162 B | 91 B | 42 MB / 24 MB |
+
+What to plan with:
+- **RSS** ≤ the node's RSS before load + **518 MiB** (every table at its bound; the allocator
+  adds about 17 % to the heap of 444 MiB) + **2.8 MB per pinned peer** sending at its frame
+  limit (replay memory, ADR-0013). A node whose peers and detectors stay far from the bounds
+  needs far less: per entry, the table above times 1.17.
+- **State file** ≤ **228 MiB** with reasons of plain text (all own claims with 512-byte reasons,
+  every record kept), plus 44 B per mesh sender (at most 4 096). A reason the writer must escape
+  can make it longer, up to the reader's limit `MAX_STATE_BYTES` (981 MiB).
+- **State write per tick:** inside the maintenance tick, `take_persisted` copies the durable
+  part under the table lock, so for that long the tick, IPC answers and mesh adoption wait; the
+  writer thread then serializes, writes, fsyncs and renames. It happens on every tick in which
+  the table changed. Measured with every table at the same share of its bound:
+
+  | Share of every bound | Lock held | Writer thread | State file | RSS growth |
+  |---|---|---|---|---|
+  | 10 % | 0.05 s | 0.04 s | 24 MB | 44 MiB |
+  | 25 % | 0.12 s | 0.08 s | 60 MB | 130 MiB |
+  | 50 % | 0.25 s | 0.17 s | 119 MB | 260 MiB |
+  | 75 % | 0.38 s | 0.25 s | 179 MB | 333 MiB |
+  | 100 % | 0.57 s | 0.37 s | 239 MB | 518 MiB |
+
+  Above about 85 % of every bound this one step alone holds the tick past 0.5 s: the node is
+  then outside its tick target (ADR-0031 S7, a named RC-1 limit). Most of it is the node's own
+  claims and records; the claim bound is reached by detectors reporting more new addresses
+  than about 290/s for the first block's TTL (`--block-ttl` 900 s), or the IPC's 2 000 lines/s
+  for about 2 min. Watch `interdict_tick_seconds_max`.
+
+The RC-1 plateau (ADR-0031 rule 5) checks these ceilings and that a node stays level once its
+event memory is full.
+
 ### Стан у `interdict-ctl`
 
 Heartbeat і читання банів — різні спостереження. `ban_readback` в `/api/data` повертає

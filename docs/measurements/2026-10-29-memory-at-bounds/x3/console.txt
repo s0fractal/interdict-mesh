@@ -1,0 +1,49 @@
+[2026-10-29T00:00:37Z INFO  orchestrator] interdictd 0.1.0 (build d638c8397df8)
+[2026-10-29T00:00:37Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.WenPGxOeBZ/n1/node.key
+[2026-10-29T00:00:37Z INFO  orchestrator] interdictd 0.1.0 (build d638c8397df8)
+[2026-10-29T00:00:37Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.WenPGxOeBZ/n2/node.key
+[2026-10-29T00:00:37Z INFO  orchestrator] interdictd 0.1.0 (build d638c8397df8)
+[2026-10-29T00:00:37Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.WenPGxOeBZ/n3/node.key
+# nodes=3 netem='none' host=aarch64 cpus=10 kernel=6.8.0-147-generic
+# full mesh after 2s: 3/3 nodes see 2 peers
+# before the load: node 1 RSS 27928 kB
+# before the load: node 2 RSS 27964 kB
+# before the load: node 3 RSS 27956 kB
+# saturation: node 1 event ids 65536 remembered, 4096 evicted; strikes 256 remembered, 0 evicted (94 s)
+# saturation: node 2 event ids 65536 remembered, 4096 evicted; strikes 256 remembered, 0 evicted (94 s)
+# saturation: node 3 event ids 65536 remembered, 4096 evicted; strikes 256 remembered, 0 evicted (94 s)
+# soak 120 min, TTL 180 s, seed 1729 (OS scheduling remains uncontrolled)
+# t=300 s: node 3 cut off for 30 s
+# t=600 s: node 2 cut off for 30 s
+# t=900 s: node 2 cut off for 30 s
+# t=1200 s: node 1 cut off for 30 s
+# t=1500 s: node 1 cut off for 30 s
+# t=1800 s: node 1 cut off for 30 s
+# t=2100 s: node 3 cut off for 30 s
+# t=2400 s: node 2 cut off for 30 s
+# t=2700 s: node 1 cut off for 30 s
+# t=3000 s: node 1 cut off for 30 s
+# t=3300 s: node 1 cut off for 30 s
+# t=3600 s: node 2 cut off for 30 s
+# t=3900 s: node 3 cut off for 30 s
+# t=4200 s: node 1 cut off for 30 s
+# t=4500 s: node 1 cut off for 30 s
+# t=4800 s: node 3 cut off for 30 s
+# t=5100 s: node 2 cut off for 30 s
+# t=5400 s: node 3 cut off for 30 s
+# t=5700 s: node 1 cut off for 30 s
+# t=6000 s: node 1 cut off for 30 s
+# t=6300 s: node 2 cut off for 30 s
+# t=6600 s: node 1 cut off for 30 s
+# t=6900 s: node 2 cut off for 30 s
+# load done: 31781 events, 0 restarts, 23 cuts; settling 90 s
+PASS all 3 nodes agree on the active blocks (256 )
+PASS every audit chain verifies; no node panicked
+RSS growth after the first 5 min: min 17.7%, max 34.2% (per node)
+PASS no block pending at the end
+plateau node 1 from t=1320 s: RSS peak 53412 -> 53964 kB, state peak 3744771 -> 3737696 bytes, fds 27 -> 27
+plateau node 2 from t=1320 s: RSS peak 51720 -> 52452 kB, state peak 3745518 -> 3737017 bytes, fds 27 -> 27
+plateau node 3 from t=1320 s: RSS peak 54512 -> 58872 kB, state peak 3739784 -> 3741356 bytes, fds 27 -> 27
+PASS plateau: RSS, state file and fds level on every node from t=1320 s, within the ceilings
+samples: /home/s0fractal.guest/plateau/x3/soak.csv
+exit=0

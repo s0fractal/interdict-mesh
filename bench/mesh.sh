@@ -33,11 +33,26 @@
 #              a random node restarted every $RESTART_EVERY s (600), a random node cut off for
 #              30 s every $CUT_EVERY s (900).
 #              Every minute each node's RSS, fds, audit and state size, active and pending blocks
-#              and tick time go to $BENCH_OUT/soak.csv (or the work dir). At the end: the mesh must
+#              and tick time go to $BENCH_OUT/soak.csv (or the work dir); an RSS, fd count or state
+#              size the sampler could not read is left empty, never 0. At the end: the mesh must
 #              agree on the active blocks, every audit chain must verify, no node may have
 #              panicked, no block may still be pending; memory growth after the first 5 minutes
-#              is reported. SOAK_PLATEAU=1 also judges RSS and fds level per node (a run without
-#              restarts, ADR-0031 rule 5b). Block TTL: $TTL, default 300 s.
+#              is reported. Block TTL: $TTL, default 300 s; TTL_MAX sets --block-ttl-max (86400).
+#              SOAK_DISTINCT=N cycles the signals over N addresses.
+#              SOAK_SATURATE=<n> first sends each node n signals with new event ids, at the
+#              IPC's pace, on the SOAK_DISTINCT addresses (new ones without it): past MAX_EVENTS
+#              (65 536) the node's event memory is full and evicting, which the run checks.
+#              On few addresses the signals merge into the running claims; on new addresses
+#              each makes a claim, and the strike memory fills too (MAX_STRIKES), but the
+#              allocator keeps the heap those claims freed (RSS stayed at its peak, 2026-10-29),
+#              which would hide later growth from the plateau's RSS check.
+#              SOAK_PLATEAU=1 (ADR-0031 rule 5b, a run without restarts) judges each node once
+#              every per-claim record of the saturation and of the escalation has been
+#              forgotten: from max(TTL, TTL_MAX) + FORGET_GRACE (600 s) on, the last third's RSS
+#              and state-file peaks within 10 % of the first third's, fds not above it, and,
+#              when set, every sample's RSS within SOAK_RSS_BOUND_KB of the node's own RSS
+#              before the load and its state file within SOAK_STATE_CEILING_BYTES (ceilings
+#              derived from the bounds, scripts/campaign.py, docs/RUNBOOK.md §4).
 #
 # recover:     recovery contract (T2, docs/RETIRED.md). Node 1's link is held to
 #              $RECOVER_RATE (8mbit) and it gets <signals> (30000) detector events at the IPC rate,
@@ -256,7 +271,8 @@ start_node() {   # start_node <i> [last seed]: (re)starts node i with its key, s
         --db-path "$WORK/n$i/audit.log" --key-file "$WORK/n$i/node.key" \
         --ipc-socket "$WORK/n$i/ipc.sock" --control-socket "$WORK/n$i/ctl.sock" \
         --p2p-bind "10.240.0.$i:7946" --peers-file "$WORK/n$i/peers.json" \
-        --metrics-bind 127.0.0.1:9470 --block-ttl "${TTL:-3600}" "${seeds[@]}" $(node_args "$i") \
+        --metrics-bind 127.0.0.1:9470 --block-ttl "${TTL:-3600}" ${TTL_MAX:+--block-ttl-max "$TTL_MAX"} \
+        "${seeds[@]}" $(node_args "$i") \
         > >(python3 -I "$BENCH_DIR/bounded-log.py" "$WORK/n$i/node.log" "${NODE_LOG_MAX:-33554432}") 2>&1 </dev/null &
     NODE_PID[$i]=$!   # the node itself: the log writer is a process substitution
     PIDS+=($!)
@@ -416,15 +432,41 @@ soak)
                 fi
                 continue
             fi
-            rss=$(awk '/VmRSS/ {print $2}' "/proc/$pid/status" 2>/dev/null || echo 0)
-            fds=$(ls "/proc/$pid/fd" 2>/dev/null | wc -l || echo 0)
+            # A value not read stays empty: as 0 it would look like a level the plateau passes
+            # (Codex finding d398137c on #76). A live node always holds open files.
+            rss=$(awk '/VmRSS/ {print $2}' "/proc/$pid/status" 2>/dev/null || true)
+            fds=$(ls "/proc/$pid/fd" 2>/dev/null | wc -l || true); fds=$((fds)); [ "$fds" -gt 0 ] || fds=""
             # A node rotating its audit log can remove a segment between the glob and du
             # (RC-1, 72 h phase: a restart at the sample's second ended the run at 69.3 h).
             audit=$(du -cb "$WORK/n$i"/audit.log* 2>/dev/null | tail -1 | cut -f1 || true)
-            state=$(stat -c %s "$WORK/n$i/audit.log.blocks.json" 2>/dev/null || echo 0)
-            echo "$t,$i,${rss:-0},$fds,${audit:-0},$state,$(metric "$i" 'interdict_blocks_active{family="ipv4"}'),$(metric "$i" interdict_blocks_pending),$(metric "$i" interdict_tick_seconds_max),$(metric "$i" interdict_p2p_active_peers)" >>"$CSV"
+            state=$(stat -c %s "$WORK/n$i/audit.log.blocks.json" 2>/dev/null || true)
+            echo "$t,$i,$rss,$fds,${audit:-0},$state,$(metric "$i" 'interdict_blocks_active{family="ipv4"}'),$(metric "$i" interdict_blocks_pending),$(metric "$i" interdict_tick_seconds_max),$(metric "$i" interdict_p2p_active_peers)" >>"$CSV"
         done
     }
+    fail=0
+    bases=""
+    for i in $(seq 1 "$N"); do
+        base=$(awk '/VmRSS/ {print $2}' "/proc/${NODE_PID[$i]}/status" 2>/dev/null || echo 0)
+        bases="$bases $i:${base:-0}"; echo "# before the load: node $i RSS ${base:-0} kB"
+    done
+    if [ -n "${SOAK_SATURATE:-}" ]; then
+        # One connection per node, all at once; nc waits for the node's answers to drain.
+        satpids=()
+        for i in $(seq 1 "$N"); do
+            ( awk -v n="$SOAK_SATURATE" -v node="$i" -v d="${SOAK_DISTINCT:-0}" 'BEGIN { for (k = 0; k < n; k++) {
+                  j = d > 0 ? k % d : k; base = d > 0 ? 64 : 80
+                  printf "SIGNAL#sat-%d-%d:sat|100.%d.%d.%d|-|sat\n", node, k, base + int(j / 65536) % 8, int(j / 256) % 256, j % 256 } }' \
+                  | in_ns "$i" nc -U -q 30 "$WORK/n$i/ipc.sock" >/dev/null 2>&1 || true ) &
+            satpids+=($!)
+        done
+        t_sat=$SECONDS; wait "${satpids[@]}"
+        for i in $(seq 1 "$N"); do
+            ev=$(metric "$i" interdict_event_ids_evicted_total); st=$(metric "$i" interdict_strikes_evicted_total)
+            echo "# saturation: node $i event ids $(metric "$i" interdict_event_ids_remembered) remembered, ${ev:-?} evicted; strikes $(metric "$i" interdict_strikes_remembered) remembered, ${st:-?} evicted ($((SECONDS - t_sat)) s)"
+            if [ "${ev:-0}" -gt 0 ]; then :; else
+                echo "FAIL saturation: node $i did not evict event ids after $SOAK_SATURATE signals"; fail=1; fi
+        done
+    fi
     start=$SECONDS; end=$((start + MINUTES * 60))
     next_sample=$start; RESTART_EVERY=${RESTART_EVERY:-600}; CUT_EVERY=${CUT_EVERY:-900}
     next_restart=$((start + RESTART_EVERY)); next_cut=$((start + CUT_EVERY))
@@ -436,7 +478,8 @@ soak)
             # One signal in ten repeats the previous event id (a resend): the node must dedup it.
             [ $((RANDOM % 10)) = 0 ] || k=$((k + 1))
             printf '%s,%s,%s\n' "$((SECONDS - start))" "$i" "$k" >>"$TRACE"
-            printf 'SIGNAL#soak-%s:soak|100.%s.%s.%s|-|soak\n' "$k" $((64 + k / 65536 % 8)) $((k / 256 % 256)) $((k % 256)) \
+            j=$k; [ -n "${SOAK_DISTINCT:-}" ] && j=$((k % SOAK_DISTINCT))
+            printf 'SIGNAL#soak-%s:soak|100.%s.%s.%s|-|soak\n' "$k" $((64 + j / 65536 % 8)) $((j / 256 % 256)) $((j % 256)) \
                 | in_ns "$i" nc -U -q0 "$WORK/n$i/ipc.sock" >/dev/null 2>&1 || true
         done
         if [ $SECONDS -ge $next_restart ]; then
@@ -460,7 +503,6 @@ soak)
     echo "# load done: $k events, $restarts restarts, $cuts cuts; settling 90 s"
     sleep 90
     sample $((SECONDS - start))
-    fail=0
     if [ ${#DIED[@]} -gt 0 ]; then echo "FAIL nodes exited on their own (node@t:status): ${DIED[*]}"; fail=1; fi
     # Blocks keep expiring (TTL), and a sweep of N nodes takes a while, so one sweep can straddle
     # an expiry. Agreement is a sweep in which every node reports the same count, within 30 s.
@@ -491,22 +533,40 @@ soak)
     pending=$(awk -F, -v t="$(tail -1 "$CSV" | cut -d, -f1)" 'NR > 1 && $1 == t && $8 != 0 { printf "%s:%s ", $2, $8 }' "$CSV")
     if [ -n "$pending" ]; then echo "FAIL blocks still pending at the end (node:count): $pending"; fail=1; else echo "PASS no block pending at the end"; fi
     # SOAK_PLATEAU=1 (ADR-0031 rule 5b): without restarts every node is one process, so growth
-    # of its resources is visible. After the first 5 min, split each node's samples in thirds:
-    # the last third's RSS peak may exceed the first third's by at most 10 %, and its fd count
-    # at the end may not exceed the first third's peak (peer sockets come and go with cuts).
+    # of its resources is visible. It is judged once every record the saturation and the
+    # escalation leave can be forgotten: a claim lives at most max(TTL, TTL_MAX), and its
+    # retraction and lease records FORGET_GRACE (block_table.rs, 600 s) past its end. Before
+    # that the tables are still filling by design. Each node's samples from then on are split
+    # in thirds: the last third's RSS and state-file peaks may exceed the first third's by at
+    # most 10 %, and its fd count at the end may not exceed the first third's peak (peer
+    # sockets come and go with cuts). Every sample of the run must lie within the ceilings, and
+    # every judged sample must have been read: by then the node holds memory, files and a state
+    # file with the saturation's event ids, so an empty or zero value is no measurement.
     if [ "${SOAK_PLATEAU:-0}" = 1 ]; then
+        FORGET_GRACE_S=600
+        settled=$(( ${TTL_MAX:-86400} > ${TTL:-3600} ? ${TTL_MAX:-86400} : ${TTL:-3600} ))
+        settled=$((settled + FORGET_GRACE_S))
         if [ "$restarts" != 0 ]; then echo "FAIL plateau needs a run without restarts ($restarts)"; fail=1
-        elif ! awk -F, 'NR > 1 && $1 >= 300 { n = $2; c[n]++; t[n, c[n]] = $1; r[n, c[n]] = $3; f[n, c[n]] = $4 }
-            END { bad = 0; for (n in c) {
-                      if (c[n] < 6) { print "FAIL plateau: node " n " has under 6 samples after the first 5 min"; bad = 1; continue }
-                      third = int(c[n] / 3); r1 = 0; r3 = 0; f1 = 0
-                      for (k = 1; k <= third; k++) { if (r[n, k] > r1) r1 = r[n, k]; if (f[n, k] > f1) f1 = f[n, k] }
-                      for (k = c[n] - third + 1; k <= c[n]; k++) if (r[n, k] > r3) r3 = r[n, k]
-                      printf "plateau node %s: RSS peak %d -> %d kB, fds %d -> %d\n", n, r1, r3, f1, f[n, c[n]]
+        elif ! awk -F, -v from="$settled" -v bases="$bases" -v rbound="${SOAK_RSS_BOUND_KB:-}" -v scap="${SOAK_STATE_CEILING_BYTES:-}" '
+            BEGIN { m = split(bases, b, " "); for (q = 1; q <= m; q++) { split(b[q], kv, ":"); base[kv[1]] = kv[2] } }
+            NR > 1 && rbound != "" && $3 > base[$2] + rbound { print "FAIL plateau: node " $2 " RSS " $3 " kB at t=" $1 " s is above its ceiling " base[$2] + rbound " kB"; over = 1 }
+            NR > 1 && scap != "" && $6 > scap { print "FAIL plateau: node " $2 " state file " $6 " bytes at t=" $1 " s is above the ceiling " scap; over = 1 }
+            NR > 1 && $1 >= from && $3 !~ /^[1-9][0-9]*$/ && !nr[$2]++ { print "FAIL plateau: node " $2 " RSS not observed at t=" $1 " s"; over = 1 }
+            NR > 1 && $1 >= from && $4 !~ /^[1-9][0-9]*$/ && !nf[$2]++ { print "FAIL plateau: node " $2 " fds not observed at t=" $1 " s"; over = 1 }
+            NR > 1 && $1 >= from && $6 !~ /^[1-9][0-9]*$/ && !ns[$2]++ { print "FAIL plateau: node " $2 " state file not observed at t=" $1 " s"; over = 1 }
+            NR > 1 && $1 >= from { n = $2; c[n]++; r[n, c[n]] = $3; f[n, c[n]] = $4; s[n, c[n]] = $6 }
+            END { bad = over; if (length(c) == 0) { print "FAIL plateau: no samples after t=" from " s (the run is too short to judge)"; exit 1 }
+                  for (n in c) {
+                      if (c[n] < 6) { print "FAIL plateau: node " n " has under 6 samples after t=" from " s"; bad = 1; continue }
+                      third = int(c[n] / 3); r1 = 0; r3 = 0; f1 = 0; s1 = 0; s3 = 0
+                      for (k = 1; k <= third; k++) { if (r[n, k] > r1) r1 = r[n, k]; if (f[n, k] > f1) f1 = f[n, k]; if (s[n, k] > s1) s1 = s[n, k] }
+                      for (k = c[n] - third + 1; k <= c[n]; k++) { if (r[n, k] > r3) r3 = r[n, k]; if (s[n, k] > s3) s3 = s[n, k] }
+                      printf "plateau node %s from t=%d s: RSS peak %d -> %d kB, state peak %d -> %d bytes, fds %d -> %d\n", n, from, r1, r3, s1, s3, f1, f[n, c[n]]
                       if (r3 > r1 * 1.10) { print "FAIL plateau: node " n " RSS grew over 10 % between the first and last third"; bad = 1 }
+                      if (s3 > s1 * 1.10) { print "FAIL plateau: node " n " state file grew over 10 % between the first and last third"; bad = 1 }
                       if (f[n, c[n]] > f1) { print "FAIL plateau: node " n " holds more fds at the end than at its first-third peak"; bad = 1 } }
                   exit bad }' "$CSV"; then fail=1
-        else echo "PASS plateau: RSS and fds level on every node"; fi
+        else echo "PASS plateau: RSS, state file and fds level on every node from t=${settled} s, within the ceilings"; fi
     fi
     echo "samples: $CSV"
     exit $fail

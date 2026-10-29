@@ -1189,6 +1189,42 @@ impl<B: Blocklist> BlockTable<B> {
         *self.known_by_issuer.entry(issuer).or_insert(0) += 1;
     }
 
+    /// Stops holding a claim: the one place a held claim leaves `claims` (with its target index
+    /// and its issuer's count, ADR-0025).
+    fn forget_held(&mut self, id: &ClaimId) -> Option<Held> {
+        let h = self.claims.remove(id)?;
+        self.forget_known(h.claim.issuer);
+        if let Some(set) = self.by_target.get_mut(&h.net) {
+            set.remove(id);
+            if set.is_empty() {
+                self.by_target.remove(&h.net);
+            }
+        }
+        Some(h)
+    }
+
+    /// Whether the issuer of claim `id` took it back (`issuer` named by the caller: the claim
+    /// itself may not be held).
+    fn retracted_by_issuer(&self, id: &ClaimId, issuer: u64) -> bool {
+        self.retractions
+            .get(id)
+            .is_some_and(|r| r.by_nodes.contains(&issuer))
+    }
+
+    /// A claim its issuer took back can never count again (ADR-0001), so it is not held: only
+    /// its retraction record stays, until FORGET_GRACE past the claim's end, and answers for
+    /// every later copy (ADR-0025, amendment 2026-10-29). A peer claim's lease record stays to
+    /// its own horizon: a peer's retraction is not saved here, so after a restart that record is
+    /// what still caps a resent copy (ADR-0003, R26-07). Own claims have no lease record.
+    fn forget_retracted(&mut self, id: &ClaimId, issuer: u64) {
+        if !self.retracted_by_issuer(id, issuer) {
+            return;
+        }
+        // This node's own claims are retracted only where the caller marks the table dirty
+        // (a superseding claim, a detector retraction, an operator lift).
+        self.forget_held(id);
+    }
+
     fn forget_known(&mut self, issuer: u64) {
         if let Some(n) = self.known_by_issuer.get_mut(&issuer) {
             *n = n.saturating_sub(1);
@@ -1612,6 +1648,11 @@ impl<B: Blocklist> BlockTable<B> {
         if !self.claim_live(&claim, now_ms) {
             return Adoption::Refused("expired");
         }
+        // Taken back by its issuer before it arrived: its record answers for it, and it is
+        // not held (`forget_retracted`), so it takes no known-claims room or share.
+        if self.retracted_by_issuer(&id, claim.issuer) {
+            return Adoption::Held("retracted");
+        }
         if self.claims.len() >= MAX_KNOWN_CLAIMS {
             return Adoption::Refused(TOO_MANY_CLAIMS);
         }
@@ -1725,6 +1766,7 @@ impl<B: Blocklist> BlockTable<B> {
                 }
             }
             self.release_slot(id);
+            self.forget_retracted(id, issuer);
         }
         self.settle(touched, now_ms)
     }
@@ -1751,16 +1793,7 @@ impl<B: Blocklist> BlockTable<B> {
             };
             if h.claim.kind == ClaimKind::Operator {
                 // Local only: no copy exists anywhere else, so it can simply go.
-                let net = h.net;
-                if let Some(gone) = self.claims.remove(&id) {
-                    self.forget_known(gone.claim.issuer);
-                }
-                if let Some(set) = self.by_target.get_mut(&net) {
-                    set.remove(&id);
-                    if set.is_empty() {
-                        self.by_target.remove(&net);
-                    }
-                }
+                self.forget_held(&id);
                 out.claims += 1;
                 continue;
             }
@@ -1780,6 +1813,7 @@ impl<B: Blocklist> BlockTable<B> {
                 if !r.by_nodes.contains(&self.node_id) {
                     r.by_nodes.push(self.node_id);
                 }
+                self.forget_retracted(&id, self.node_id);
                 out.retracted.push(id);
             } else {
                 self.release_slot(&id);
@@ -1912,14 +1946,7 @@ impl<B: Blocklist> BlockTable<B> {
         }
         for id in dead {
             self.release_slot(&id);
-            if let Some(h) = self.claims.remove(&id) {
-                self.forget_known(h.claim.issuer);
-                if let Some(set) = self.by_target.get_mut(&h.net) {
-                    set.remove(&id);
-                    if set.is_empty() {
-                        self.by_target.remove(&h.net);
-                    }
-                }
+            if let Some(h) = self.forget_held(&id) {
                 if h.claim.issuer == self.node_id {
                     self.dirty = true;
                 }
@@ -2312,6 +2339,11 @@ impl<B: Blocklist> BlockTable<B> {
                 || end.is_some_and(|e| e <= now_ms)
             {
                 refused += 1;
+                continue;
+            }
+            // A file written before retracted claims were forgotten may still list one; its
+            // restored record answers for it, as at runtime (`forget_retracted`).
+            if self.retracted_by_issuer(&claim.id(), self.node_id) {
                 continue;
             }
             // MAX_KNOWN_CLAIMS bounds the claims as at runtime (`add_claim` refuses past it).
@@ -2752,9 +2784,10 @@ mod tests {
             T0 + S
         )));
         assert!(!t.is_blocked(ip("203.0.113.9")));
+        // No replacement claim: the lifted one is forgotten (ADR-0025 amendment), so a slot frees.
         assert_eq!(
             t.claims.len(),
-            MAX_KNOWN_CLAIMS,
+            MAX_KNOWN_CLAIMS - 1,
             "no replacement claim needed"
         );
         assert_eq!(t.retractions.len(), 1);
@@ -3623,6 +3656,287 @@ mod tests {
         let mut odd = detect(&mut n2, "203.0.113.17", T0);
         odd.target = "203.0.113.17/32".into();
         assert!(matches!(n1.adopt(odd, true, T0), Adoption::Refused(_)));
+    }
+
+    /// Heap this thread holds while `fill` runs on a fresh table, and the table it built.
+    fn heap_of(
+        node: u64,
+        fill: impl FnOnce(&mut BlockTable<FakeLists>),
+    ) -> (i64, BlockTable<FakeLists>) {
+        let before = crate::heap_count::live();
+        let mut t = table(node, common::BLOCKLIST_CAPACITY as usize);
+        fill(&mut t);
+        (crate::heap_count::live() - before, t)
+    }
+
+    fn net_of(i: usize) -> IpNet {
+        ip(&format!(
+            "100.{}.{}.{}",
+            64 + i / 65536,
+            (i / 256) % 256,
+            i % 256
+        ))
+    }
+
+    /// What each bounded collection of the table costs at its bound (heap, state file), and how
+    /// a 3-node soak over few addresses fills them (ADR-0013, ADR-0031 rule 5). Measurement, not
+    /// a check: run with `cargo test --release -p orchestrator measure_memory_at_bounds -- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn measure_memory_at_bounds() {
+        let at = T0;
+        let reason = "r".repeat(MAX_REASON_BYTES);
+        let mut rows: Vec<(&str, usize, i64, usize)> = Vec::new();
+        let saved = |t: &mut BlockTable<FakeLists>| {
+            serde_json::to_vec(&t.take_persisted(at)).unwrap().len()
+        };
+        let (heap, mut t) = heap_of(1, |t| {
+            for i in 0..MAX_EVENTS {
+                t.record_event("ids", &i.to_string(), at);
+            }
+        });
+        rows.push(("events", MAX_EVENTS, heap, saved(&mut t)));
+        let (heap, mut t) = heap_of(1, |t| {
+            for i in 0..MAX_STRIKES {
+                t.strike(net_of(i), at);
+            }
+        });
+        rows.push(("strikes", MAX_STRIKES, heap, saved(&mut t)));
+        let (heap, mut t) = heap_of(1, |t| {
+            for i in 0..MAX_SUPPORT_TARGETS {
+                for e in 0..MAX_SUPPORT_PER_TARGET {
+                    t.note_support(
+                        net_of(i),
+                        Some(event_key("ids", &format!("{i}-{e}"))),
+                        Some(at + 1000 * S),
+                    );
+                }
+            }
+        });
+        rows.push((
+            "support (8 per target)",
+            MAX_SUPPORT_TARGETS * MAX_SUPPORT_PER_TARGET,
+            heap,
+            saved(&mut t),
+        ));
+        for (name, len) in [
+            ("own claims, reason 4 B", 4),
+            ("own claims, reason 512 B", MAX_REASON_BYTES),
+        ] {
+            let (heap, mut t) = heap_of(1, |t| {
+                for i in 0..MAX_KNOWN_CLAIMS {
+                    t.issue_own(
+                        net_of(i),
+                        ClaimKind::Detector,
+                        &reason[..len],
+                        at,
+                        Some(at + 1000 * S),
+                    );
+                }
+            });
+            rows.push((name, MAX_KNOWN_CLAIMS, heap, saved(&mut t)));
+        }
+        let (heap, mut t) = heap_of(1, |t| {
+            let ids: Vec<ClaimId> = (0..MAX_KNOWN_CLAIMS)
+                .map(|i| blake3::hash(&i.to_le_bytes()).to_hex().to_string())
+                .collect();
+            t.retract(1, &ids, at);
+        });
+        rows.push((
+            "own retraction records",
+            MAX_KNOWN_CLAIMS,
+            heap,
+            saved(&mut t),
+        ));
+        let (heap, mut t) = heap_of(1, |t| {
+            for i in 0..MAX_KNOWN_CLAIMS {
+                let id = blake3::hash(&i.to_le_bytes()).to_hex().to_string();
+                t.record_lease(&id, at + 1000 * S, Some(at + 1000 * S));
+            }
+        });
+        rows.push(("lease records", MAX_KNOWN_CLAIMS, heap, saved(&mut t)));
+        println!(
+            "collection | entries at bound | heap bytes | per entry | state file bytes | per entry"
+        );
+        for (name, n, heap, file) in &rows {
+            println!(
+                "{name} | {n} | {heap} | {} | {file} | {}",
+                heap / *n as i64,
+                file / n
+            );
+        }
+        // Escalation on a few addresses, as `bench/mesh.sh soak` with SOAK_DISTINCT: 3 nodes, 5
+        // signals/s at random nodes (one in ten a resend), TTL 180 s doubling to 86 400 s,
+        // snapshot repair every 30 s. Per minute: what node 1 holds.
+        let distinct: usize = std::env::var("MEASURE_DISTINCT")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(256);
+        let minutes: u64 = std::env::var("MEASURE_MINUTES")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(45);
+        let policy = TtlPolicy {
+            base: Duration::from_secs(180),
+            max: Duration::from_secs(86_400),
+        };
+        let envelope = Envelope {
+            max_active: 16_384,
+            max_known: PEER_MAX_KNOWN_DEFAULT,
+            max_ttl: policy.max,
+            min_prefix_v4: 0,
+            min_prefix_v6: 0,
+        };
+        let before = crate::heap_count::live();
+        let mut nodes: Vec<BlockTable<FakeLists>> = (1..=3u64)
+            .map(|n| {
+                let mut t = table(n, common::BLOCKLIST_CAPACITY as usize);
+                t.policy = policy;
+                t.configure_peers(envelope, HashMap::new(), Quorum::OFF, at);
+                t
+            })
+            .collect();
+        let mut rng: u64 = 1729;
+        let mut next = || {
+            rng = rng
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            rng >> 33
+        };
+        let mut k = 0usize;
+        println!("min | events | strikes | support | claims (own, retracted) | retraction records | lease records | node 1 heap | node 1 state bytes");
+        for second in 0..minutes * 60 {
+            let now = at + second * S;
+            for _ in 0..5 {
+                let i = (next() % 3) as usize;
+                if next() % 10 != 0 {
+                    k += 1;
+                }
+                let target = net_of(k % distinct);
+                if let Detected::Added(added) =
+                    nodes[i].detect(target, "soak", now, Some(("soak", &k.to_string())), None)
+                {
+                    if added.new {
+                        for j in (0..3).filter(|j| *j != i) {
+                            nodes[j].adopt(added.claim.clone(), true, now);
+                        }
+                    }
+                }
+            }
+            if second % 30 == 0 {
+                for (i, j) in [(0, 1), (0, 2), (1, 2)] {
+                    let (low, high) = nodes.split_at_mut(j);
+                    exchange(&mut low[i], &mut high[0], now);
+                }
+            }
+            for n in nodes.iter_mut() {
+                n.tick(now);
+            }
+            if second % 300 == 299 {
+                let n = &mut nodes[0];
+                let retracted = n.claims.iter().filter(|(id, h)| n.retracted(id, h)).count();
+                let support: usize = n.support.values().map(Vec::len).sum();
+                let heap = crate::heap_count::live() - before;
+                let file = serde_json::to_vec(&n.take_persisted(now)).unwrap().len();
+                println!(
+                    "{} | {} | {} | {} | {} ({}, {}) | {} | {} | {} | {}",
+                    (second + 1) / 60,
+                    n.events.len(),
+                    n.strikes.len(),
+                    support,
+                    n.claims.len(),
+                    n.known_of(1),
+                    retracted,
+                    n.retractions.len(),
+                    n.lease_ends.len(),
+                    heap / 3,
+                    file
+                );
+            }
+        }
+    }
+
+    /// Every bound at once, in a process of its own so its RSS is not the earlier fills' freed
+    /// memory: `cargo test --release -p orchestrator measure_memory_at_all_bounds -- --ignored
+    /// --nocapture --exact block_table::tests::measure_memory_at_all_bounds`.
+    #[test]
+    #[ignore]
+    fn measure_memory_at_all_bounds() {
+        let at = T0;
+        let reason = "r".repeat(MAX_REASON_BYTES);
+        // MEASURE_SHARE=<percent> fills every table to that share of its bound instead.
+        let share: usize = std::env::var("MEASURE_SHARE")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(100);
+        let upto = |bound: usize| bound * share / 100;
+        // Every bound at once in one table (claims all own, 512-byte reasons): the worst case
+        // the table can hold, its RSS on this host's allocator, and what one state write costs.
+        let rss_kb = || {
+            std::fs::read_to_string("/proc/self/status")
+                .ok()
+                .and_then(|s| {
+                    s.lines()
+                        .find(|l| l.starts_with("VmRSS:"))?
+                        .split_whitespace()
+                        .nth(1)?
+                        .parse::<i64>()
+                        .ok()
+                })
+        };
+        let rss_before = rss_kb();
+        let (heap, mut t) = heap_of(1, |t| {
+            for i in 0..upto(MAX_EVENTS) {
+                t.record_event("ids", &i.to_string(), at);
+            }
+            for i in 0..upto(MAX_STRIKES) {
+                t.strike(net_of(i), at);
+            }
+            for i in 0..upto(MAX_SUPPORT_TARGETS) {
+                for e in 0..MAX_SUPPORT_PER_TARGET {
+                    t.note_support(
+                        net_of(i),
+                        Some(event_key("ids", &format!("{i}-{e}"))),
+                        Some(at + 1000 * S),
+                    );
+                }
+            }
+            for i in 0..upto(MAX_KNOWN_CLAIMS) {
+                t.issue_own(
+                    net_of(i),
+                    ClaimKind::Detector,
+                    &reason,
+                    at,
+                    Some(at + 1000 * S),
+                );
+            }
+            let ids: Vec<ClaimId> = (0..upto(MAX_KNOWN_CLAIMS))
+                .map(|i| blake3::hash(&i.to_le_bytes()).to_hex().to_string())
+                .collect();
+            t.retract(1, &ids, at);
+            for id in &ids {
+                t.record_lease(id, at + 1000 * S, Some(at + 1000 * S));
+            }
+        });
+        let rss_after = rss_kb();
+        // submit_state holds the table lock for take_persisted only; the writer thread serializes.
+        let started = std::time::Instant::now();
+        let state = t.take_persisted(at);
+        let locked = started.elapsed();
+        let bytes = serde_json::to_vec(&state).unwrap();
+        let path = std::env::temp_dir().join(format!("measure-state-{}.json", std::process::id()));
+        let started = std::time::Instant::now();
+        crate::state_store::save_state(&path, &state).unwrap();
+        let write = started.elapsed();
+        std::fs::remove_file(&path).unwrap();
+        println!(
+            "{share} % of all bounds | heap {heap} bytes | RSS +{} kB | state file {} bytes | take_persisted under the lock {:?} | save_state (serialize, write, fsync, rename) {:?}",
+            rss_after.zip(rss_before).map_or(-1, |(a, b)| a - b),
+            bytes.len(),
+            locked,
+            write
+        );
+        drop(t);
     }
 
     /// Two nodes exchange snapshots (claims + own retractions), in both directions.
@@ -4757,6 +5071,27 @@ mod tests {
         }
     }
 
+    /// A peer's retraction is not saved here, so the lease record of the claim it took back is
+    /// what still caps a copy resent after a restart (Codex finding 86291d96 on #76).
+    #[test]
+    fn a_peer_claim_its_issuer_took_back_gets_no_second_lease_after_a_restart() {
+        let mut t = table(1, 64);
+        let target = ip("203.0.113.126");
+        let mut c = peer_claim(2, "203.0.113.126", T0);
+        c.expires_ms = Some(T0 + 3600 * S);
+        assert_eq!(t.adopt(c.clone(), true, T0), Adoption::Enforced);
+        t.retract(2, &[c.id()], T0 + S);
+        assert!(!t.is_blocked(target));
+        let mut t = restarted(t, T0 + 2 * S);
+        let later = T0 + ms(POLICY.max) + S;
+        let again = t.adopt(c, true, later);
+        assert!(
+            !t.is_blocked(target),
+            "a second lease past the first cap after a restart ({again:?})"
+        );
+        assert_eq!(again, Adoption::Held("expired"));
+    }
+
     /// A lease record's end moves earlier with a shorter cap, and the change is saved (the
     /// table is dirty); a later, longer cap leaves it where it is (`common::lease`).
     #[test]
@@ -5077,6 +5412,98 @@ mod tests {
             t.adopt(peer_claim(3, "203.0.113.21", T0), true, T0),
             Adoption::Refused(_)
         ));
+    }
+
+    /// ADR-0025 amendment 2026-10-29: a claim its issuer superseded is forgotten once the
+    /// retraction arrives, so a peer escalating on a target does not fill its share here with
+    /// claims that can never count again (3 843 of 4 611 claims after 45 min of the 256-address
+    /// soak were such claims). Its lease record stays to its own horizon (ADR-0003).
+    #[test]
+    fn a_claim_its_issuer_took_back_holds_no_share_here() {
+        let two = Envelope {
+            max_known: 2,
+            ..Envelope::unlimited(POLICY.max)
+        };
+        let mut t = limited(1, Envelope::unlimited(POLICY.max), &[(2, two)]);
+        let mut peer = table(2, 64);
+        let first = detect(&mut peer, "203.0.113.30", T0);
+        // A repeat that doubles the block supersedes the first claim (R26-05).
+        let second = detect(&mut peer, "203.0.113.30", T0 + 10 * S);
+        assert_ne!(first.id(), second.id());
+        assert_eq!(t.adopt(first.clone(), true, T0), Adoption::Enforced);
+        assert_eq!(
+            t.adopt(second, true, T0 + 10 * S),
+            Adoption::Held("already blocked")
+        );
+        t.take_persisted(T0 + 10 * S);
+        let (_, retracted) = peer.snapshot(T0 + 10 * S);
+        assert!(retracted.contains(&first.id()));
+        t.retract(2, &retracted, T0 + 11 * S);
+        assert!(
+            !t.claims.contains_key(&first.id()),
+            "the superseded claim is still held"
+        );
+        assert_eq!(t.known_of(2), 1);
+        assert!(
+            t.take_persisted(T0 + 11 * S)
+                .peer_ends
+                .iter()
+                .any(|(id, _, _)| *id == first.id()),
+            "its lease record left the state"
+        );
+        assert!(t.is_blocked(ip("203.0.113.30")));
+        assert_eq!(
+            t.adopt(peer_claim(2, "203.0.113.31", T0), true, T0 + 11 * S),
+            Adoption::Enforced,
+            "the peer's share is still taken by a claim it took back"
+        );
+        // A late copy of the superseded claim is answered by the record and not held again.
+        assert_eq!(
+            t.adopt(first.clone(), true, T0 + 12 * S),
+            Adoption::Held("retracted")
+        );
+        assert!(!t.claims.contains_key(&first.id()));
+        assert_eq!(t.known_of(2), 2);
+    }
+
+    /// The same on the issuing node: a superseded or lifted own claim is not held, so it leaves
+    /// the state file and the known-claims room; its retraction record stays and is saved.
+    #[test]
+    fn a_superseded_or_lifted_own_claim_leaves_the_table_and_the_state_file() {
+        let mut t = table(1, 64);
+        let first = detect(&mut t, "203.0.113.32", T0);
+        let second = detect(&mut t, "203.0.113.32", T0 + 10 * S);
+        assert!(
+            !t.claims.contains_key(&first.id()),
+            "the superseded claim is still held"
+        );
+        assert_eq!(t.known_of(1), 1);
+        let saved = t.take_persisted(T0 + 10 * S);
+        assert_eq!(saved.claims, vec![second.clone()]);
+        assert!(saved.retracted.iter().any(|(id, _)| *id == first.id()));
+        t.lift(ip("203.0.113.32"), T0 + 11 * S).unwrap();
+        assert!(
+            !t.claims.contains_key(&second.id()),
+            "the lifted claim is still held"
+        );
+        assert!(t.take_persisted(T0 + 11 * S).claims.is_empty());
+        assert!(!t.is_blocked(ip("203.0.113.32")));
+    }
+
+    /// A state file written before that may list a retracted own claim; restoring it holds the
+    /// record, not the claim.
+    #[test]
+    fn a_retracted_own_claim_in_an_older_state_file_is_not_held_again() {
+        let mut t = table(1, 64);
+        let first = detect(&mut t, "203.0.113.33", T0);
+        let second = detect(&mut t, "203.0.113.33", T0 + 10 * S);
+        let mut saved = t.take_persisted(T0 + 10 * S);
+        saved.claims.push(first.clone());
+        let mut again = table(1, 64);
+        assert_eq!(again.restore(saved, |_| true, T0 + 11 * S), (1, 0));
+        assert!(!again.claims.contains_key(&first.id()));
+        assert!(again.claims.contains_key(&second.id()));
+        assert!(again.is_blocked(ip("203.0.113.33")));
     }
 
     /// A peer's share frees exactly as its claims go: one expired claim of two makes room for
