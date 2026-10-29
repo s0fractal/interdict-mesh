@@ -1,0 +1,36 @@
+[2026-10-29T02:04:06Z INFO  orchestrator] interdictd 0.1.0 (build d638c8397df8-dirty)
+[2026-10-29T02:04:06Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.tEWFaIDwLx/n1/node.key
+[2026-10-29T02:04:06Z INFO  orchestrator] interdictd 0.1.0 (build d638c8397df8-dirty)
+[2026-10-29T02:04:06Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.tEWFaIDwLx/n2/node.key
+[2026-10-29T02:04:06Z INFO  orchestrator] interdictd 0.1.0 (build d638c8397df8-dirty)
+[2026-10-29T02:04:06Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.tEWFaIDwLx/n3/node.key
+# nodes=3 netem='none' host=aarch64 cpus=10 kernel=6.8.0-147-generic
+# full mesh after 2s: 3/3 nodes see 2 peers
+# before the load: node 1 RSS 27828 kB
+# before the load: node 2 RSS 27940 kB
+# before the load: node 3 RSS 28012 kB
+# soak 60 min, TTL 180 s, seed 1729 (OS scheduling remains uncontrolled)
+# t=300 s: node 3 cut off for 30 s
+# t=600 s: node 1 cut off for 30 s
+# t=900 s: node 1 cut off for 30 s
+# t=1200 s: node 1 cut off for 30 s
+# t=1500 s: node 1 cut off for 30 s
+# t=1800 s: node 1 cut off for 30 s
+# t=2100 s: node 2 cut off for 30 s
+# t=2400 s: node 2 cut off for 30 s
+# t=2700 s: node 2 cut off for 30 s
+# t=3000 s: node 1 cut off for 30 s
+# t=3300 s: node 1 cut off for 30 s
+# load done: 15837 events, 0 restarts, 11 cuts; settling 90 s
+PASS all 3 nodes agree on the active blocks (256 )
+PASS every audit chain verifies; no node panicked
+RSS growth after the first 5 min: min 13.3%, max 18.3% (per node)
+PASS no block pending at the end
+plateau node 1 from t=1320 s: RSS peak 34152 -> 35744 kB, state peak 372231 -> 495362 bytes, fds 27 -> 27
+FAIL plateau: node 1 state file grew over 10 % between the first and last third
+plateau node 2 from t=1320 s: RSS peak 32856 -> 33728 kB, state peak 369249 -> 488688 bytes, fds 27 -> 27
+FAIL plateau: node 2 state file grew over 10 % between the first and last third
+plateau node 3 from t=1320 s: RSS peak 33068 -> 34108 kB, state peak 372891 -> 492324 bytes, fds 27 -> 27
+FAIL plateau: node 3 state file grew over 10 % between the first and last third
+samples: /home/s0fractal.guest/plateau/x4/soak.csv
+exit=1

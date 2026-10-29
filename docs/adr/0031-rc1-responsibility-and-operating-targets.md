@@ -158,6 +158,10 @@ claim bound (`MAX_KNOWN_CLAIMS`) is likewise covered by its capacity tests and b
 
 **What RC-1 still cannot see:** growth tied to claim lifetimes longer than 720 s, and anything
 slower than 10 % in 98 min. RC-2's `--profile long` runs with the default `--block-ttl-max`.
+On the lab VM (`docs/measurements/2026-10-29-memory-at-bounds/README.md` §4) the plateau passed
+on this change's build, failed without the saturation (state file +32 % within the judged
+window), and passed on the build before the ADR-0025 amendment of 2026-10-29 too: that
+retention is tied to claim lifetimes, which 720 s bounds, so its tests are the evidence for it.
 
 **Named RC-1 limit: S7 is not met with the block table at its bounds** (owner decision
 2026-10-29). Derived ceilings with every table at its bound (RUNBOOK §4): RSS the node's own
