@@ -75,6 +75,9 @@
   "a_capacity_refusal_preserves_retraction_intent_for_retry": [
    "orchestrator/src/block_table.rs:cfb75168506572a506f15a532bcf5f09cb95f3a1cf790b94070bdccd87755a04"
   ],
+  "a_claim_its_issuer_took_back_holds_no_share_and_no_lease_here": [
+   "orchestrator/src/block_table.rs:45221f521db398209792e767cc7aa9ef658e178104a5f41b4559d18174779c9c"
+  ],
   "a_clients_vector_cannot_choose_the_shown_tier_or_ip": [
    "orchestrator/src/bin/monitor.rs:0ea32a12276c390c34b36207823d61e45c11c0198010edf85da851ac1da64e35"
   ],
@@ -226,7 +229,7 @@
    "orchestrator/src/block_table.rs:b4f0682b729ef03a7d8f3661420ff7f1eeb00ac583258b59fe04017840621f46"
   ],
   "a_plain_lift_needs_no_free_claim_slot": [
-   "orchestrator/src/block_table.rs:2bd8dd2a982607b475bd0d7e27f6037e8c01465d0cbf36f06193a2490f9de6b8"
+   "orchestrator/src/block_table.rs:ebee9d964360514ad5c25a9157b3239069b05e216c2b6617408670d395e1dba4"
   ],
   "a_read_error_preserves_completed_alerts_and_unfinished_bytes": [
    "orchestrator/src/bin/interdict-suricata.rs:8784072b0de13fb3d19c0cfe57e7360be1cebd59fa392e25ff3f6c38e421d990"
@@ -314,6 +317,9 @@
   ],
   "a_storm_threshold_outside_zero_to_one_is_refused_at_startup": [
    "orchestrator/src/main.rs:986b539589a9e53edc0bf3a79bd9ddca80f3259cc9692babe46b218477b06992"
+  ],
+  "a_superseded_or_lifted_own_claim_leaves_the_table_and_the_state_file": [
+   "orchestrator/src/block_table.rs:cabe011d450e1b1e2f5997a99559adb875b9206e6765d0bb67494cb72b83e3e8"
   ],
   "a_surplus_answer_does_not_settle_the_next_signal": [
    "orchestrator/src/delivery.rs:1f1bad5e5ab4ec36ec04320b4e84e3a5f6cbb5b2777a609befde15ded450a549"
@@ -737,7 +743,7 @@
   "MESH-A1": "7d2e7956326c7893059ea7e4bab5b22ed80243c9377c7cdb5d5e177b43b0868e",
   "MESH-A2": "bb0ac3241a1b5f17446df53860ee1d4775d83943ef68675a4778caf2a9ebf5a3",
   "MESH-C1": "733992c6e60d958baabbf7d228c21ad4115298dfcd93c3c5ad93b76c5b51db73",
-  "MESH-K1": "deb2463f8795f42f039cd217000c39ea28e97e11615c17266646b4fc5dc9c72a",
+  "MESH-K1": "c831f6a0ed77baae334b2751a429a013519ba3529d12b4e5557e5bec6d4821a0",
   "MESH-N1": "ca1b0b28b3046dfebcae3896ada5858438da754cda778e654c98cab09dfd2912",
   "MESH-R1": "d1dd76f0497e210c50b5eeb6e7bba48d65d55c122be3081970a59dd3b03bb42e",
   "MESH-V1": "57964e66e41ecb7ae67154f694b87a4e5e51d05f0313b4baf90dc1db90972a44",
@@ -1010,14 +1016,16 @@
    ]
   },
   "MESH-K1": {
-   "statement": "32f95310c1f2e76c1b172501d10bbdaacc8c6820e0cc9c58e0c574e0f50f04fc",
+   "statement": "1d3bbdf1e374a8cfd380493e470cb6415c1a2e4fd831f6f91937a904492c37ed",
    "witnesses": [
+    "a_claim_its_issuer_took_back_holds_no_share_and_no_lease_here",
     "a_one_slot_peer_cannot_deny_this_nodes_own_detections_by_volume",
     "a_peer_beyond_its_known_claims_share_is_refused_alone",
     "a_peers_share_frees_exactly_as_its_claims_end",
     "a_refused_share_reload_answers_error_and_keeps_trust_then_can_be_retried",
     "a_reload_at_the_held_known_claims_bound_applies_and_ignores_own_claims",
     "a_reload_below_held_known_claims_keeps_the_previous_envelopes",
+    "a_superseded_or_lifted_own_claim_leaves_the_table_and_the_state_file",
     "an_explicit_large_peer_share_can_exhaust_the_shared_peer_budget",
     "peers_together_leave_the_room_kept_for_this_nodes_own_decisions"
    ]
@@ -1496,6 +1504,9 @@
   "a_capacity_refusal_preserves_retraction_intent_for_retry": [
    "orchestrator/src/block_table.rs:2783bd17daf809d881602646b152468d3a7d2022aece47146aacb83ddbf376be"
   ],
+  "a_claim_its_issuer_took_back_holds_no_share_and_no_lease_here": [
+   "orchestrator/src/block_table.rs:dd55b841be24d9d5f0de8522b953d8f6c6f1c8c14d089567596f5b5031db0b3b"
+  ],
   "a_clients_vector_cannot_choose_the_shown_tier_or_ip": [
    "orchestrator/src/bin/monitor.rs:8ec704a7e5dbd4301453b43cb7030b2a63036bb89c284a8adcdded8475973eb4"
   ],
@@ -1647,7 +1658,7 @@
    "orchestrator/src/block_table.rs:302c11a745b3ad9b15aa072ae75aae3a0f83f760c233c1d3750e69baeff305c6"
   ],
   "a_plain_lift_needs_no_free_claim_slot": [
-   "orchestrator/src/block_table.rs:8f417c1cac64251147e86d7b6f02e05bd49e6d37fe791e84bee4824a9afe47ba"
+   "orchestrator/src/block_table.rs:f51eefddad161b6ba4d934e20dbab7c63e7f9e15b60aab79a1b18621d2676125"
   ],
   "a_read_error_preserves_completed_alerts_and_unfinished_bytes": [
    "orchestrator/src/bin/interdict-suricata.rs:deb55b2ab1cb5388cfe54270f47113f69be14751901e2478dac9226f69a94bfd"
@@ -1735,6 +1746,9 @@
   ],
   "a_storm_threshold_outside_zero_to_one_is_refused_at_startup": [
    "orchestrator/src/main.rs:9b84b1644187904ded6826e5f5f316b431f1714fc1f12ba4c328453373ac5f01"
+  ],
+  "a_superseded_or_lifted_own_claim_leaves_the_table_and_the_state_file": [
+   "orchestrator/src/block_table.rs:dbee2579cddcb52476eaac079f0f9e1bd138d04566e7dd5c767066d6fd89c321"
   ],
   "a_surplus_answer_does_not_settle_the_next_signal": [
    "orchestrator/src/delivery.rs:643e6766f595a373780472e6bfd89fec55d00d1329a6c0a63df730a9ade5b9ff"
