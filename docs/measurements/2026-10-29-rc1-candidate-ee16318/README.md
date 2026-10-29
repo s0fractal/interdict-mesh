@@ -1,4 +1,7 @@
-# RC-1 candidate `ee16318`: admission record (2026-10-29)
+# RC-1 candidate `ee16318`: evidence for admission (2026-10-29)
+
+**Status: NOT_ADMITTED.** Rules 1–6 of ADR-0031 hold on the digest below (technical evidence
+ready); admission is the owner's signed tag, which does not exist yet (see *Admission*).
 
 The candidate is the aarch64 archive CI built on main at `ee16318a3dc92d5238afc99f45b23a035bcec158`
 (the merge of PR #76), artifact `candidate-ee16318…-aarch64` of CI run 40877306864:
@@ -14,7 +17,7 @@ The candidate is the aarch64 archive CI built on main at `ee16318a3dc92d5238afc9
 
 Every number below was produced by the binaries of this archive, not by a local build (issue #61:
 the same commit built on the VM gives other bytes). The x86_64 archive of the same run is attested
-too but was not measured here: ARM and x86 are qualified separately (ROADMAP), so this record admits
+too but was not measured here: ARM and x86 are qualified separately (ROADMAP), so this record concerns
 the aarch64 digest only.
 
 Lab: Lima `sokol-lab`, aarch64, 10 vCPU, Ubuntu 24.04, kernel 6.8.0-147, XDP `generic`, nodes in
@@ -30,14 +33,16 @@ timers and unattended-upgrades masked before the start (issue #65's trigger). 15
 
 **Chaos, 60 min** (`campaign/chaos/`): 59 restarts and 39 cuts on schedule, 15 938 events.
 PASS all 3 nodes agree on the active blocks (403); PASS every audit chain verifies, no node panicked;
-PASS no block pending at the end, and `blocks_pending` 0 in every sample. Longest tick 0.017 s;
-RSS max 32.3 / 32.2 / 48.6 MB. The console's informational line "RSS growth … max 406.5 %" is not a
+PASS no block pending at the end (all three final readings 0). Of the 183 samples, 127 read
+`blocks_pending` and every one of them is 0; 56 have no reading (the node was restarting or its
+metrics endpoint not yet up), which is unknown, not zero. Longest tick 0.017 s over the 130 samples
+that read it (53 without a reading); RSS read in all 183, max 32.3 / 32.2 / 48.6 MB. The console's informational line "RSS growth … max 406.5 %" is not a
 criterion and not growth: node 1's first sample after 5 min (t = 300 s) fell inside a restart
 (6 076 kB, metrics empty), its last sample is 30 772 kB.
 
 **Plateau, 120 min** (`campaign/plateau/`): no restarts, 23 cuts, 31 746 events. Saturation before
 the load on every node: 65 536 event ids remembered, 4 096 evicted (94–95 s). PASS agreement (256),
-audit chains, no panic, nothing pending. Judged from t = 1 320 s, first vs last third:
+audit chains, no panic; `blocks_pending` read in all 363 samples, 0 in every one. Judged from t = 1 320 s, first vs last third:
 
 | Node | RSS peak (kB) | State file peak (bytes) | fds |
 |---|---|---|---|
@@ -76,8 +81,9 @@ RESTART_CONTROL=1 bench/mesh.sh restart <interdictd> <interdict-mon> 3 3   # ben
 | RTO | crash (SIGKILL) with a block on disk: apply ≤ 10 s, mesh ≤ 30 s | control answers 119–148 ms; attacker's last reply 41–73 ms; all peers back 138–1 131 ms, in every one of 20 rounds (3 and 10 nodes; each run exit 0) | restart X1–X3 | yes |
 | control | a node that restores nothing must fail X2 | attacker still answered 2 130–3 106 ms after the kill; X2 FAIL in 3 of 3 rounds | restart-control | as intended |
 
-Upstream GoBGP (`upstr`) within 5 ms of the node's own RIB in every way; `no layer kept blocking
-20 s after an end`.
+Upstream GoBGP (`upstr`) worst case within 5 ms of the node's own RIB for retract, unban and flush
+(2 003 / 1 986 / 2 000 ms) and lower for expiry (991 ms); `no layer kept blocking 20 s after an
+end`.
 
 ## Rule 3: runbook rehearsal from the package
 
@@ -106,11 +112,14 @@ attested builds; `interdict-mon` is byte-identical in the two archives.
 
 ## Admission
 
-Rules 1–6 of ADR-0031 hold on archive `03bae666…`. The owner's signature is what turns that into
-an admitted RC (ADR-0031, *Responsibility*): RC-1 is admitted by the owner's signed tag
-`v0.1.0-rc.1` on `ee16318`, whose message names this digest and this record. The tag name follows
-the crate version (0.1.0) and CI's `v*` trigger; no earlier document fixes it. Support (ADR-0031):
-until RC-2 or 90 days after the tag, whichever is earlier. A CI run on the tag rebuilds and proves
+**NOT_ADMITTED** (as `candidate-aarch64.json` and `campaign/report.json` say). Rules 1–6 of
+ADR-0031 hold on archive `03bae666…`; only the owner's signature turns that into an admitted RC
+(ADR-0031, *Responsibility*), and merging this record is not that signature. The planned act is the
+owner's signed tag `v0.1.0-rc.1` on `ee16318`, whose message names this digest and this record; the
+name follows the crate version (0.1.0) and CI's `v*` trigger, no earlier document fixes it. If and
+when that tag exists and verifies against the owner's key, RC-1 is admitted from its date, and
+support (ADR-0031) would run until RC-2 or 90 days after it, whichever is earlier; the status here
+changes only with that verifiable act. A CI run on the tag rebuilds and proves
 the commit again; its bytes are not this candidate (issue #61): the RC is the digest above.
 
 ## What this does and does not establish

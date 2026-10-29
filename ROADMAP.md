@@ -85,8 +85,8 @@ native-NIC і не польовий пілот.
 
 ## Що далі
 
-0. **RC-1: rules 1–6 of ADR-0031 hold on the aarch64 archive `03bae666…` of `ee16318`; admitted by the
-   owner's signed tag `v0.1.0-rc.1`.** Campaign `--profile rc1` LIMITED_PASS (chaos 60 min, plateau
+0. **RC-1: NOT_ADMITTED; rules 1–6 of ADR-0031 hold on the aarch64 archive `03bae666…` of `ee16318`,
+   awaiting the owner's signed tag `v0.1.0-rc.1` (ADR-0031: only that signature admits).** Campaign `--profile rc1` LIMITED_PASS (chaos 60 min, plateau
    120 min), S1–S7 and `restart` within the targets, runbook rehearsal from the package with an
    attested upgrade/rollback build: [docs/measurements/2026-10-29-rc1-candidate-ee16318](docs/measurements/2026-10-29-rc1-candidate-ee16318/README.md).
    The earlier runs (2026-10-15…21, stopped by the harness and the VM's apt timer) are in
