@@ -62,6 +62,6 @@ mesh experiments concurrently; the bench's lock and preflight enforce ownership.
 Responder, SLO/RPO/RTO, support horizon and the RC admission rule: ADR-0031 (the owner is
 responsible; models review it per RC). RC-1's admission record is
 `docs/measurements/2026-10-29-rc1-candidate-ee16318` (rules 1–6 on one aarch64 archive digest);
-it stays NOT_ADMITTED until the owner's signed tag. Physical NIC/router qualification remains evidence still to produce.
+admitted on 2026-10-29 by the owner's signed tag `v0.1.0-rc.1`. Physical NIC/router qualification remains evidence still to produce.
 VM success does not qualify hardware. A launched long campaign is RUNNING until
 it has completed; a tool without a reproduced counterexample is not calibrated.

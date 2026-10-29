@@ -35,7 +35,8 @@ attestations against the intended repository and workflow identity using GitHub'
 attestation verifier; offline expected-digest verification only establishes integrity.
 Documentation: https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations .
 
-All candidates remain NOT_ADMITTED / NOT_QUALIFIED. Native NIC, actual router,
+The tool marks every candidate NOT_ADMITTED / NOT_QUALIFIED: admission is the owner's signed
+tag over one digest (ADR-0031), never this tool's output. Native NIC, actual router,
 support commitments and public RC acceptance remain separate. Installation is
 not activation or admission. Keep the previously authenticated candidate archive
 and matching state/key backup for rollback; a label-only rehearsal is not a

@@ -77,7 +77,7 @@ native-NIC і не польовий пілот.
 
 | Пакет | Стан | Докази |
 |---|---|---|
-| P0 · RC, публічні ADR, support profile | **Технічно готово; RC — за власниками** | ADR 0001–0017; [SUPPORT](docs/SUPPORT.md), [RUNBOOK](docs/RUNBOOK.md) і його репетиція в CI; build id у `--version` і метриках. Релізу немає свідомо (без користувачів — без міграцій). Власники release та incident response не призначені |
+| P0 · RC, публічні ADR, support profile | **RC-1 допущено 2026-10-29** (`v0.1.0-rc.1`, aarch64) | ADR 0001–0017, ADR-0031 (власник release та incident response — `s0fractal`); [SUPPORT](docs/SUPPORT.md), [RUNBOOK](docs/RUNBOOK.md) і його репетиція в CI та з пакета; build id у `--version` і метриках; [запис допуску](docs/measurements/2026-10-29-rc1-candidate-ee16318/README.md). Користувачів і міграцій ще немає |
 | P1 · Конфігурація й identity | **Завершено** | Unicode/malformed input, невдалий reload лишає довіру, міграція ключа не затирає байти (ADR-0010, R27) |
 | P2 · Storage і maintenance | **Завершено** | Writer стану не блокує expiry; пошкоджений стан видно (`*_restore_ok`, `.corrupt`, `ACCEPT_STATE_LOSS`); контракт generation/ack (ADR-0004/0005) |
 | P3 · Replay та мережеві зміни | **Завершено** | Event IDs і пам'ять подій (ADR-0009); захищені адреси, шлюзи й WireGuard-endpoint'и стежать за хостом (ADR-0012); монотонні кінці блоків (ADR-0017); відтворення рішень з аудиту (ADR-0016) |
@@ -85,8 +85,8 @@ native-NIC і не польовий пілот.
 
 ## Що далі
 
-0. **RC-1: NOT_ADMITTED; rules 1–6 of ADR-0031 hold on the aarch64 archive `03bae666…` of `ee16318`,
-   awaiting the owner's signed tag `v0.1.0-rc.1` (ADR-0031: only that signature admits).** Campaign `--profile rc1` LIMITED_PASS (chaos 60 min, plateau
+0. **RC-1 ADMITTED 2026-10-29: the owner's signed tag `v0.1.0-rc.1` (object `6565c820`) on `ee16318`,
+   aarch64 archive `03bae666…`; supported until RC-2 or 2027-01-27.** Rules 1–6 of ADR-0031: campaign `--profile rc1` LIMITED_PASS (chaos 60 min, plateau
    120 min), S1–S7 and `restart` within the targets, runbook rehearsal from the package with an
    attested upgrade/rollback build: [docs/measurements/2026-10-29-rc1-candidate-ee16318](docs/measurements/2026-10-29-rc1-candidate-ee16318/README.md).
    The earlier runs (2026-10-15…21, stopped by the harness and the VM's apt timer) are in

@@ -1,7 +1,8 @@
-# RC-1 candidate `ee16318`: evidence for admission (2026-10-29)
+# RC-1 candidate `ee16318`: admission record (2026-10-29)
 
-**Status: NOT_ADMITTED.** Rules 1–6 of ADR-0031 hold on the digest below (technical evidence
-ready); admission is the owner's signed tag, which does not exist yet (see *Admission*).
+**Status: ADMITTED as RC-1** on 2026-10-29 19:30:31 +02:00 by the owner's signed tag `v0.1.0-rc.1`
+(tag object `6565c820f6afdbbaa864882afe3cc8b78fb17d10`, target `ee16318`); rules 1–6 of ADR-0031
+hold on the digest below. Supported until RC-2 or 2027-01-27, whichever is earlier (see *Admission*).
 
 The candidate is the aarch64 archive CI built on main at `ee16318a3dc92d5238afc99f45b23a035bcec158`
 (the merge of PR #76), artifact `candidate-ee16318…-aarch64` of CI run 40877306864:
@@ -112,15 +113,40 @@ attested builds; `interdict-mon` is byte-identical in the two archives.
 
 ## Admission
 
-**NOT_ADMITTED** (as `candidate-aarch64.json` and `campaign/report.json` say). Rules 1–6 of
-ADR-0031 hold on archive `03bae666…`; only the owner's signature turns that into an admitted RC
-(ADR-0031, *Responsibility*), and merging this record is not that signature. The planned act is the
-owner's signed tag `v0.1.0-rc.1` on `ee16318`, whose message names this digest and this record; the
-name follows the crate version (0.1.0) and CI's `v*` trigger, no earlier document fixes it. If and
-when that tag exists and verifies against the owner's key, RC-1 is admitted from its date, and
-support (ADR-0031) would run until RC-2 or 90 days after it, whichever is earlier; the status here
-changes only with that verifiable act. A CI run on the tag rebuilds and proves
-the commit again; its bytes are not this candidate (issue #61): the RC is the digest above.
+**ADMITTED.** Rules 1–6 of ADR-0031 hold on archive `03bae666…` (above); the owner's signature is
+the act of admission (ADR-0031, *Responsibility*). The owner signed it after this record was merged
+(main `28fdee0`, PR #77):
+
+| | |
+|---|---|
+| tag | `v0.1.0-rc.1`, annotated, SSH-signed with the owner key of `.github/witness-signers` (ED25519 `SHA256:4dJ6IEtOAZpBdQ07gvhKTiwTqsiZnaf1Jh/GuYuTeA4`) |
+| tag object | `6565c820f6afdbbaa864882afe3cc8b78fb17d10` |
+| target | `ee16318a3dc92d5238afc99f45b23a035bcec158` (the candidate's source commit, not the record's merge) |
+| tagger date | 1793295031 = 2026-10-29 19:30:31 +02:00 |
+| message | names archive `03bae666…`, main run 40877306864 and this record |
+| support (ADR-0031) | until RC-2 or 90 days after the tag, whichever is earlier: at the latest 2027-01-27 |
+
+`candidate-aarch64.json` and `campaign/report.json` keep `NOT_ADMITTED`: they are what the tools
+wrote when they ran, and no tool output admits a candidate; the tag above does.
+
+**Verifying the signature with what is in this repository.** `.github/witness-signers` pins the owner
+key for the namespace `sokol-witness` (the manifest signatures), while `git tag -s` signs in the
+namespace `git`, so `tag -v` against that file as it is says the key "is not permitted" there. The
+same owner line with its namespace set to `git` verifies the tag (from a checkout with the tag
+fetched; the file stays as the witness gate pins it):
+
+```bash
+f=$(mktemp) && grep '^owner ' .github/witness-signers | sed 's/namespaces="sokol-witness"/namespaces="git"/' > "$f" && git -c gpg.ssh.allowedSignersFile="$f" tag -v v0.1.0-rc.1; s=$?; rm -f "$f"; [ $s = 0 ]
+```
+
+Expected: `Good "git" signature for owner with ED25519 key SHA256:4dJ6IE…`, exit 0, and `object
+ee16318a…` in the printed tag. Checked 2026-10-29; the agent line in its place fails (exit 1).
+
+**CI on the tag.** Run 40922177860 (event push, ref `v0.1.0-rc.1`, head `ee16318`): **success**,
+finished 2026-10-29 17:44:27 UTC: kani, test, demo and smoke on x86_64 and aarch64,
+`build-test-smoke` on both; mutants and `candidate origin` skipped, as they are on every tag (the
+attested candidate comes only from main's run). A CI run on the tag rebuilds and proves the commit again; its bytes
+are not this candidate (issue #61): the RC is the digest above.
 
 ## What this does and does not establish
 
