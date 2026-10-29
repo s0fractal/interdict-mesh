@@ -1,0 +1,52 @@
+
+== §1 install (binaries given; building from source is not rehearsed)
+PASS  §1 user, groups, binaries and unit installed as written
+
+== §2 keys and peers
+PASS  §2 --print-public-key before the first start prints the key
+
+== §3 first start
+PASS  §3 the service starts
+PASS  §2 the key file is 0600
+PASS  §3 build: build="ee16318a3dc9"
+PASS  §3 all four required node health metrics are 1
+PASS  §3 prog/xdp on pilot0
+PASS  §3 peers: 0 (a single node)
+PASS  §3 ctl LIST_BANS: OK 0
+PASS  §3 the audit chain verifies
+PASS  §3 protected addresses are read
+
+== §5.1 a wrong block
+PASS  §5.1 10.250.0.7 reaches the node before
+PASS  §5.1 a detector's signal blocks 10.250.0.7
+PASS  §5.1 other traffic still passes
+PASS  §5.1 ctl "UNBAN_IP:10.250.0.7": OK 0
+PASS  §5.1 10.250.0.7 passes again
+PASS  §5.1 the audit says what the lifted block did: BLOCK_OUTCOME|IP:10.250.0.7|Dropped:1|Seconds:2
+
+== §5.4 state not restored at start
+PASS  §5.4 the state file is /var/lib/interdict/audit.log.blocks.json
+PASS  §5.4 the current invocation journal reports Restore failed
+PASS  §5.4 interdict_state_restore_ok 0
+PASS  §5.4 the bytes are kept (audit.log.blocks.json.corrupt)
+PASS  §5.4 ctl ACCEPT_STATE_LOSS: OK state loss accepted
+PASS  §5.4 as documented, the ban in the lost state is gone (10.250.0.7 passes)
+PASS  §5.4 the operator restores the ban by hand
+
+== §7 upgrade and rollback
+PASS  §7 upgrade: build="ee16318a3dc9" -> build="d638c8397df8"
+PASS  §7 the operator ban survives the upgrade
+PASS  §7 rollback: back to build="ee16318a3dc9"
+PASS  §7 the ban survives the rollback
+
+== §8 emergency removal of the filter
+PASS  §8 systemctl stop: prog/xdp is gone from pilot0
+PASS  §8 traffic runs without the filter
+PASS  §8 the operator ban is back after the next start
+
+== support bundle
+PASS  support bundle /tmp/interdict-support-20261029T163154Z-f5adfe.tar.gz (0600)
+PASS  the bundle holds no key bytes
+
+rehearsal: 0 failed, 0 runbook deviation(s)
+exit=0 2026-10-29T16:31:54Z

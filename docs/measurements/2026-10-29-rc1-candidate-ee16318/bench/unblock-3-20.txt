@@ -1,0 +1,35 @@
+[2026-10-29T16:22:37Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:22:37Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.64dVapablB/n1/node.key
+[2026-10-29T16:22:37Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:22:37Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.64dVapablB/n2/node.key
+[2026-10-29T16:22:37Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:22:37Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.64dVapablB/n3/node.key
+# nodes=3 netem='none' host=aarch64 cpus=10 kernel=6.8.0-147-generic
+# full mesh after 5s: 3/3 nodes see 2 peers
+# unblock: ways 'retract unban flush expire', 20 rounds each, expire ttl 6s, FlowSpec on
+== retract
+   xdp1  node 1 answers again:        n=20 min=0 median=7 p95=11 max=11 (ms)
+   peer  another node answers again:  n=40 min=1 median=6 p95=11 max=12 (ms)
+   rib   rule gone from node gobgpd:  n=20 min=885 median=965 p95=1049 max=1999 (ms)
+   upstr rule gone upstream:          n=20 min=890 median=971 p95=1054 max=2003 (ms)
+   fsrec FLOWSPEC_WITHDRAW record:    n=20 min=874 median=926 p95=999 max=1964 (ms)
+== unban
+   xdp1  node 1 answers again:        n=20 min=0 median=6 p95=10 max=11 (ms)
+   peer  another node answers again:  n=40 min=1 median=6 p95=11 max=12 (ms)
+   rib   rule gone from node gobgpd:  n=20 min=889 median=980 p95=1061 max=1982 (ms)
+   upstr rule gone upstream:          n=20 min=894 median=985 p95=1066 max=1986 (ms)
+   fsrec FLOWSPEC_WITHDRAW record:    n=20 min=884 median=945 p95=1007 max=1921 (ms)
+== flush
+   xdp1  node 1 answers again:        n=20 min=0 median=4 p95=10 max=12 (ms)
+   peer  another node answers again:  n=40 min=1 median=6 p95=11 max=12 (ms)
+   rib   rule gone from node gobgpd:  n=20 min=925 median=956 p95=1068 max=1995 (ms)
+   upstr rule gone upstream:          n=20 min=930 median=961 p95=1053 max=2000 (ms)
+   fsrec FLOWSPEC_WITHDRAW record:    n=20 min=889 median=947 p95=1007 max=1978 (ms)
+== expire
+   xdp1  node 1 answers again:        n=20 min=0 median=4 p95=9 max=10 (ms)
+   peer  another node answers again:  n=40 min=0 median=5 p95=11 max=15 (ms)
+   rib   rule gone from node gobgpd:  n=20 min=70 median=475 p95=943 max=1048 (ms)
+   upstr rule gone upstream:          n=20 min=70 median=480 p95=948 max=991 (ms)
+   fsrec FLOWSPEC_WITHDRAW record:    n=20 min=32 median=465 p95=934 max=989 (ms)
+   lag   BLOCK_EXPIRED - signed end:  n=20 min=68 median=523 p95=964 max=998 (ms)
+no layer kept blocking 20 s after an end

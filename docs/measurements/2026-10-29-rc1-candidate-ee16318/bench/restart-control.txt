@@ -1,0 +1,15 @@
+[2026-10-29T16:30:50Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:30:50Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.HCAU4FRBiT/n1/node.key
+[2026-10-29T16:30:50Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:30:50Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.HCAU4FRBiT/n2/node.key
+[2026-10-29T16:30:50Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:30:50Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.HCAU4FRBiT/n3/node.key
+# nodes=3 netem='none' host=aarch64 cpus=10 kernel=6.8.0-147-generic
+# full mesh after 2s: 3/3 nodes see 2 peers
+# restart: 3 rounds, node 1 SIGKILLed with a detector block on disk; X1<=10000 X2<=10000 X3<=30000 ms
+round 1: control 119 ms, attacker last reply 3106 ms, peers 1097 ms
+FAIL X2 round 1 (the attacker still got replies)
+round 2: control 129 ms, attacker last reply 2135 ms, peers 134 ms
+FAIL X2 round 2 (the attacker still got replies)
+round 3: control 130 ms, attacker last reply 2130 ms, peers 134 ms
+FAIL X2 round 3 (the attacker still got replies)

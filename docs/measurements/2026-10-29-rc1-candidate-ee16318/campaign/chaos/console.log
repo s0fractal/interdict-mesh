@@ -1,0 +1,116 @@
+[2026-10-29T13:09:17Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T13:09:17Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.g6wW31AudI/n1/node.key
+[2026-10-29T13:09:17Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T13:09:17Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.g6wW31AudI/n2/node.key
+[2026-10-29T13:09:17Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T13:09:17Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.g6wW31AudI/n3/node.key
+# nodes=3 netem='none' host=aarch64 cpus=10 kernel=6.8.0-147-generic
+# full mesh after 2s: 3/3 nodes see 2 peers
+# before the load: node 1 RSS 28548 kB
+# before the load: node 2 RSS 28560 kB
+# before the load: node 3 RSS 28216 kB
+# soak 60 min, TTL 180 s, seed 1729 (OS scheduling remains uncontrolled)
+# t=60 s: node 3 restarted
+# t=90 s: node 3 cut off for 30 s
+# t=120 s: node 3 restarted
+# t=180 s: node 1 restarted
+# t=180 s: node 2 cut off for 30 s
+# t=240 s: node 3 restarted
+# t=270 s: node 1 cut off for 30 s
+# t=300 s: node 1 restarted
+# t=360 s: node 2 restarted
+# t=360 s: node 1 cut off for 30 s
+# t=420 s: node 3 restarted
+# t=450 s: node 3 cut off for 30 s
+# t=480 s: node 3 restarted
+# t=540 s: node 1 restarted
+# t=540 s: node 2 cut off for 30 s
+# t=600 s: node 3 restarted
+# t=630 s: node 3 cut off for 30 s
+# t=660 s: node 1 restarted
+# t=720 s: node 3 restarted
+# t=720 s: node 1 cut off for 30 s
+# t=780 s: node 1 restarted
+# t=810 s: node 1 cut off for 30 s
+# t=840 s: node 2 restarted
+# t=900 s: node 3 restarted
+# t=900 s: node 2 cut off for 30 s
+# t=960 s: node 3 restarted
+# t=990 s: node 2 cut off for 30 s
+# t=1020 s: node 1 restarted
+# t=1080 s: node 3 restarted
+# t=1080 s: node 3 cut off for 30 s
+# t=1140 s: node 1 restarted
+# t=1170 s: node 3 cut off for 30 s
+# t=1200 s: node 3 restarted
+# t=1260 s: node 3 restarted
+# t=1260 s: node 3 cut off for 30 s
+# t=1320 s: node 1 restarted
+# t=1350 s: node 2 cut off for 30 s
+# t=1380 s: node 3 restarted
+# t=1440 s: node 2 restarted
+# t=1440 s: node 1 cut off for 30 s
+# t=1500 s: node 2 restarted
+# t=1530 s: node 1 cut off for 30 s
+# t=1560 s: node 3 restarted
+# t=1620 s: node 1 restarted
+# t=1620 s: node 1 cut off for 30 s
+# t=1680 s: node 2 restarted
+# t=1710 s: node 3 cut off for 30 s
+# t=1740 s: node 1 restarted
+# t=1800 s: node 2 restarted
+# t=1800 s: node 3 cut off for 30 s
+# t=1860 s: node 2 restarted
+# t=1890 s: node 1 cut off for 30 s
+# t=1920 s: node 1 restarted
+# t=1980 s: node 3 restarted
+# t=1980 s: node 3 cut off for 30 s
+# t=2040 s: node 2 restarted
+# t=2071 s: node 2 cut off for 30 s
+# t=2100 s: node 2 restarted
+# t=2160 s: node 3 restarted
+# t=2160 s: node 2 cut off for 30 s
+# t=2220 s: node 2 restarted
+# t=2250 s: node 1 cut off for 30 s
+# t=2280 s: node 2 restarted
+# t=2340 s: node 2 restarted
+# t=2340 s: node 3 cut off for 30 s
+# t=2400 s: node 3 restarted
+# t=2430 s: node 3 cut off for 30 s
+# t=2460 s: node 2 restarted
+# t=2520 s: node 1 restarted
+# t=2520 s: node 3 cut off for 30 s
+# t=2580 s: node 1 restarted
+# t=2610 s: node 1 cut off for 30 s
+# t=2641 s: node 3 restarted
+# t=2700 s: node 1 restarted
+# t=2700 s: node 2 cut off for 30 s
+# t=2760 s: node 1 restarted
+# t=2790 s: node 3 cut off for 30 s
+# t=2820 s: node 3 restarted
+# t=2880 s: node 1 restarted
+# t=2880 s: node 3 cut off for 30 s
+# t=2940 s: node 3 restarted
+# t=2970 s: node 2 cut off for 30 s
+# t=3000 s: node 3 restarted
+# t=3060 s: node 1 restarted
+# t=3060 s: node 3 cut off for 30 s
+# t=3120 s: node 1 restarted
+# t=3150 s: node 1 cut off for 30 s
+# t=3180 s: node 3 restarted
+# t=3240 s: node 1 restarted
+# t=3240 s: node 1 cut off for 30 s
+# t=3300 s: node 2 restarted
+# t=3330 s: node 1 cut off for 30 s
+# t=3360 s: node 2 restarted
+# t=3420 s: node 2 restarted
+# t=3420 s: node 3 cut off for 30 s
+# t=3480 s: node 2 restarted
+# t=3510 s: node 1 cut off for 30 s
+# t=3540 s: node 1 restarted
+# load done: 15938 events, 59 restarts, 39 cuts; settling 90 s
+PASS all 3 nodes agree on the active blocks (403 )
+PASS every audit chain verifies; no node panicked
+RSS growth after the first 5 min: min 0.6%, max 406.5% (per node)
+PASS no block pending at the end
+samples: /var/lib/sokol-campaigns/rc1-ee16318/chaos/soak.csv

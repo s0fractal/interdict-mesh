@@ -1,0 +1,6 @@
+{
+  "admission": "NOT_ADMITTED",
+  "archive": "/home/runner/work/interdict-mesh/interdict-mesh/candidates/candidate-aarch64.tar.gz",
+  "sha256": "03bae666742ded82c8b60c940d37ad525996283f7f4bb589ca0383dbf675ab99",
+  "source_commit": "ee16318a3dc92d5238afc99f45b23a035bcec158"
+}

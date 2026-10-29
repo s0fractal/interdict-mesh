@@ -1,0 +1,33 @@
+[2026-10-29T16:29:41Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:29:41Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.ImZcXk3u66/n1/node.key
+[2026-10-29T16:29:41Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:29:41Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.ImZcXk3u66/n2/node.key
+[2026-10-29T16:29:41Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:29:41Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.ImZcXk3u66/n3/node.key
+[2026-10-29T16:29:41Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:29:41Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.ImZcXk3u66/n4/node.key
+[2026-10-29T16:29:41Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:29:41Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.ImZcXk3u66/n5/node.key
+[2026-10-29T16:29:41Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:29:41Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.ImZcXk3u66/n6/node.key
+[2026-10-29T16:29:41Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:29:41Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.ImZcXk3u66/n7/node.key
+[2026-10-29T16:29:41Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:29:41Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.ImZcXk3u66/n8/node.key
+[2026-10-29T16:29:41Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:29:41Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.ImZcXk3u66/n9/node.key
+[2026-10-29T16:29:41Z INFO  orchestrator] interdictd 0.1.0 (build ee16318a3dc9)
+[2026-10-29T16:29:41Z INFO  orchestrator::p2p] [P2P] Generated new node identity key at /tmp/tmp.ImZcXk3u66/n10/node.key
+# nodes=10 netem='none' host=aarch64 cpus=10 kernel=6.8.0-147-generic
+# full mesh after 3s: 10/10 nodes see 9 peers
+# restart: 10 rounds, node 1 SIGKILLed with a detector block on disk; X1<=10000 X2<=10000 X3<=30000 ms
+round 1: control 129 ms, attacker last reply 48 ms, peers 1085 ms
+round 2: control 123 ms, attacker last reply 73 ms, peers 1131 ms
+round 3: control 146 ms, attacker last reply 68 ms, peers 1086 ms
+round 4: control 122 ms, attacker last reply 51 ms, peers 1072 ms
+round 5: control 119 ms, attacker last reply 41 ms, peers 1061 ms
+round 6: control 142 ms, attacker last reply 71 ms, peers 1093 ms
+round 7: control 134 ms, attacker last reply 62 ms, peers 139 ms
+round 8: control 141 ms, attacker last reply 69 ms, peers 1079 ms
+round 9: control 123 ms, attacker last reply 49 ms, peers 1100 ms
+round 10: control 136 ms, attacker last reply 64 ms, peers 1081 ms
