@@ -75,8 +75,8 @@
   "a_capacity_refusal_preserves_retraction_intent_for_retry": [
    "orchestrator/src/block_table.rs:cfb75168506572a506f15a532bcf5f09cb95f3a1cf790b94070bdccd87755a04"
   ],
-  "a_claim_its_issuer_took_back_holds_no_share_and_no_lease_here": [
-   "orchestrator/src/block_table.rs:45221f521db398209792e767cc7aa9ef658e178104a5f41b4559d18174779c9c"
+  "a_claim_its_issuer_took_back_holds_no_share_here": [
+   "orchestrator/src/block_table.rs:89f3c48f12e4f511bd7ff7e495573545a5b9507180d4f28c296eee5aebda4654"
   ],
   "a_clients_vector_cannot_choose_the_shown_tier_or_ip": [
    "orchestrator/src/bin/monitor.rs:0ea32a12276c390c34b36207823d61e45c11c0198010edf85da851ac1da64e35"
@@ -209,6 +209,9 @@
   ],
   "a_peer_beyond_its_known_claims_share_is_refused_alone": [
    "orchestrator/src/block_table.rs:65c963aab63a59d8d1ff93ddda9582c772c3c738c1dce56bed2797919c49fead"
+  ],
+  "a_peer_claim_its_issuer_took_back_gets_no_second_lease_after_a_restart": [
+   "orchestrator/src/block_table.rs:52b4281ac629b321ae4ffcf2d9f8d7ccd296a1ed41ea7485d12ebef2e9bb242d"
   ],
   "a_peer_reason_cannot_frame_extra_operator_telemetry_lines": [
    "orchestrator/src/mesh_dispatch.rs:4b736d409903e659382e63f56a306755fb3451c1da27fbfc66c5d0a9595306ef"
@@ -738,12 +741,12 @@
   "IPC-L1": "e95d1711381ca22d185a7118d762e407ad500a8d087e486d4fa513711502cf26",
   "IPC-R1": "f325d52baee3548ba5441aab180046b6104668548e0107f544eccf5a2cdf20f9",
   "IPC-T1": "0327d2368f9c8ed1a951aebf3ed790d1fa5b7e86ef0e55b64d0897751a2320fb",
-  "LEASE-C1": "d4c1a09b63b29944606ff90f40e829ad23f1cbb2133c41cdbfae17edfa696298",
+  "LEASE-C1": "7535ece9e5ed565b6fade77988a4f0e11a6e208e1637b7224bcfd49ba1e283d3",
   "LEASE-W1": "72f35c5ca80f911e39fb43be0bade59fe0c158003e446eee01e975d774b720c6",
   "MESH-A1": "7d2e7956326c7893059ea7e4bab5b22ed80243c9377c7cdb5d5e177b43b0868e",
   "MESH-A2": "bb0ac3241a1b5f17446df53860ee1d4775d83943ef68675a4778caf2a9ebf5a3",
   "MESH-C1": "733992c6e60d958baabbf7d228c21ad4115298dfcd93c3c5ad93b76c5b51db73",
-  "MESH-K1": "c831f6a0ed77baae334b2751a429a013519ba3529d12b4e5557e5bec6d4821a0",
+  "MESH-K1": "249c7dc7fe7d002cb180a5b85ea83089c7bccbd40aa37604fa0b9ecbfb38bce9",
   "MESH-N1": "ca1b0b28b3046dfebcae3896ada5858438da754cda778e654c98cab09dfd2912",
   "MESH-R1": "d1dd76f0497e210c50b5eeb6e7bba48d65d55c122be3081970a59dd3b03bb42e",
   "MESH-V1": "57964e66e41ecb7ae67154f694b87a4e5e51d05f0313b4baf90dc1db90972a44",
@@ -975,6 +978,7 @@
    "witnesses": [
     "a_lease_is_capped_by_its_first_record_and_kept_for_the_grace",
     "a_lift_is_not_undone_by_a_step_back_within_forget_grace",
+    "a_peer_claim_its_issuer_took_back_gets_no_second_lease_after_a_restart",
     "a_used_lease_is_not_renewed_by_a_step_back_within_forget_grace_and_a_resend",
     "an_uncapped_peer_claim_is_not_revived_past_the_cap_by_a_small_step_back",
     "lease_records_stay_bounded_by_forgetting_the_first_ended_one",
@@ -1018,7 +1022,7 @@
   "MESH-K1": {
    "statement": "1d3bbdf1e374a8cfd380493e470cb6415c1a2e4fd831f6f91937a904492c37ed",
    "witnesses": [
-    "a_claim_its_issuer_took_back_holds_no_share_and_no_lease_here",
+    "a_claim_its_issuer_took_back_holds_no_share_here",
     "a_one_slot_peer_cannot_deny_this_nodes_own_detections_by_volume",
     "a_peer_beyond_its_known_claims_share_is_refused_alone",
     "a_peers_share_frees_exactly_as_its_claims_end",
@@ -1504,8 +1508,8 @@
   "a_capacity_refusal_preserves_retraction_intent_for_retry": [
    "orchestrator/src/block_table.rs:2783bd17daf809d881602646b152468d3a7d2022aece47146aacb83ddbf376be"
   ],
-  "a_claim_its_issuer_took_back_holds_no_share_and_no_lease_here": [
-   "orchestrator/src/block_table.rs:dd55b841be24d9d5f0de8522b953d8f6c6f1c8c14d089567596f5b5031db0b3b"
+  "a_claim_its_issuer_took_back_holds_no_share_here": [
+   "orchestrator/src/block_table.rs:e909f5c7fbd049e7314b31da792ea0be774aa39ad99dd79a0f314d1a9407c1e5"
   ],
   "a_clients_vector_cannot_choose_the_shown_tier_or_ip": [
    "orchestrator/src/bin/monitor.rs:8ec704a7e5dbd4301453b43cb7030b2a63036bb89c284a8adcdded8475973eb4"
@@ -1638,6 +1642,9 @@
   ],
   "a_peer_beyond_its_known_claims_share_is_refused_alone": [
    "orchestrator/src/block_table.rs:1f5e371c2dc361bbe7ef8d682ba6c58377ed12451ca7e7d5cb123ad67716e64f"
+  ],
+  "a_peer_claim_its_issuer_took_back_gets_no_second_lease_after_a_restart": [
+   "orchestrator/src/block_table.rs:c1b036474b00dce7f476d91aff05f6f8970b691420b23573cfe5e48374364d9b"
   ],
   "a_peer_reason_cannot_frame_extra_operator_telemetry_lines": [
    "orchestrator/src/mesh_dispatch.rs:aa57e7c0b5cdbde509924e18a34f71fadc80ff9687133f3bf6e0c457c0882ae2"
