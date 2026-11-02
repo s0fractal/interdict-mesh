@@ -1,3 +1,6 @@
 monitor linguist-detectable=false
 sntl.db linguist-detectable=false
 sokol_audit.sntl linguist-detectable=false
+# Records are signed data, not a change to read in a pull request: GitHub collapses their diff, still one click away.
+.warrant/records.jsonl linguist-generated=true
+.warrant/blobs/** linguist-generated=true
