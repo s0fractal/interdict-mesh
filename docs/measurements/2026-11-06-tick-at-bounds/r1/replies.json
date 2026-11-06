@@ -1,0 +1,6 @@
+{
+ "OK applied": 65536,
+ "OK duplicate": 131072,
+ "OK pending": 196608,
+ "OK refused too many known claims": 1070846
+}

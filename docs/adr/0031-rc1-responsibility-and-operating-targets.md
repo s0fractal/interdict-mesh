@@ -193,3 +193,15 @@ state write at every bound holds the table lock 195–217 ms on the reference VM
 (`measure_memory_at_all_bounds`, [measurement](../measurements/2026-11-06-state-write-at-bounds/README.md)).
 Lower bounds and an incremental file were not needed. The condition's other half,
 `interdict_tick_seconds_max` under load at the bounds, is for the RC-2 campaign.
+
+**Amendment 2026-11-06 (RC-2 condition, second half).** A running node on the reference VM, driven
+over its detector IPC to `MAX_KNOWN_CLAIMS` (121 s at 2 000 lines/s) and held there 600 s under
+the same load, kept `interdict_tick_seconds_max` at 0.391 s (reached while filling). With the full
+table changing on every tick (signals with a 150 s TTL), it stayed at 0.284 s; the longest ticks
+are those where the mesh digest and a state hand-off fall together
+([measurement](../measurements/2026-11-06-tick-at-bounds/README.md)). Retraction and lease records,
+which only peers fill, were empty; adding the in-process lock time at every bound to the measured
+parts estimates about 0.37 s. Both halves of the condition are within S7 on this VM; the RC-2
+campaign's `--profile long` remains. The same run showed that the RSS ceiling of RUNBOOK §4 left out
+the state writer's copies (up to three of 251 MiB and 228 MiB of bytes at every bound); the
+runbook now adds them.

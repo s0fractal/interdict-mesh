@@ -57,8 +57,7 @@ tick.
 ## 4. What this does not show
 
 - The other half of the condition: `interdict_tick_seconds_max` under load with the tables at
-  their bounds. That needs a node driven to `MAX_KNOWN_CLAIMS`, which the RC-1 campaign does not
-  do (ADR-0031, "Not driven, and why"); it is left to the RC-2 campaign.
+  their bounds. Measured the same day in [2026-11-06-tick-at-bounds](../2026-11-06-tick-at-bounds/README.md).
 - Another host: the numbers are of the lab VM only. The reference VM of ADR-0031 is this one.
 - What is left under the lock is mostly copies (claims, ids, targets). Keeping claims behind a
   shared pointer would take most of the claims' 75 ms; it changes the table's types and is not

@@ -3986,9 +3986,13 @@ mod tests {
         let rss_after = rss_kb();
         // submit_state holds the table lock for take_persisted_unsorted only; the writer thread
         // sorts and serializes.
+        let copy_before = crate::heap_count::live();
         let started = std::time::Instant::now();
         let mut state = t.take_persisted_unsorted(at);
         let locked = started.elapsed();
+        // The state writer keeps at most two such copies (one written, one handed over) and
+        // the serialized bytes of one: memory on top of the table's while the table changes.
+        let copy_heap = crate::heap_count::live() - copy_before;
         let path = std::env::temp_dir().join(format!("measure-state-{}.json", std::process::id()));
         let started = std::time::Instant::now();
         state.sort();
@@ -4002,7 +4006,7 @@ mod tests {
         );
         std::fs::remove_file(&path).unwrap();
         println!(
-            "{share} % of all bounds | heap {heap} bytes | RSS +{} kB | state file {} bytes | take_persisted_unsorted under the lock {:?} | writer (sort, serialize, write, fsync, rename) {:?}",
+            "{share} % of all bounds | heap {heap} bytes | RSS +{} kB | state file {} bytes | copy taken under the lock {copy_heap} heap bytes | take_persisted_unsorted under the lock {:?} | writer (sort, serialize, write, fsync, rename) {:?}",
             rss_after.zip(rss_before).map_or(-1, |(a, b)| a - b),
             bytes.len(),
             locked,
