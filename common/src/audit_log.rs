@@ -406,7 +406,9 @@ impl AuditLog {
                 Err(std::fs::TryLockError::WouldBlock) if held_since.elapsed() < LOCK_SETTLE => {
                     std::thread::sleep(Duration::from_millis(1));
                 }
-                Err(std::fs::TryLockError::WouldBlock) => return Err(AuditError::Locked(lock_path)),
+                Err(std::fs::TryLockError::WouldBlock) => {
+                    return Err(AuditError::Locked(lock_path))
+                }
                 Err(std::fs::TryLockError::Error(e)) => return Err(e.into()),
             }
         }
@@ -1336,7 +1338,10 @@ mod tests {
         for s in spawners {
             s.join().unwrap();
         }
-        assert_eq!(refused, 0, "a lock released by this process is not another writer's");
+        assert_eq!(
+            refused, 0,
+            "a lock released by this process is not another writer's"
+        );
     }
 
     #[test]
