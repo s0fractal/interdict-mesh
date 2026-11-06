@@ -46,9 +46,11 @@ and timing each step of `take_persisted` separately gave:
 | 25 % | 42 ms | 91 ms | 59 703 045 B |
 | 50 % | 94 ms | 177 ms | 119 415 685 B |
 | 75 % | 145 ms | 254 ms | 179 137 541 B |
-| 100 % | 205, 217, 196 ms (three runs) | 351, 319, 303 ms | 238 859 397 B |
+| 100 % | 205, 217, 196 ms; at `1cefcdd` 195, 198, 201 ms | 351, 319, 303 ms; at `1cefcdd` 313, 343, 319 ms | 238 859 397 B |
 
-The state file has the size it had on 2026-10-29 at every share. At 100 % the lock is held
+The rows are of `fd49929` (hex digits from a table); `1cefcdd` computes them without indexing,
+as the crate's lints require, and was measured again at 100 %. The state file has the size it
+had on 2026-10-29 at every share. At 100 % the lock is held
 about 0.2 s, 2.3 times less than on main and within S7 with 0.28 s to spare for the rest of the
 tick.
 

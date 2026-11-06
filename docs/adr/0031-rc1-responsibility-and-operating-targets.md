@@ -189,7 +189,7 @@ outside the table lock. ROADMAP item 0a.
 copy as such: about 215 of 460 ms were `p2p::to_hex`, which allocated once per byte, and 106 ms
 were sorts that need no lock. With one allocation per key and the sorts moved to the state
 writer (`take_persisted_unsorted`, `Persisted::sort`; the file unchanged byte for byte), one
-state write at every bound holds the table lock 196–217 ms on the reference VM
+state write at every bound holds the table lock 195–217 ms on the reference VM
 (`measure_memory_at_all_bounds`, [measurement](../measurements/2026-11-06-state-write-at-bounds/README.md)).
 Lower bounds and an incremental file were not needed. The condition's other half,
 `interdict_tick_seconds_max` under load at the bounds, is for the RC-2 campaign.
