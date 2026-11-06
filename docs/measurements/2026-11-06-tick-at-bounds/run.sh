@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # One run of drive.py against a real node on a veth pair (XDP generic). Root, Linux, lab VM only.
-#   sudo docs/measurements/2026-11-06-tick-at-bounds/run.sh BINARY OUT_DIR [HOLD_SECONDS [TTL_SECONDS]]
+#   sudo docs/measurements/2026-11-06-tick-at-bounds/run.sh BINARY OUT_DIR [HOLD_SECONDS [TTL_SECONDS [CHURN [CONNS]]]]
 set -euo pipefail
-BIN=$(realpath "$1"); OUT=$(realpath -m "$2"); HOLD=${3:-600}; TTL=${4:-0}
+BIN=$(realpath "$1"); OUT=$(realpath -m "$2"); HOLD=${3:-600}; TTL=${4:-0}; CHURN=${5:-none}; CONNS=${6:-4}
 HERE=$(dirname "$(realpath "$0")")
 W="$OUT/node"
 rm -rf "$OUT"; mkdir -p "$W"
@@ -19,6 +19,6 @@ PID=$!
 for _ in $(seq 1 100); do curl -sf http://127.0.0.1:9471/metrics >/dev/null && break; sleep 0.2; done
 curl -sf http://127.0.0.1:9471/metrics >/dev/null
 python3 "$HERE/drive.py" --socket "$W/ipc.sock" --metrics http://127.0.0.1:9471/metrics \
-    --pid "$PID" --out "$OUT" --hold "$HOLD" --ttl "$TTL"
+    --pid "$PID" --out "$OUT" --hold "$HOLD" --ttl "$TTL" --churn "$CHURN" --conns "$CONNS"
 curl -s http://127.0.0.1:9471/metrics | grep -E '^interdict_tick_seconds(_max)? ' >"$OUT/final-tick.txt"
 ls -l "$W/state.json" >"$OUT/state-file.txt"

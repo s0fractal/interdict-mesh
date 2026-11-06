@@ -73,7 +73,8 @@ SKIP.
 - Linux з XDP, systemd, root лише для встановлення (служба працює як `interdict`).
 - Memory and disk for the bounded tables: RSS up to the node's idle RSS + 518 MiB + 2.8 MB per
   pinned peer, and while a table at its bounds changes up to 981 MiB more for the state writer's
-  copies; a state file up to 228 MiB, and at the bound about 0.2 s of table lock per state
+  copies (unbounded yet under a stream of retractions at the bounds, RUNBOOK §4); a state file up
+  to 228 MiB, and at the bound about 0.2 s of table lock per state
   write (RC-1 `v0.1.0-rc.1`: 0.57 s, past the 0.5 s tick target above about 85 % of every
   bound, ADR-0031; [RUNBOOK §4](RUNBOOK.md#memory-and-the-state-file-at-the-bounds)).
 - Синхронізація часу (NTP/chrony).

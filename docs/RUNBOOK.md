@@ -162,14 +162,16 @@ What to plan with:
   adds about 17 % to the heap of 444 MiB) + **2.8 MB per pinned peer** sending at its frame
   limit (replay memory, ADR-0013). A node whose peers and detectors stay far from the bounds
   needs far less: per entry, the table above times 1.17.
-- **While the table changes, add the state hand-off.** The state writer keeps up to three copies
-  of the durable part for an instant (the one written, the one handed over, its replacement)
-  and the serialized bytes of one. At every bound a copy is 251 MiB and its bytes 228 MiB, so
-  plan **+ 981 MiB**, about 1.46 GiB over the RSS before load in all
+- **While the table changes, add the state hand-off.** With one hand-off a tick, the state writer
+  keeps up to three copies of the durable part for an instant (the one written, the one handed
+  over, its replacement) and the serialized bytes of one. At every bound a copy is 251 MiB and its
+  bytes 228 MiB, so plan **+ 981 MiB**, about 1.46 GiB over the RSS before load in all
   (`measure_memory_at_all_bounds`;
-  [measurement](measurements/2026-11-06-tick-at-bounds/README.md) §3: a node held at its claim
-  bound rose to 733 MB). Elsewhere it is about 4.3 times the state file's size. A table that
-  does not change hands nothing over.
+  [measurement](measurements/2026-11-06-tick-at-bounds/README.md) §4: a node at its claim bound
+  rose to 733 MB). Elsewhere that is about 4.3 times the state file's size. A table that does not
+  change hands nothing over. **Not bounded yet:** a stream of detector retractions or operator
+  commands at the bounds, each of which copies the state for its own answer, took a node to
+  1.92 GB (same measurement, §3; ROADMAP 0a).
 - **State file** ≤ **228 MiB** with reasons of plain text (all own claims with 512-byte reasons,
   every record kept), plus 44 B per mesh sender (at most 4 096). A reason the writer must escape
   can make it longer, up to the reader's limit `MAX_STATE_BYTES` (981 MiB).
@@ -193,8 +195,9 @@ What to plan with:
   reached by detectors reporting more new addresses than about 290/s for the first block's TTL
   (`--block-ttl` 900 s), or the IPC's 2 000 lines/s for about 2 min. Watch
   `interdict_tick_seconds_max`. A running node driven to the claim bound over the IPC kept it at
-  0.39 s at most; with the full table changing on every tick, at 0.28 s
-  ([measurement](measurements/2026-11-06-tick-at-bounds/README.md)).
+  0.39 s at most while detectors only signalled. With the full table changed by retractions, it
+  reached 0.88 s: each retraction's answer copies the state under the table lock
+  ([measurement](measurements/2026-11-06-tick-at-bounds/README.md); ROADMAP 0a).
 
 The RC-1 plateau (ADR-0031 rule 5) checks these ceilings and that a node stays level once its
 event memory is full.

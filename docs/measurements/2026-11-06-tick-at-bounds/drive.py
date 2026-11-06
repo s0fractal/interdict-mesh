@@ -9,7 +9,7 @@ the load on (each further line is refused at the bound) for --hold seconds. Ever
 samples the node's metrics (tick, tick max, kernel blocks) and its RSS.
 
     sudo python3 drive.py --socket IPC_SOCKET --metrics URL --pid NODE_PID --out DIR \
-        [--count 262144] [--conns 4] [--hold 600] [--ttl SECONDS]
+        [--count 262144] [--conns 4] [--hold 600] [--ttl SECONDS] [--churn retract]
 
 Writes DIR/samples.csv (one row a second), DIR/replies.json (answers by class) and
 DIR/latency.json (ACK round trip, percentiles per phase). Measurement only: nothing here is run
@@ -43,39 +43,64 @@ class Shared:
         self.lock = threading.Lock()
         self.replies: collections.Counter[str] = collections.Counter()
         self.full_at: float | None = None
-        self.latency: dict[str, list[float]] = {"fill": [], "hold": []}
+        self.latency: dict[str, list[float]] = {"fill": [], "hold": [], "retract": []}
         self.stop = threading.Event()
         self.sent = 0
+        # This driver's own claims held by the node: admitted (applied or pending) less lifted.
+        self.held = 0
 
 
-def connection(k: int, conns: int, count: int, ttl: int, path: str, sh: Shared, hold_until: list[float]) -> None:
+ADMITTED = ("OK applied", "OK pending")
+
+
+def connection(k: int, conns: int, count: int, ttl: int, churn: str, path: str, sh: Shared,
+               hold_until: list[float]) -> None:
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     s.connect(path)
-    f = s.makefile("rwb", buffering=0)
-    f.write(b"ACK\n")
-    assert f.readline().strip() == b"OK ack"
     r = s.makefile("rb")
-    i = k
-    while not sh.stop.is_set():
-        # Fill with new addresses; once full, keep sending new ones (each refused at the bound).
-        head = f"SIGNAL#b{i}" + (f";ttl={ttl}" if ttl else "")
-        line = f"{head}:{SOURCE}|{address(i)}|-|{REASON}\n".encode()
+    s.sendall(b"ACK\n")
+    assert r.readline().strip() == b"OK ack"
+
+    def ask(line: str, phase: str) -> str:
         t0 = time.monotonic()
-        s.sendall(line)
+        s.sendall(line.encode())
         reply = r.readline().decode().strip()
-        dt = time.monotonic() - t0
-        if not reply:
-            break
-        i += conns
         with sh.lock:
             sh.sent += 1
             sh.replies[reply] += 1
-            phase = "fill" if sh.full_at is None else "hold"
-            sh.latency[phase].append(dt)
+            sh.latency[phase].append(time.monotonic() - t0)
+        return reply
+
+    mine: list[int] = []   # this connection's admitted signals, newest last
+    i = k
+    while not sh.stop.is_set():
+        with sh.lock:
+            full = sh.full_at is not None
+        if full and churn == "retract" and mine:
+            # Take one of this connection's own claims back (its event id is still remembered:
+            # the newest), then signal a new address into the slot it freed. The claims stay
+            # at their bound, less the retractions in flight, and the table changes every tick.
+            j = mine.pop()
+            reply = ask(f"RETRACT#b{j}:{SOURCE}|{address(j)}\n", "retract")
+            if not reply:
+                break
+            if reply.startswith("OK lifted"):   # a durability warning may follow
+                with sh.lock:
+                    sh.held -= 1
+        head = f"SIGNAL#b{i}" + (f";ttl={ttl}" if ttl else "")
+        reply = ask(f"{head}:{SOURCE}|{address(i)}|-|{REASON}\n", "hold" if full else "fill")
+        if not reply:
+            break
+        if reply in ADMITTED:
+            mine.append(i)
+            with sh.lock:
+                sh.held += 1
+        with sh.lock:
             if sh.full_at is None and "too many known claims" in reply:   # TOO_MANY_CLAIMS
                 sh.full_at = time.monotonic()
                 hold_until[0] = sh.full_at + HOLD
-        if i >= 2 * count + conns:   # never runs out of new addresses while holding
+        i += conns
+        if i >= 4 * count:   # addresses taken back long ago are new to the node again
             i = k
     s.close()
 
@@ -125,6 +150,9 @@ def main() -> None:
     # With a TTL shorter than the fill, claims end while new ones arrive: the table stays at
     # its bound and changes every tick, so every tick writes the state.
     ap.add_argument("--ttl", type=int, default=0)
+    # retract: once full, each connection takes one of its own claims back before each new
+    # signal, so the claims stay at their bound while the table changes.
+    ap.add_argument("--churn", choices=["none", "retract"], default="none")
     a = ap.parse_args()
     HOLD = a.hold
     out = pathlib.Path(a.out)
@@ -132,7 +160,7 @@ def main() -> None:
     sh = Shared()
     hold_until = [float("inf")]
     threads = [
-        threading.Thread(target=connection, args=(k, a.conns, a.count, a.ttl, a.socket, sh, hold_until), daemon=True)
+        threading.Thread(target=connection, args=(k, a.conns, a.count, a.ttl, a.churn, a.socket, sh, hold_until), daemon=True)
         for k in range(a.conns)
     ]
     start = time.monotonic()
@@ -148,7 +176,7 @@ def main() -> None:
     ]
     with open(out / "samples.csv", "w", newline="") as fh:
         w = csv.writer(fh)
-        w.writerow(["t_s", "sent", "phase", "rss_kb", *keys])
+        w.writerow(["t_s", "sent", "phase", "held", "rss_kb", *keys])
         while True:
             now = time.monotonic()
             if now >= hold_until[0] or now - start > a.max_seconds:
@@ -158,8 +186,8 @@ def main() -> None:
             except OSError:
                 m = {}
             with sh.lock:
-                sent, phase = sh.sent, ("fill" if sh.full_at is None else "hold")
-            w.writerow([f"{now - start:.1f}", sent, phase, rss_kb(a.pid), *[m.get(k, "") for k in keys]])
+                sent, held, phase = sh.sent, sh.held, ("fill" if sh.full_at is None else "hold")
+            w.writerow([f"{now - start:.1f}", sent, phase, held, rss_kb(a.pid), *[m.get(k, "") for k in keys]])
             fh.flush()
             time.sleep(1.0)
     sh.stop.set()
