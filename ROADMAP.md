@@ -95,9 +95,11 @@ native-NIC і не польовий пілот.
    The daily and 72-hour campaigns are for RC-2.
 0a. **RC-2: the state write at the bounds within S7** (ADR-0031, amendment 2026-10-29; an RC-2
    admission condition, owner decision 2026-10-29). With every block-table bound full,
-   `take_persisted` holds the table lock 0.57 s inside the tick (S7: 500 ms); RC-1 names it as a
-   limit. Choose by measurement: lower bounds, an incremental state file, or a copy outside the
-   table lock; then `measure_memory_at_all_bounds` at 100 % must stay within S7.
+   `take_persisted` held the table lock 0.57 s inside the tick (S7: 500 ms); RC-1 names it as a
+   limit. **Measured half done 2026-11-06:** most of it was a per-byte allocation in `to_hex`
+   and sorts that need no lock; now 0.2 s at 100 % on the reference VM
+   ([measurement](docs/measurements/2026-11-06-state-write-at-bounds/README.md), ADR-0031
+   amendment). Left for the RC-2 campaign: `interdict_tick_seconds_max` under load at the bounds.
 1. **Native NIC** на цільовому залізі — єдине, що лишилося в P4 з технічного боку:
    pps, затримка, CPU і поведінка `auto` на драйвері карти. Потрібна фізична
    Linux-машина з XDP-native картою (ixgbe, i40e, ice, mlx5) і джерело трафіку.

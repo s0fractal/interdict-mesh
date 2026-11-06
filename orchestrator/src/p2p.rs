@@ -205,8 +205,16 @@ pub fn now_ms() -> u64 {
         .unwrap_or(0)
 }
 
+/// Lowercase hex, two digits a byte. One allocation: a state write at the bounds converts about
+/// 590 000 event keys, and a `format!` per byte held the table lock 0.2 s longer (ADR-0031, RC-2).
 pub fn to_hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{:02x}", b)).collect()
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let mut out = String::with_capacity(bytes.len() * 2);
+    for &b in bytes {
+        out.push(char::from(DIGITS[usize::from(b >> 4)]));
+        out.push(char::from(DIGITS[usize::from(b & 0x0f)]));
+    }
+    out
 }
 
 pub fn from_hex(s: &str) -> Result<Vec<u8>> {
@@ -1879,6 +1887,15 @@ async fn handle_reader_loop(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn to_hex_is_two_lowercase_digits_a_byte() {
+        let all: Vec<u8> = (0..=255).collect();
+        let want: String = all.iter().map(|b| format!("{:02x}", b)).collect();
+        assert_eq!(to_hex(&all), want);
+        assert_eq!(to_hex(&[0x0f, 0xf0, 0xa5]), "0ff0a5");
+        assert_eq!(to_hex(&[]), "");
+    }
 
     /// A command that names no sender, for transport tests.
     fn alert(text: &str) -> MeshCommand {

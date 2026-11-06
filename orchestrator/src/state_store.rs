@@ -269,12 +269,14 @@ fn writer_loop(path: &Path, rx: &mpsc::Receiver<()>, shared: &Shared, write: &Wr
                 pending = latest.take().map(|s| (s.generation, s.state));
             }
         }
-        let Some((generation, state)) = pending.take() else {
+        let Some((generation, mut state)) = pending.take() else {
             continue;
         };
         if generation <= written {
             continue;
         }
+        // The table lock is not held here: the snapshot is put in its file order now (RC-2).
+        state.sort();
         match write(path, &state) {
             Ok(()) => {
                 written = generation;
@@ -495,6 +497,34 @@ mod tests {
     fn release(gate: &(Mutex<bool>, std::sync::Condvar)) {
         *gate.0.lock().unwrap() = true;
         gate.1.notify_all();
+    }
+
+    #[tokio::test]
+    async fn the_writer_writes_a_snapshot_in_its_file_order() {
+        // ADR-0031 RC-2: submit_state hands over the durable part unsorted, so the table lock is
+        // not held for the sort; the writer sorts before it writes.
+        let seen = Arc::new(Mutex::new(Vec::new()));
+        let s2 = seen.clone();
+        let write: Arc<WriteFn> = Arc::new(move |_: &Path, s: &Persisted| {
+            s2.lock().unwrap().push(s.retracted.clone());
+            Ok(())
+        });
+        let store = StateStore::with_writer(temp("order"), write);
+        let unsorted: Vec<(String, Option<u64>)> = (0..16u64)
+            .rev()
+            .map(|i| (format!("{:064x}", i), Some(i)))
+            .collect();
+        let g = store.submit(
+            Persisted {
+                retracted: unsorted.clone(),
+                ..Persisted::default()
+            },
+            now(),
+        );
+        store.wait_durable(g, Duration::from_secs(5)).await.unwrap();
+        let mut want = unsorted;
+        want.sort();
+        assert_eq!(*seen.lock().unwrap(), vec![want]);
     }
 
     #[tokio::test]

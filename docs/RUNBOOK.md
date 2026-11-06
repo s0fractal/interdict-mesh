@@ -165,24 +165,26 @@ What to plan with:
 - **State file** ≤ **228 MiB** with reasons of plain text (all own claims with 512-byte reasons,
   every record kept), plus 44 B per mesh sender (at most 4 096). A reason the writer must escape
   can make it longer, up to the reader's limit `MAX_STATE_BYTES` (981 MiB).
-- **State write per tick:** inside the maintenance tick, `take_persisted` copies the durable
-  part under the table lock, so for that long the tick, IPC answers and mesh adoption wait; the
-  writer thread then serializes, writes, fsyncs and renames. It happens on every tick in which
-  the table changed. Measured with every table at the same share of its bound:
+- **State write per tick:** inside the maintenance tick, `take_persisted_unsorted` copies the
+  durable part under the table lock, so for that long the tick, IPC answers and mesh adoption
+  wait; the writer thread then sorts, serializes, writes, fsyncs and renames. It happens on
+  every tick in which the table changed. Measured with every table at the same share of its
+  bound (2026-11-06, [measurement](measurements/2026-11-06-state-write-at-bounds/README.md);
+  RSS growth from 2026-10-29):
 
   | Share of every bound | Lock held | Writer thread | State file | RSS growth |
   |---|---|---|---|---|
-  | 10 % | 0.05 s | 0.04 s | 24 MB | 44 MiB |
-  | 25 % | 0.12 s | 0.08 s | 60 MB | 130 MiB |
-  | 50 % | 0.25 s | 0.17 s | 119 MB | 260 MiB |
-  | 75 % | 0.38 s | 0.25 s | 179 MB | 333 MiB |
-  | 100 % | 0.57 s | 0.37 s | 239 MB | 518 MiB |
+  | 10 % | 0.02 s | 0.04 s | 24 MB | 44 MiB |
+  | 25 % | 0.04 s | 0.09 s | 60 MB | 130 MiB |
+  | 50 % | 0.09 s | 0.18 s | 119 MB | 260 MiB |
+  | 75 % | 0.15 s | 0.25 s | 179 MB | 333 MiB |
+  | 100 % | 0.22 s | 0.35 s | 239 MB | 518 MiB |
 
-  Above about 85 % of every bound this one step alone holds the tick past 0.5 s: the node is
-  then outside its tick target (ADR-0031 S7, a named RC-1 limit). Most of it is the node's own
-  claims and records; the claim bound is reached by detectors reporting more new addresses
-  than about 290/s for the first block's TTL (`--block-ttl` 900 s), or the IPC's 2 000 lines/s
-  for about 2 min. Watch `interdict_tick_seconds_max`.
+  At every bound this step holds the tick about 0.2 s of its 0.5 s target (ADR-0031 S7); RC-1
+  held it 0.57 s there. Most of it is the node's own claims and records; the claim bound is
+  reached by detectors reporting more new addresses than about 290/s for the first block's TTL
+  (`--block-ttl` 900 s), or the IPC's 2 000 lines/s for about 2 min. Watch
+  `interdict_tick_seconds_max`.
 
 The RC-1 plateau (ADR-0031 rule 5) checks these ceilings and that a node stays level once its
 event memory is full.

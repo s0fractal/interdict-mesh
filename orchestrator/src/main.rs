@@ -806,7 +806,7 @@ async fn submit_state<B: block_table::Blocklist>(
     let mut table = blocks.lock().await;
     let mut state = table
         .dirty()
-        .then(|| table.take_persisted(block_table::local_ms()))?;
+        .then(|| table.take_persisted_unsorted(block_table::local_ms()))?;
     if let Some(registry) = REPLAY_FLOORS.get() {
         state.mesh_floors = registry.replay_floors();
     }
