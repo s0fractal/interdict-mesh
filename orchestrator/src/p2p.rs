@@ -208,11 +208,12 @@ pub fn now_ms() -> u64 {
 /// Lowercase hex, two digits a byte. One allocation: a state write at the bounds converts about
 /// 590 000 event keys, and a `format!` per byte held the table lock 0.2 s longer (ADR-0031, RC-2).
 pub fn to_hex(bytes: &[u8]) -> String {
-    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    // a nibble is below 16: '0'..'9', then 'a'..'f'
+    let digit = |n: u8| char::from(if n < 10 { b'0' + n } else { b'a' + (n - 10) });
     let mut out = String::with_capacity(bytes.len() * 2);
     for &b in bytes {
-        out.push(char::from(DIGITS[usize::from(b >> 4)]));
-        out.push(char::from(DIGITS[usize::from(b & 0x0f)]));
+        out.push(digit(b >> 4));
+        out.push(digit(b & 0x0f));
     }
     out
 }

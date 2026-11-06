@@ -2155,7 +2155,13 @@ impl<B: Blocklist> BlockTable<B> {
         self.dirty
     }
 
-    /// The durable part in the order the state file keeps it.
+    /// The durable part in the order the state file keeps it. The node itself takes it unsorted
+    /// ([`Self::take_persisted_unsorted`]) and lets the writer sort. Not `cfg(test)`: pinned
+    /// witnesses reach it, and a test item they reach is part of their pins.
+    #[cfg_attr(
+        not(test),
+        allow(dead_code, reason = "the node takes the unsorted part")
+    )]
     pub fn take_persisted(&mut self, now_ms: u64) -> Persisted {
         let mut state = self.take_persisted_unsorted(now_ms);
         state.sort();
