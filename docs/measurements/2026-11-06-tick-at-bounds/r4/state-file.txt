@@ -1,0 +1,1 @@
+-rw------- 1 root root 92844828 Nov  7 00:54 /home/s0fractal.guest/tick-bounds-r4/node/state.json
