@@ -2189,7 +2189,7 @@ impl<B: Blocklist> BlockTable<B> {
                 retracted.push((id.clone(), forget));
             }
         }
-        let mut peer_ends: Vec<(ClaimId, u64, Option<u64>)> = self
+        let peer_ends: Vec<(ClaimId, u64, Option<u64>)> = self
             .lease_ends
             .iter()
             .filter(|(_, (_, expires))| lease_kept(*expires, now_ms))
@@ -2208,7 +2208,7 @@ impl<B: Blocklist> BlockTable<B> {
             .filter(|(_, seen)| now_ms.saturating_sub(*seen) <= ms(EVENT_MEMORY))
             .map(|(key, seen)| (crate::p2p::to_hex(key), self.to_wall(*seen)))
             .collect();
-        let mut support: Vec<(String, SavedReasons)> = self
+        let support: Vec<(String, SavedReasons)> = self
             .support
             .iter()
             .map(|(net, list)| {
