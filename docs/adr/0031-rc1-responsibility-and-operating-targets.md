@@ -213,6 +213,13 @@ writer behind waits and is covered by the next copy, and the tick skips its copy
 handoff slot. In the same run (claims at their bound, retractions), ticks over 0.5 s fell from 82
 to 1 of about 600, and 73 % more retractions were answered. The longest tick was 0.631 s, so the
 condition is still open (measurement §3a).
+
+**Amendment 2026-11-07, spaced copies.** A copy for the writer starts at least `COPY_SPACING` (4)
+times the last one's length after it. Copies then hold the table lock at most a quarter of the
+time, and a tick either copies or waits behind one. With the claim table at its bound under
+retractions, the longest tick was 0.392 s and none passed S7 (measurement §3b). The condition
+names every bound. There a copy takes 0.218 s, and r6's parts add up to an estimated ≈ 0.52 s, so
+it stays open until the tick's own work under that load is measured lower.
 The same runs showed that the RSS ceiling of RUNBOOK §4 left out the state writer's copies. The
 runbook now adds them for one hand-off per tick and names the retraction case as unbounded until
 the copies are coalesced.

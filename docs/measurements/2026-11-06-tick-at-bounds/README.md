@@ -119,6 +119,36 @@ ticks over 0.5 s, RSS 1.86 GB.
 
 Both are open in ROADMAP 0a.
 
+## 3b. Spaced copies (r6, 2026-11-07), and the allocator (r5)
+
+Copies for the writer now start at least `COPY_SPACING` (4) times the last copy's length after it
+started (`StateStore::copy_due_in`). Copies therefore hold the table lock at most a quarter of the
+time, and a tick shorter than that gap either copies or waits behind one copy, not both
+(`copies_are_spaced_by_their_length`). r6 is r3's run on that build, `260fedb` (`build 260fedb5e5d9`).
+
+| | r3 | r4 | r5: r4 with `MALLOC_ARENA_MAX=2` | **r6: spaced** |
+|---|---|---|---|---|
+| `interdict_tick_seconds_max` | 0.881 s | 0.631 s | 0.828 s | **0.392 s** (in the hold) |
+| Tick in the hold, sampled: p50 / p99 | 0.321 / 0.755 s | 0.074 / 0.347 s | 0.141 / 0.634 s | **0.010 / 0.285 s** |
+| Sampled hold ticks over 0.5 s | 82 | 1 | 21 | **0** |
+| Retractions in 600 s; round trip p50 / max | 4 647; 422 / 869 ms | 8 023; 274 / 550 ms | 5 507; 348 / 835 ms | 4 616; 516 / 942 ms |
+| Signal round trip in the hold: p99 | 232 ms | 96 ms | 175 ms | **41 ms** |
+| RSS in the hold, at most | 1 921 MB | 1 499 MB | 916 MB | 1 047 MB |
+
+- **The claim bound is within S7 now.** With the claim table full and changed by retractions, no
+  tick reached 500 ms. The longest was 0.392 s. Retractions are answered more slowly than in r4,
+  since copies wait out their spacing. All answers stay within `DURABLE_WAIT` (2 s): at most
+  0.942 s.
+- **The allocator (r5).** With two malloc arenas instead of one per thread, RSS stayed at 916 MB,
+  within §4's derivation (≈ 966 MB here). That is evidence that r4's 1.5 GB was heap kept per
+  thread. But the tick got slower: 21 ticks over 0.5 s and 0.828 s at most. So it is not a fix.
+  r6's spacing alone took RSS to 1.05 GB.
+- **Every bound is not shown.** At every bound a copy holds the lock 0.218 s, not about 0.085 s
+  (`measure_memory_at_all_bounds`). Adding the difference to r6's longest tick estimates
+  ≈ 0.52 s, past S7 by about 20 ms. This is an estimate, not a measurement. What is left is the
+  tick's own work under load (≈ 0.3 s: expiry, kernel retries, the digest). It is the next lever
+  of ROADMAP 0a.
+
 ## 4. Memory: the state hand-off is not in the RSS ceiling
 
 `measure_memory_at_all_bounds` now prints the heap of the copy taken under the lock. At every
@@ -157,5 +187,5 @@ bound:
 ## Files
 
 - `drive.py`, `run.sh`: the driver and its harness.
-- `r1/`, `r2/`, `r3/`, `r4/`: `samples.csv`, `latency.json`, `replies.json`, `final-tick.txt`,
+- `r1/` … `r6/`: `samples.csv`, `latency.json`, `replies.json`, `final-tick.txt`,
   `state-file.txt` and `version.txt` of each run.

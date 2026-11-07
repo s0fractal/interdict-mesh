@@ -105,9 +105,11 @@ native-NIC і не польовий пілот.
    **One copy per state write, 2026-11-07:** `persist_now` and the tick copy only into a free
    handoff slot, so callers waiting together share a copy. On the same run, ticks over 0.5 s went
    from 82 to 1 of about 600 and RSS from 1.92 to 1.50 GB, but the longest tick was still 0.631 s
-   (measurement §3a). Left:
-   - the tick's own waits for the lock behind a copy;
-   - the copies' heap kept per thread;
+   (measurement §3a). **Spaced copies, 2026-11-07:** a copy starts at least 4 times the last one's
+   length after it (`COPY_SPACING`). With the claim table full under retractions, no tick reached
+   S7, and the longest was 0.392 s (measurement §3b). Every bound at once is estimated at
+   ≈ 0.52 s, not measured. Left:
+   - the tick's own work under load at the bounds (≈ 0.3 s: expiry, kernel retries, the digest);
    - then the RC-2 campaign (`--profile long`).
 1. **Native NIC** на цільовому залізі — єдине, що лишилося в P4 з технічного боку:
    pps, затримка, CPU і поведінка `auto` на драйвері карти. Потрібна фізична

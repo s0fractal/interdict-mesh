@@ -805,13 +805,15 @@ async fn submit_state<B: block_table::Blocklist>(
 ) -> Option<u64> {
     let mut table = blocks.lock().await;
     // RC-2 (ROADMAP 0a): while the writer has not taken the snapshot handed over, a new copy
-    // would only replace it unwritten. The table stays dirty; the next copy covers it.
-    if store.handoff_waiting() {
+    // would only replace it unwritten, and copies are spaced (`COPY_SPACING`). The table stays
+    // dirty; the next copy covers it.
+    if store.handoff_waiting() || !store.copy_due_in(std::time::Instant::now()).is_zero() {
         return None;
     }
-    let mut state = table
-        .dirty()
-        .then(|| table.take_persisted_unsorted(block_table::local_ms()))?;
+    if !table.dirty() {
+        return None;
+    }
+    let mut state = take_copy(store, &mut table);
     if let Some(registry) = REPLAY_FLOORS.get() {
         state.mesh_floors = registry.replay_floors();
     }
@@ -819,6 +821,17 @@ async fn submit_state<B: block_table::Blocklist>(
     // one ordered handoff. Neither a newer capture nor a clean caller may pass
     // between them. submit does no filesystem work; wait_durable runs after unlock.
     Some(store.submit(state, now_ms()))
+}
+
+/// The durable part copied under the table lock for the writer, its start and length recorded.
+fn take_copy<B: block_table::Blocklist>(
+    store: &StateStore,
+    table: &mut BlockTable<B>,
+) -> block_table::Persisted {
+    let started = std::time::Instant::now();
+    let state = table.take_persisted_unsorted(block_table::local_ms());
+    store.copied(started, started.elapsed());
+    state
 }
 
 /// Waits (at most `wait`) until this caller's change, made before the call, is on disk.
@@ -835,6 +848,14 @@ async fn persist_now<B: block_table::Blocklist>(
     let started = std::time::Instant::now();
     let seen = store.submitted();
     store.wait_handoff(wait).await;
+    // Spaced copies (`COPY_SPACING`); another caller's or the tick's copy may cover this meanwhile.
+    let due = store.copy_due_in(std::time::Instant::now());
+    if !due.is_zero() && store.submitted() == seen {
+        tokio::time::sleep(due.min(wait.saturating_sub(started.elapsed()))).await;
+        store
+            .wait_handoff(wait.saturating_sub(started.elapsed()))
+            .await;
+    }
     let generation = {
         let mut table = blocks.lock().await;
         let submitted = store.submitted();
@@ -842,7 +863,7 @@ async fn persist_now<B: block_table::Blocklist>(
             // Covered by a later copy, or by the copy that left the table clean.
             submitted
         } else if !store.handoff_waiting() {
-            let mut state = table.take_persisted_unsorted(block_table::local_ms());
+            let mut state = take_copy(store, &mut table);
             if let Some(registry) = REPLAY_FLOORS.get() {
                 state.mesh_floors = registry.replay_floors();
             }
@@ -2949,6 +2970,68 @@ mod tests {
         );
         let on_disk = state_store::read_state(&path).unwrap().unwrap();
         assert!(on_disk.claims.iter().any(|c| c.target == "198.51.100.140"));
+        std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    /// RC-2: copies for the writer are spaced by `COPY_SPACING` times the last one's length, so
+    /// they hold the table lock at most a quarter of the time. After a copy that took 100 ms,
+    /// the tick takes none for 400 ms (its changes stay dirty), and an answer waiting for the
+    /// disk waits that long before it copies. A node at its claim bound under retractions
+    /// ticked up to 0.63 s with unspaced copies (docs/measurements/2026-11-06-tick-at-bounds).
+    #[test]
+    fn copies_are_spaced_by_their_length() {
+        let path = std::path::PathBuf::from(temp_log("spaced-copies")).with_extension("json");
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        let store = StateStore::new(path.clone());
+        let blocks = Arc::new(tokio::sync::Mutex::new(BlockTable::with_lists(
+            AcceptLists,
+            TtlPolicy {
+                base: Duration::from_secs(60),
+                max: Duration::from_secs(600),
+            },
+            1,
+        )));
+        let ban = |table: &mut BlockTable<AcceptLists>, last: u8| {
+            table
+                .add_local(
+                    parse_target(&format!("198.51.100.{last}")).unwrap(),
+                    block_table::ClaimKind::Operator,
+                    "spaced",
+                    block_table::local_ms(),
+                )
+                .unwrap();
+        };
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        rt.block_on(async {
+            let long = Duration::from_millis(100);
+            store.copied(std::time::Instant::now(), long);
+            ban(&mut *blocks.lock().await, 150);
+            assert_eq!(
+                submit_state(&store, &blocks).await,
+                None,
+                "within the spacing"
+            );
+            assert!(
+                blocks.lock().await.dirty(),
+                "its change waits for the next copy"
+            );
+            let started = std::time::Instant::now();
+            assert_eq!(
+                persist_now(&store, &blocks, Duration::from_secs(2)).await,
+                Ok(())
+            );
+            let waited = started.elapsed();
+            assert!(
+                waited >= long * (state_store::COPY_SPACING - 1),
+                "the answer copied {waited:?} after a 100 ms copy"
+            );
+            assert_eq!(store.submitted(), 1);
+        });
+        let on_disk = state_store::read_state(&path).unwrap().unwrap();
+        assert!(on_disk.claims.iter().any(|c| c.target == "198.51.100.150"));
         std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
