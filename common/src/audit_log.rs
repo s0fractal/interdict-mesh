@@ -23,7 +23,7 @@
 use std::fs::{File, OpenOptions};
 use std::io::{self, BufReader, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 pub const MAGIC: [u8; 4] = *b"SAL2";
 pub const HEADER_LEN: usize = 4 + 4 + 8 + 8;
@@ -302,6 +302,13 @@ pub struct Rotation {
     pub keep: usize,
 }
 
+/// How long a held lock is tried again before it is another writer's. A child forked by another
+/// thread of this process holds a copy of the lock's descriptor until it executes, so a lock
+/// this process has just released can read as held for that moment (the orchestrator reopens
+/// its log after a failed write while it runs `wg`); another writer holds it past this bound,
+/// and its refusal comes this much later.
+const LOCK_SETTLE: Duration = Duration::from_millis(100);
+
 pub struct AuditLog {
     file: File,
     path: PathBuf,
@@ -392,10 +399,18 @@ impl AuditLog {
             .create(true)
             .truncate(false)
             .open(&lock_path)?;
-        match lock.try_lock() {
-            Ok(()) => {}
-            Err(std::fs::TryLockError::WouldBlock) => return Err(AuditError::Locked(lock_path)),
-            Err(std::fs::TryLockError::Error(e)) => return Err(e.into()),
+        let held_since = Instant::now();
+        loop {
+            match lock.try_lock() {
+                Ok(()) => break,
+                Err(std::fs::TryLockError::WouldBlock) if held_since.elapsed() < LOCK_SETTLE => {
+                    std::thread::sleep(Duration::from_millis(1));
+                }
+                Err(std::fs::TryLockError::WouldBlock) => {
+                    return Err(AuditError::Locked(lock_path))
+                }
+                Err(std::fs::TryLockError::Error(e)) => return Err(e.into()),
+            }
         }
         let file = OpenOptions::new()
             .read(true)
@@ -1293,6 +1308,40 @@ mod tests {
         let mut again = AuditLog::open(&path).expect("the lock is released with the writer");
         again.append(b"three").unwrap();
         assert_eq!(read_all(&path).unwrap().len(), 3);
+    }
+
+    /// A child forked by another thread holds a copy of the lock's descriptor until it
+    /// executes, so a lock this process has just released could read as another writer's
+    /// (the orchestrator's reopen after a failed write while it runs `wg`; CI x86_64,
+    /// 2026-11-06, `a_failed_loss_notice_retains_its_count_until_recovery`). Four threads
+    /// spawning made about 1 % of immediate re-acquisitions fail on Linux (probe, same day).
+    #[test]
+    fn a_lock_released_while_other_threads_spawn_is_taken_again() {
+        use std::sync::atomic::{AtomicBool, Ordering};
+        let path = temp_path("respawn");
+        drop(AuditLog::open(&path).unwrap());
+        let stop = std::sync::Arc::new(AtomicBool::new(false));
+        let spawners: Vec<_> = (0..4)
+            .map(|_| {
+                let stop = stop.clone();
+                std::thread::spawn(move || {
+                    while !stop.load(Ordering::Relaxed) {
+                        let _ = std::process::Command::new("true").status();
+                    }
+                })
+            })
+            .collect();
+        let refused = (0..2000)
+            .filter(|_| matches!(AuditLog::open(&path), Err(AuditError::Locked(_))))
+            .count();
+        stop.store(true, Ordering::Relaxed);
+        for s in spawners {
+            s.join().unwrap();
+        }
+        assert_eq!(
+            refused, 0,
+            "a lock released by this process is not another writer's"
+        );
     }
 
     #[test]
