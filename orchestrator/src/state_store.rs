@@ -9,10 +9,12 @@
 //!
 //! Contract: an operator decision waits for its generation to be durable, up to
 //! [`DURABLE_WAIT`]; past that the answer says the outcome is not yet known. A detector decision
-//! is durable within one tick plus two write times: a copy is handed over only into a free slot
-//! (RC-2), so a change made while one waits there goes with the next. Health turns bad when a
-//! change has waited longer than [`STALE_AFTER`] (hung or failing disk), and stays bad after a
-//! failed restore until the operator accepts the loss.
+//! is durable within one tick plus two write times, once the next copy is due: a copy is handed
+//! over only into a free slot and starts no earlier than [`COPY_SPACING`] times the last one's
+//! length after it (RC-2), so a change made meanwhile goes with the next. Health turns bad when a
+//! change has waited longer than [`STALE_AFTER`], handed over or still in the table (hung or
+//! failing disk, or copies spaced that far), and stays bad after a failed restore until the
+//! operator accepts the loss.
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
@@ -70,6 +72,9 @@ struct Shared {
     durable: AtomicU64,
     /// When the oldest change not yet on disk was handed over (ms since epoch; 0: none).
     pending_since_ms: AtomicU64,
+    /// When a change was first left in the table uncopied (the copy spaced or the slot full;
+    /// ms since epoch; 0: none). The next handoff carries it (Codex finding cf6b0e5b on #83).
+    uncopied_since_ms: AtomicU64,
     last_error: Mutex<Option<String>>,
     restore: Mutex<Restore>,
     durable_tx: tokio::sync::watch::Sender<u64>,
@@ -103,6 +108,7 @@ impl StateStore {
             submitted: AtomicU64::new(0),
             durable: AtomicU64::new(0),
             pending_since_ms: AtomicU64::new(0),
+            uncopied_since_ms: AtomicU64::new(0),
             last_error: Mutex::new(None),
             restore: Mutex::new(Restore::Fresh),
             durable_tx,
@@ -124,13 +130,18 @@ impl StateStore {
         let generation = {
             let mut latest = self.shared.latest.lock().unwrap_or_else(|p| p.into_inner());
             let generation = self.shared.submitted.fetch_add(1, Ordering::SeqCst) + 1;
+            // A change left uncopied before this copy has waited since then.
+            let first = match self.shared.uncopied_since_ms.swap(0, Ordering::SeqCst) {
+                0 => now_ms.max(1),
+                since => since,
+            };
             let _ = self.shared.pending_since_ms.compare_exchange(
                 0,
-                now_ms.max(1),
+                first,
                 Ordering::SeqCst,
                 Ordering::SeqCst,
             );
-            let since_ms = latest.as_ref().map_or(now_ms.max(1), |s| s.since_ms);
+            let since_ms = latest.as_ref().map_or(first, |s| s.since_ms);
             *latest = Some(Snapshot {
                 generation,
                 state,
@@ -155,6 +166,17 @@ impl StateStore {
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
             .is_some()
+    }
+
+    /// A change stays in the table uncopied (the copy is not due, or the slot is full); it
+    /// counts as pending from the first such call until a copy is handed over (`pending_for`).
+    pub fn left_uncopied(&self, now_ms: u64) {
+        let _ = self.shared.uncopied_since_ms.compare_exchange(
+            0,
+            now_ms.max(1),
+            Ordering::SeqCst,
+            Ordering::SeqCst,
+        );
     }
 
     /// Records a copy taken for the writer: started at `started`, took `took`.
@@ -220,12 +242,20 @@ impl StateStore {
         self.shared.durable.load(Ordering::SeqCst)
     }
 
-    /// How long the oldest change not yet on disk has waited.
+    /// How long the oldest change not yet on disk has waited: handed over to the writer, or
+    /// left in the table uncopied (`left_uncopied`).
     pub fn pending_for(&self, now_ms: u64) -> Duration {
-        match self.shared.pending_since_ms.load(Ordering::SeqCst) {
+        [
+            &self.shared.pending_since_ms,
+            &self.shared.uncopied_since_ms,
+        ]
+        .iter()
+        .map(|since| match since.load(Ordering::SeqCst) {
             0 => Duration::ZERO,
             since => Duration::from_millis(now_ms.saturating_sub(since)),
-        }
+        })
+        .max()
+        .unwrap_or_default()
     }
 
     pub fn last_error(&self) -> Option<String> {
@@ -684,6 +714,68 @@ mod tests {
             "unfinished old work acquired a fresh health grace period"
         );
         assert_eq!(read_state(store.path()).unwrap().unwrap(), state(3));
+        assert!(store.healthy(now()));
+    }
+
+    /// A change left in the table uncopied counts as pending from then, and the copy that
+    /// takes it carries that age to the writer, past the completion of an older write (Codex
+    /// finding cf6b0e5b on #83: a spaced copy left a change unwritten for 5.2 s, healthy, 0 s
+    /// pending).
+    #[tokio::test]
+    async fn a_change_left_uncopied_is_pending_until_its_copy_is_written() {
+        let gates = Arc::new([
+            (Mutex::new(false), std::sync::Condvar::new()),
+            (Mutex::new(false), std::sync::Condvar::new()),
+        ]);
+        let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let (entered_tx, entered_rx) = mpsc::channel();
+        let (g, c) = (gates.clone(), calls.clone());
+        let write: Arc<WriteFn> = Arc::new(move |path, snapshot| {
+            let call = c.fetch_add(1, Ordering::SeqCst);
+            entered_tx.send(call).unwrap();
+            if let Some(gate) = g.get(call) {
+                let mut open = gate.0.lock().unwrap();
+                while !*open {
+                    open = gate.1.wait(open).unwrap();
+                }
+            }
+            save_state(path, snapshot)
+        });
+        let store = StateStore::with_writer(temp("uncopied-age"), write);
+        let t0 = now().saturating_sub(20_000);
+        store.left_uncopied(t0);
+        store.left_uncopied(t0 + 500);
+        assert_eq!(
+            store.pending_for(t0 + 1000),
+            Duration::from_millis(1000),
+            "an uncopied change counts from the first time it was left"
+        );
+        let first = store.submit(state(1), t0 + 2000);
+        assert_eq!(entered_rx.recv_timeout(Duration::from_secs(2)).unwrap(), 0);
+        assert_eq!(
+            store.pending_for(t0 + 6000),
+            Duration::from_millis(6000),
+            "the copy carries the age of the change it took"
+        );
+        store.left_uncopied(t0 + 3000);
+        let last = store.submit(state(2), t0 + 4000);
+        release(&gates[0]);
+        assert_eq!(entered_rx.recv_timeout(Duration::from_secs(2)).unwrap(), 1);
+        store
+            .wait_durable(first, Duration::from_secs(2))
+            .await
+            .unwrap();
+        assert_eq!(
+            store.pending_for(t0 + 6000),
+            Duration::from_millis(3000),
+            "the queued copy kept the age of its uncopied change past the older write"
+        );
+        release(&gates[1]);
+        store
+            .wait_durable(last, Duration::from_secs(2))
+            .await
+            .unwrap();
+        assert_eq!(store.pending_for(now()), Duration::ZERO);
         assert!(store.healthy(now()));
     }
 

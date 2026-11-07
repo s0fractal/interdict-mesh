@@ -804,13 +804,14 @@ async fn submit_state<B: block_table::Blocklist>(
     blocks: &SharedBlockTable<B>,
 ) -> Option<u64> {
     let mut table = blocks.lock().await;
-    // RC-2 (ROADMAP 0a): while the writer has not taken the snapshot handed over, a new copy
-    // would only replace it unwritten, and copies are spaced (`COPY_SPACING`). The table stays
-    // dirty; the next copy covers it.
-    if store.handoff_waiting() || !store.copy_due_in(std::time::Instant::now()).is_zero() {
+    if !table.dirty() {
         return None;
     }
-    if !table.dirty() {
+    // RC-2 (ROADMAP 0a): while the writer has not taken the snapshot handed over, a new copy
+    // would only replace it unwritten, and copies are spaced (`COPY_SPACING`). The table stays
+    // dirty; the next copy covers it, and health counts its wait meanwhile.
+    if store.handoff_waiting() || !store.copy_due_in(std::time::Instant::now()).is_zero() {
+        store.left_uncopied(now_ms());
         return None;
     }
     let mut state = take_copy(store, &mut table);
@@ -865,6 +866,7 @@ async fn persist_now<B: block_table::Blocklist>(
         } else if !store.copy_due_in(std::time::Instant::now()).is_zero() {
             // The spacing outlasts `wait` (Codex finding 273bcf5d on #83): copying now would
             // break it. Unknown, not durable; the table stays dirty for the next copy.
+            store.left_uncopied(now_ms());
             return Err(format!(
                 "not yet durable after {} ms (the next copy is not due yet)",
                 wait.as_millis()
@@ -877,6 +879,7 @@ async fn persist_now<B: block_table::Blocklist>(
             store.submit(state, now_ms())
         } else {
             // The writer has not taken the last handoff within `wait`: unknown, not durable.
+            store.left_uncopied(now_ms());
             return Err(format!(
                 "not yet durable after {} ms (the state writer is behind)",
                 wait.as_millis()
@@ -3095,6 +3098,149 @@ mod tests {
             assert!(
                 blocks.lock().await.dirty(),
                 "the change waits for the next copy"
+            );
+            assert!(
+                !store.healthy(now_ms() + stale_ms()),
+                "the change it left uncopied is not counted as pending"
+            );
+        });
+        std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    /// Past `STALE_AFTER` plus one second, in ms: a change pending since now is stale then.
+    fn stale_ms() -> u64 {
+        u64::try_from(state_store::STALE_AFTER.as_millis()).unwrap() + 1000
+    }
+
+    /// RC-2: a change the spacing leaves in the table counts as pending, so a copy spaced past
+    /// `STALE_AFTER` turns health bad instead of reporting zero pending (Codex finding cf6b0e5b
+    /// on #83: unwritten at 5.2 s, healthy, 0 s pending). The copy that takes it clears it.
+    #[test]
+    fn a_change_the_spacing_leaves_uncopied_counts_as_pending() {
+        let path = std::path::PathBuf::from(temp_log("spacing-pending")).with_extension("json");
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        let store = StateStore::new(path.clone());
+        let blocks = Arc::new(tokio::sync::Mutex::new(BlockTable::with_lists(
+            AcceptLists,
+            TtlPolicy {
+                base: Duration::from_secs(60),
+                max: Duration::from_secs(600),
+            },
+            1,
+        )));
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        rt.block_on(async {
+            assert_eq!(submit_state(&store, &blocks).await, None, "a clean table");
+            assert!(
+                store.healthy(now_ms() + stale_ms()),
+                "nothing left uncopied"
+            );
+            store.copied(std::time::Instant::now(), Duration::from_secs(3));
+            blocks
+                .lock()
+                .await
+                .add_local(
+                    parse_target("198.51.100.170").unwrap(),
+                    block_table::ClaimKind::Operator,
+                    "uncopied",
+                    block_table::local_ms(),
+                )
+                .unwrap();
+            assert_eq!(
+                submit_state(&store, &blocks).await,
+                None,
+                "within the spacing"
+            );
+            assert!(
+                !store.healthy(now_ms() + stale_ms()),
+                "a change the spacing left uncopied is not counted as pending"
+            );
+            store.copied(
+                std::time::Instant::now() - Duration::from_secs(1),
+                Duration::from_millis(1),
+            );
+            let generation = submit_state(&store, &blocks).await.unwrap();
+            store
+                .wait_durable(generation, Duration::from_secs(2))
+                .await
+                .unwrap();
+            assert!(store.healthy(now_ms()), "written: nothing pending");
+        });
+        std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    /// RC-2: an answer that finds the writer behind leaves its change uncopied, and it stays
+    /// pending after the writer catches up with the copies before it.
+    #[test]
+    fn an_answer_that_finds_the_writer_behind_leaves_its_change_pending() {
+        use std::sync::{Condvar, Mutex};
+        let path = std::path::PathBuf::from(temp_log("behind-pending")).with_extension("json");
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        let gate = Arc::new((Mutex::new(false), Condvar::new()));
+        let held = gate.clone();
+        let write: Arc<state_store::WriteFn> = Arc::new(move |path, state| {
+            let open = held.0.lock().unwrap();
+            let (open, _) = held
+                .1
+                .wait_timeout_while(open, Duration::from_secs(10), |open| !*open)
+                .unwrap();
+            drop(open);
+            state_store::save_state(path, state)
+        });
+        let store = StateStore::with_writer(path.clone(), write);
+        let blocks = Arc::new(tokio::sync::Mutex::new(BlockTable::with_lists(
+            AcceptLists,
+            TtlPolicy {
+                base: Duration::from_secs(60),
+                max: Duration::from_secs(600),
+            },
+            1,
+        )));
+        let ban = |table: &mut BlockTable<AcceptLists>, last: u8| {
+            table
+                .add_local(
+                    parse_target(&format!("198.51.100.{last}")).unwrap(),
+                    block_table::ClaimKind::Operator,
+                    "behind",
+                    block_table::local_ms(),
+                )
+                .unwrap();
+        };
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        rt.block_on(async {
+            ban(&mut *blocks.lock().await, 180);
+            assert_eq!(submit_state(&store, &blocks).await, Some(1));
+            store.wait_handoff(Duration::from_secs(2)).await;
+            // The next copy is due now (`COPY_SPACING`).
+            store.copied(
+                std::time::Instant::now() - Duration::from_secs(1),
+                Duration::from_millis(1),
+            );
+            ban(&mut *blocks.lock().await, 181);
+            assert_eq!(
+                submit_state(&store, &blocks).await,
+                Some(2),
+                "fills the slot"
+            );
+            ban(&mut *blocks.lock().await, 182);
+            let answer = persist_now(&store, &blocks, Duration::from_millis(300)).await;
+            assert!(
+                answer.as_ref().is_err_and(|e| e.contains("behind")),
+                "{answer:?}"
+            );
+            *gate.0.lock().unwrap() = true;
+            gate.1.notify_all();
+            store.wait_durable(2, Duration::from_secs(5)).await.unwrap();
+            assert!(blocks.lock().await.dirty());
+            assert!(
+                !store.healthy(now_ms() + stale_ms()),
+                "the change the answer left uncopied is not counted as pending"
             );
         });
         std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
