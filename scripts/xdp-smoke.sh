@@ -346,6 +346,10 @@ BUSY_DROPPED=$(grep -o "Outcome of the block of $OUT_BUSY: [0-9]* packets" "$LOG
 check "a lifted block records the packets it dropped ($BUSY_DROPPED >= 5)" test "${BUSY_DROPPED:-0}" -ge 5
 check "a block that saw no traffic records that it dropped none" \
     grep -q "Outcome of the block of $OUT_IDLE: 0 packets dropped" "$LOG"
+# The audit writer is a thread of its own: its record may follow the node log's line. On a slow
+# runner it came later than the 1.5 s above (smoke x86_64, #83 run 42402729985; replay later
+# found no audit gap, so the record was late, not lost).
+for _ in $(seq 1 25); do grep -aq "BLOCK_OUTCOME|IP:$OUT_BUSY|" "$WORK/events.sntl" && break; sleep 0.2; done
 check "an outcome names the decision behind the block" \
     grep -aq "BLOCK_OUTCOME|IP:$OUT_BUSY|Dropped:[0-9]*|Seconds:[0-9]*|Cause:operator: operator" "$WORK/events.sntl"
 check "monitor --outcomes summarises outcomes by cause" bash -c \
