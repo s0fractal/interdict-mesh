@@ -184,3 +184,35 @@ bound, one state write keeps the maintenance tick within S7 (≤ 500 ms, measure
 `measure_memory_at_all_bounds` on the reference VM and by `interdict_tick_seconds_max` under
 load). How is chosen by measurement: lower bounds, an incremental state file, or a copy taken
 outside the table lock. ROADMAP item 0a.
+
+**Amendment 2026-11-06 (RC-2 condition, first half).** Measured, the lock was not spent on the
+copy as such: about 215 of 460 ms were `p2p::to_hex`, which allocated once per byte, and 106 ms
+were sorts that need no lock. With one allocation per key and the sorts moved to the state
+writer (`take_persisted_unsorted`, `Persisted::sort`; the file unchanged byte for byte), one
+state write at every bound holds the table lock 195–217 ms on the reference VM
+(`measure_memory_at_all_bounds`, [measurement](../measurements/2026-11-06-state-write-at-bounds/README.md)).
+Lower bounds and an incremental file were not needed. The condition's other half,
+`interdict_tick_seconds_max` under load at the bounds, is for the RC-2 campaign.
+
+**Amendment 2026-11-06 (RC-2 condition, second half): not met.** A running node on the reference VM
+was driven over its detector IPC to `MAX_KNOWN_CLAIMS` (121 s at 2 000 lines/s) and held there
+600 s ([measurement](../measurements/2026-11-06-tick-at-bounds/README.md)).
+- With the full table changed by detector retractions (7.7 a second), 82 of 597 sampled ticks
+  were over S7's 500 ms. The longest was 0.881 s, and RSS rose to 1.92 GB.
+- Each retraction's answer (`persist_now`) copies the whole durable state under the table lock.
+  The writer writes 2 or 3 copies a second; the rest are taken and thrown away, and the tick
+  waits for the lock behind them.
+- Signals into a full, unchanging table (0.391 s at most, while filling), or into one that churned
+  just below the bound (0.284 s), stayed within S7. Neither is the condition's case, as Codex
+  found on PR #80.
+
+The condition stays open. What it needs is at most one copy per write: a caller that finds the
+writer behind waits and is covered by the next copy, and the tick skips its copy meanwhile.
+
+**Amendment 2026-11-07.** That change was made: `persist_now` and the tick copy only into a free
+handoff slot. In the same run (claims at their bound, retractions), ticks over 0.5 s fell from 82
+to 1 of about 600, and 73 % more retractions were answered. The longest tick was 0.631 s, so the
+condition is still open (measurement §3a).
+The same runs showed that the RSS ceiling of RUNBOOK §4 left out the state writer's copies. The
+runbook now adds them for one hand-off per tick and names the retraction case as unbounded until
+the copies are coalesced.

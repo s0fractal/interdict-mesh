@@ -453,6 +453,19 @@ impl Default for Persisted {
     }
 }
 
+impl Persisted {
+    /// Puts the lists a state file keeps in order into that order. Sorting is pure, so the state
+    /// writer does it off the table lock (`state_store::writer_loop`); [`BlockTable::take_persisted`]
+    /// returns it already done. The claims are ordered by id when they are taken, since the id is
+    /// not kept with them. Each list's entries are distinct, so this order is the one sort.
+    pub fn sort(&mut self) {
+        self.operator_lifts.sort_unstable();
+        self.retracted.sort_unstable();
+        self.peer_ends.sort_unstable();
+        self.support.sort_unstable();
+    }
+}
+
 /// What a restore left out to keep each table within its runtime bound.
 #[derive(Debug, Default, PartialEq, Eq)]
 struct Dropped {
@@ -2142,7 +2155,22 @@ impl<B: Blocklist> BlockTable<B> {
         self.dirty
     }
 
+    /// The durable part in the order the state file keeps it. The node itself takes it unsorted
+    /// ([`Self::take_persisted_unsorted`]) and lets the writer sort. Not `cfg(test)`: pinned
+    /// witnesses reach it, and a test item they reach is part of their pins.
+    #[cfg_attr(
+        not(test),
+        allow(dead_code, reason = "the node takes the unsorted part")
+    )]
     pub fn take_persisted(&mut self, now_ms: u64) -> Persisted {
+        let mut state = self.take_persisted_unsorted(now_ms);
+        state.sort();
+        state
+    }
+
+    /// The durable part as `submit_state` takes it under the table lock: everything but the
+    /// claims is left for the writer to sort ([`Persisted::sort`]), off the lock (ADR-0031, RC-2).
+    pub fn take_persisted_unsorted(&mut self, now_ms: u64) -> Persisted {
         self.dirty = false;
         let mut own: Vec<(&ClaimId, &Claim)> = self
             .claims
@@ -2154,7 +2182,7 @@ impl<B: Blocklist> BlockTable<B> {
             })
             .map(|(id, h)| (id, &h.claim))
             .collect();
-        own.sort_by(|a, b| a.0.cmp(b.0));
+        own.sort_unstable_by(|a, b| a.0.cmp(b.0)); // ids are the map's keys: distinct
         let claims: Vec<Claim> = own.into_iter().map(|(_, c)| c.clone()).collect();
         let mut operator_lifts = Vec::new();
         let mut retracted = Vec::new();
@@ -2167,9 +2195,7 @@ impl<B: Blocklist> BlockTable<B> {
                 retracted.push((id.clone(), forget));
             }
         }
-        operator_lifts.sort();
-        retracted.sort();
-        let mut peer_ends: Vec<(ClaimId, u64, Option<u64>)> = self
+        let peer_ends: Vec<(ClaimId, u64, Option<u64>)> = self
             .lease_ends
             .iter()
             .filter(|(_, (_, expires))| lease_kept(*expires, now_ms))
@@ -2181,7 +2207,6 @@ impl<B: Blocklist> BlockTable<B> {
                 )
             })
             .collect();
-        peer_ends.sort();
         let events = self
             .event_order
             .iter()
@@ -2189,7 +2214,7 @@ impl<B: Blocklist> BlockTable<B> {
             .filter(|(_, seen)| now_ms.saturating_sub(*seen) <= ms(EVENT_MEMORY))
             .map(|(key, seen)| (crate::p2p::to_hex(key), self.to_wall(*seen)))
             .collect();
-        let mut support: Vec<(String, SavedReasons)> = self
+        let support: Vec<(String, SavedReasons)> = self
             .support
             .iter()
             .map(|(net, list)| {
@@ -2207,7 +2232,6 @@ impl<B: Blocklist> BlockTable<B> {
             })
             .filter(|(_, reasons)| !reasons.is_empty())
             .collect();
-        support.sort();
         Persisted {
             schema: STATE_SCHEMA,
             claims,
@@ -3856,6 +3880,47 @@ mod tests {
         }
     }
 
+    #[test]
+    fn the_state_taken_under_the_lock_sorts_to_the_file_order() {
+        // ADR-0031 RC-2: submit_state takes the durable part unsorted under the table lock and
+        // the writer sorts it. Sorted, it is the state the sorted take gives, and every list
+        // the file keeps in order is in order.
+        let n = 48;
+        let mut t = table(1, common::BLOCKLIST_CAPACITY as usize);
+        for i in 0..n {
+            t.record_event("ids", &i.to_string(), T0);
+            t.note_support(
+                net_of(i),
+                Some(event_key("ids", &i.to_string())),
+                Some(T0 + 1000 * S),
+            );
+            t.issue_own(net_of(i), ClaimKind::Detector, "r", T0, Some(T0 + 1000 * S));
+        }
+        let ids: Vec<ClaimId> = (0..n)
+            .map(|i| blake3::hash(&i.to_le_bytes()).to_hex().to_string())
+            .collect();
+        t.retract(1, &ids, T0);
+        for id in &ids {
+            t.record_lease(id, T0 + 1000 * S, Some(T0 + 1000 * S));
+        }
+        for i in n..2 * n {
+            // an operator lift of a detector claim is kept as a record (one of an operator
+            // claim simply forgets it)
+            t.issue_own(net_of(i), ClaimKind::Detector, "r", T0, Some(T0 + 1000 * S));
+            t.lift(net_of(i), T0).unwrap();
+        }
+        let mut taken = t.take_persisted_unsorted(T0);
+        let sorted = t.take_persisted(T0);
+        let claim_ids: Vec<ClaimId> = sorted.claims.iter().map(Claim::id).collect();
+        assert!(claim_ids.len() >= n && claim_ids.is_sorted());
+        assert!(sorted.operator_lifts.len() >= n && sorted.operator_lifts.is_sorted());
+        assert!(sorted.retracted.len() >= n && sorted.retracted.is_sorted());
+        assert!(sorted.peer_ends.len() >= n && sorted.peer_ends.is_sorted());
+        assert!(sorted.support.len() >= n && sorted.support.is_sorted());
+        taken.sort();
+        assert_eq!(taken, sorted);
+    }
+
     /// Every bound at once, in a process of its own so its RSS is not the earlier fills' freed
     /// memory: `cargo test --release -p orchestrator measure_memory_at_all_bounds -- --ignored
     /// --nocapture --exact block_table::tests::measure_memory_at_all_bounds`.
@@ -3919,18 +3984,29 @@ mod tests {
             }
         });
         let rss_after = rss_kb();
-        // submit_state holds the table lock for take_persisted only; the writer thread serializes.
+        // submit_state holds the table lock for take_persisted_unsorted only; the writer thread
+        // sorts and serializes.
+        let copy_before = crate::heap_count::live();
         let started = std::time::Instant::now();
-        let state = t.take_persisted(at);
+        let mut state = t.take_persisted_unsorted(at);
         let locked = started.elapsed();
-        let bytes = serde_json::to_vec(&state).unwrap();
+        // The state writer keeps at most two such copies (one written, one handed over) and
+        // the serialized bytes of one: memory on top of the table's while the table changes.
+        let copy_heap = crate::heap_count::live() - copy_before;
         let path = std::env::temp_dir().join(format!("measure-state-{}.json", std::process::id()));
         let started = std::time::Instant::now();
+        state.sort();
         crate::state_store::save_state(&path, &state).unwrap();
         let write = started.elapsed();
+        let bytes = serde_json::to_vec(&state).unwrap();
+        assert_eq!(
+            state,
+            t.take_persisted(at),
+            "the writer's order is the sorted take's"
+        );
         std::fs::remove_file(&path).unwrap();
         println!(
-            "{share} % of all bounds | heap {heap} bytes | RSS +{} kB | state file {} bytes | take_persisted under the lock {:?} | save_state (serialize, write, fsync, rename) {:?}",
+            "{share} % of all bounds | heap {heap} bytes | RSS +{} kB | state file {} bytes | copy taken under the lock {copy_heap} heap bytes | take_persisted_unsorted under the lock {:?} | writer (sort, serialize, write, fsync, rename) {:?}",
             rss_after.zip(rss_before).map_or(-1, |(a, b)| a - b),
             bytes.len(),
             locked,

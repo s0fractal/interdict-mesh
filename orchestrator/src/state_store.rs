@@ -9,9 +9,10 @@
 //!
 //! Contract: an operator decision waits for its generation to be durable, up to
 //! [`DURABLE_WAIT`]; past that the answer says the outcome is not yet known. A detector decision
-//! is durable within one tick plus the write time. Health turns bad when a change has waited
-//! longer than [`STALE_AFTER`] (hung or failing disk), and stays bad after a failed restore until
-//! the operator accepts the loss.
+//! is durable within one tick plus two write times: a copy is handed over only into a free slot
+//! (RC-2), so a change made while one waits there goes with the next. Health turns bad when a
+//! change has waited longer than [`STALE_AFTER`] (hung or failing disk), and stays bad after a
+//! failed restore until the operator accepts the loss.
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
@@ -71,6 +72,8 @@ struct Shared {
     /// One replaceable snapshot, separate from the writer's in-flight/retry state.
     /// This lock also orders generation assignment and completion accounting.
     latest: Mutex<Option<Snapshot>>,
+    /// Signalled when a snapshot is handed over and when the writer takes it (`wait_handoff`).
+    handoff_tx: tokio::sync::watch::Sender<()>,
 }
 
 pub struct StateStore {
@@ -89,6 +92,7 @@ impl StateStore {
         // coalesce at submission, even while the writer is stuck in the filesystem.
         let (tx, rx) = mpsc::sync_channel::<()>(1);
         let (durable_tx, _) = tokio::sync::watch::channel(0);
+        let (handoff_tx, _) = tokio::sync::watch::channel(());
         let shared = Arc::new(Shared {
             submitted: AtomicU64::new(0),
             durable: AtomicU64::new(0),
@@ -97,6 +101,7 @@ impl StateStore {
             restore: Mutex::new(Restore::Fresh),
             durable_tx,
             latest: Mutex::new(None),
+            handoff_tx,
         });
         let (writer_shared, writer_path) = (shared.clone(), path.clone());
         std::thread::Builder::new()
@@ -124,6 +129,7 @@ impl StateStore {
                 state,
                 since_ms,
             });
+            self.shared.handoff_tx.send_replace(());
             generation
         };
         // A full notification channel already wakes the writer. Do not wait for
@@ -132,6 +138,29 @@ impl StateStore {
             self.set_error("the state writer is gone".into());
         }
         generation
+    }
+
+    /// A snapshot is handed over and the writer has not taken it yet. A copy handed over now
+    /// would only replace it unwritten (RC-2, ROADMAP 0a).
+    pub fn handoff_waiting(&self) -> bool {
+        self.shared
+            .latest
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .is_some()
+    }
+
+    /// Waits, at most `wait`, until the writer has taken the snapshot handed over.
+    pub async fn wait_handoff(&self, wait: Duration) {
+        let mut rx = self.shared.handoff_tx.subscribe();
+        let _ = tokio::time::timeout(wait, async {
+            while self.handoff_waiting() {
+                if rx.changed().await.is_err() {
+                    return;
+                }
+            }
+        })
+        .await;
     }
 
     /// Waits until `generation` (or a newer one) is on disk, at most `wait`.
@@ -267,14 +296,17 @@ fn writer_loop(path: &Path, rx: &mpsc::Receiver<()>, shared: &Shared, write: &Wr
                 // producers cannot refill the slot: retain at most two snapshots.
                 drop(pending.take());
                 pending = latest.take().map(|s| (s.generation, s.state));
+                shared.handoff_tx.send_replace(());
             }
         }
-        let Some((generation, state)) = pending.take() else {
+        let Some((generation, mut state)) = pending.take() else {
             continue;
         };
         if generation <= written {
             continue;
         }
+        // The table lock is not held here: the snapshot is put in its file order now (RC-2).
+        state.sort();
         match write(path, &state) {
             Ok(()) => {
                 written = generation;
@@ -495,6 +527,34 @@ mod tests {
     fn release(gate: &(Mutex<bool>, std::sync::Condvar)) {
         *gate.0.lock().unwrap() = true;
         gate.1.notify_all();
+    }
+
+    #[tokio::test]
+    async fn the_writer_writes_a_snapshot_in_its_file_order() {
+        // ADR-0031 RC-2: submit_state hands over the durable part unsorted, so the table lock is
+        // not held for the sort; the writer sorts before it writes.
+        let seen = Arc::new(Mutex::new(Vec::new()));
+        let s2 = seen.clone();
+        let write: Arc<WriteFn> = Arc::new(move |_: &Path, s: &Persisted| {
+            s2.lock().unwrap().push(s.retracted.clone());
+            Ok(())
+        });
+        let store = StateStore::with_writer(temp("order"), write);
+        let unsorted: Vec<(String, Option<u64>)> = (0..16u64)
+            .rev()
+            .map(|i| (format!("{:064x}", i), Some(i)))
+            .collect();
+        let g = store.submit(
+            Persisted {
+                retracted: unsorted.clone(),
+                ..Persisted::default()
+            },
+            now(),
+        );
+        store.wait_durable(g, Duration::from_secs(5)).await.unwrap();
+        let mut want = unsorted;
+        want.sort();
+        assert_eq!(*seen.lock().unwrap(), vec![want]);
     }
 
     #[tokio::test]

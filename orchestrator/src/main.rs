@@ -804,9 +804,14 @@ async fn submit_state<B: block_table::Blocklist>(
     blocks: &SharedBlockTable<B>,
 ) -> Option<u64> {
     let mut table = blocks.lock().await;
+    // RC-2 (ROADMAP 0a): while the writer has not taken the snapshot handed over, a new copy
+    // would only replace it unwritten. The table stays dirty; the next copy covers it.
+    if store.handoff_waiting() {
+        return None;
+    }
     let mut state = table
         .dirty()
-        .then(|| table.take_persisted(block_table::local_ms()))?;
+        .then(|| table.take_persisted_unsorted(block_table::local_ms()))?;
     if let Some(registry) = REPLAY_FLOORS.get() {
         state.mesh_floors = registry.replay_floors();
     }
@@ -816,20 +821,46 @@ async fn submit_state<B: block_table::Blocklist>(
     Some(store.submit(state, now_ms()))
 }
 
-/// Submits the current state and waits (at most `wait`) until it, or anything newer, is on disk.
+/// Waits (at most `wait`) until this caller's change, made before the call, is on disk.
+///
+/// One copy per write (RC-2, ROADMAP 0a): a copy is taken only into a free handoff slot, and a
+/// generation handed over after the call began covers the change, since a copy is taken and
+/// numbered under the table lock the change was made under. Callers waiting together are
+/// covered by the first copy after the writer takes the previous one.
 async fn persist_now<B: block_table::Blocklist>(
     store: &StateStore,
     blocks: &SharedBlockTable<B>,
     wait: Duration,
 ) -> Result<(), String> {
-    let generation = match submit_state(store, blocks).await {
-        Some(g) => g,
-        None => store.submitted(),
+    let started = std::time::Instant::now();
+    let seen = store.submitted();
+    store.wait_handoff(wait).await;
+    let generation = {
+        let mut table = blocks.lock().await;
+        let submitted = store.submitted();
+        if submitted > seen || !table.dirty() {
+            // Covered by a later copy, or by the copy that left the table clean.
+            submitted
+        } else if !store.handoff_waiting() {
+            let mut state = table.take_persisted_unsorted(block_table::local_ms());
+            if let Some(registry) = REPLAY_FLOORS.get() {
+                state.mesh_floors = registry.replay_floors();
+            }
+            store.submit(state, now_ms())
+        } else {
+            // The writer has not taken the last handoff within `wait`: unknown, not durable.
+            return Err(format!(
+                "not yet durable after {} ms (the state writer is behind)",
+                wait.as_millis()
+            ));
+        }
     };
     if generation == 0 {
         return Ok(());
     }
-    store.wait_durable(generation, wait).await
+    store
+        .wait_durable(generation, wait.saturating_sub(started.elapsed()))
+        .await
 }
 
 async fn push_telemetry(msg: &str) {
@@ -2186,9 +2217,10 @@ async fn main() -> Result<(), anyhow::Error> {
                 }
                 outcome_stats.dropped += outcomes_dropped;
 
-                // ADR-4: this node's decisions and lifts survive a restart (<= 1 tick for detector
-                // decisions; operator decisions are written before they are answered).
-                // Never waits for the disk (R27-03): a slow write must not hold up expiry.
+                // ADR-4: this node's decisions and lifts survive a restart (<= 1 tick plus two
+                // writes for detector decisions; operator decisions are written before they are
+                // answered). Never waits for the disk (R27-03): a slow write must not hold up
+                // expiry; while the writer has not taken the last handoff this skips (RC-2).
                 let _ = submit_state(&state_store, &blocks).await;
 
                 // ADR-3 anti-entropy: a peer whose digest differs answers with its state.
@@ -2749,6 +2781,175 @@ mod tests {
                 .iter()
                 .any(|c| c.target == "198.51.100.110"));
         }
+    }
+
+    /// RC-2 (ROADMAP 0a): answers that wait for the disk share copies of the state. With the
+    /// writer held in its first write, eight operator decisions are answered one after another,
+    /// each after its own change. Each used to take its own copy under the table lock (nine
+    /// generations, the newest replacing the one before unwritten; a node at its bounds ticked
+    /// 0.88 s, docs/measurements/2026-11-06-tick-at-bounds). Now the first fills the free
+    /// handoff slot and the rest wait for the writer to take it: one more copy covers them all.
+    #[test]
+    fn answers_waiting_for_the_disk_share_one_copy_per_write() {
+        use std::sync::{Condvar, Mutex};
+        let path = std::path::PathBuf::from(temp_log("share-copies")).with_extension("json");
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        let gate = Arc::new((Mutex::new(false), Condvar::new()));
+        let held = gate.clone();
+        let write: Arc<state_store::WriteFn> = Arc::new(move |path, state| {
+            let open = held.0.lock().unwrap();
+            let (open, _) = held
+                .1
+                .wait_timeout_while(open, Duration::from_secs(10), |open| !*open)
+                .unwrap();
+            drop(open);
+            state_store::save_state(path, state)
+        });
+        let store = Arc::new(StateStore::with_writer(path.clone(), write));
+        let blocks = Arc::new(tokio::sync::Mutex::new(BlockTable::with_lists(
+            AcceptLists,
+            TtlPolicy {
+                base: Duration::from_secs(60),
+                max: Duration::from_secs(600),
+            },
+            1,
+        )));
+        fn target(i: usize) -> String {
+            format!("198.51.100.{}", 120 + i)
+        }
+        fn ban(table: &mut BlockTable<AcceptLists>, i: usize) {
+            table
+                .add_local(
+                    parse_target(&target(i)).unwrap(),
+                    block_table::ClaimKind::Operator,
+                    "answered after its write",
+                    block_table::local_ms(),
+                )
+                .unwrap();
+        }
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .enable_all()
+            .build()
+            .unwrap();
+        let answers = rt.block_on(async {
+            ban(&mut *blocks.lock().await, 0);
+            assert_eq!(submit_state(&store, &blocks).await, Some(1));
+            let deadline = std::time::Instant::now() + Duration::from_secs(5);
+            while store.handoff_waiting() && std::time::Instant::now() < deadline {
+                tokio::time::sleep(Duration::from_millis(5)).await;
+            }
+            assert!(
+                !store.handoff_waiting(),
+                "the writer took the first snapshot"
+            );
+            let mut answers = Vec::new();
+            for i in 1..=8 {
+                let (s, b) = (store.clone(), blocks.clone());
+                answers.push(tokio::spawn(async move {
+                    ban(&mut *b.lock().await, i);
+                    persist_now(&s, &b, Duration::from_secs(5)).await
+                }));
+                // Each change and its answer's submission happen before the next change.
+                tokio::time::sleep(Duration::from_millis(50)).await;
+            }
+            *gate.0.lock().unwrap() = true;
+            gate.1.notify_all();
+            let mut out = Vec::new();
+            for a in answers {
+                out.push(a.await.unwrap());
+            }
+            out
+        });
+        assert!(answers.iter().all(|a| a.is_ok()), "{answers:?}");
+        assert_eq!(
+            store.submitted(),
+            3,
+            "the first decision fills the free slot; one copy after the writer takes it covers the other seven"
+        );
+        let on_disk = state_store::read_state(&path).unwrap().unwrap();
+        for i in 0..=8 {
+            assert!(
+                on_disk.claims.iter().any(|c| c.target == target(i)),
+                "decision {i} answered before it was on disk"
+            );
+        }
+        std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    /// RC-2: a generation handed over after an answer's call began covers its change, even when
+    /// the table changed again since. Copying again there would replace that handoff unwritten,
+    /// and with the slot full the answer would say the writer is behind.
+    #[test]
+    fn a_later_copy_covers_an_answer_although_the_table_changed_again() {
+        use std::sync::{Condvar, Mutex};
+        let path = std::path::PathBuf::from(temp_log("covered-later")).with_extension("json");
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        let gate = Arc::new((Mutex::new(false), Condvar::new()));
+        let held = gate.clone();
+        let write: Arc<state_store::WriteFn> = Arc::new(move |path, state| {
+            let open = held.0.lock().unwrap();
+            let (open, _) = held
+                .1
+                .wait_timeout_while(open, Duration::from_secs(10), |open| !*open)
+                .unwrap();
+            drop(open);
+            state_store::save_state(path, state)
+        });
+        let store = Arc::new(StateStore::with_writer(path.clone(), write));
+        let blocks = Arc::new(tokio::sync::Mutex::new(BlockTable::with_lists(
+            AcceptLists,
+            TtlPolicy {
+                base: Duration::from_secs(60),
+                max: Duration::from_secs(600),
+            },
+            1,
+        )));
+        let ban = |table: &mut BlockTable<AcceptLists>, last: u8| {
+            table
+                .add_local(
+                    parse_target(&format!("198.51.100.{last}")).unwrap(),
+                    block_table::ClaimKind::Operator,
+                    "covered",
+                    block_table::local_ms(),
+                )
+                .unwrap();
+        };
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .enable_all()
+            .build()
+            .unwrap();
+        let answer = rt.block_on(async {
+            let mut table = blocks.lock().await;
+            ban(&mut table, 140);
+            // The answer reads its generation and waits for the table lock held here.
+            let (s, b) = (store.clone(), blocks.clone());
+            let answer =
+                tokio::spawn(async move { persist_now(&s, &b, Duration::from_secs(5)).await });
+            tokio::time::sleep(Duration::from_millis(200)).await;
+            // A copy taken after the answer's call began, then another change.
+            store.submit(
+                table.take_persisted_unsorted(block_table::local_ms()),
+                now_ms(),
+            );
+            ban(&mut table, 141);
+            assert!(table.dirty());
+            drop(table);
+            tokio::time::sleep(Duration::from_millis(100)).await;
+            *gate.0.lock().unwrap() = true;
+            gate.1.notify_all();
+            answer.await.unwrap()
+        });
+        assert_eq!(answer, Ok(()));
+        assert_eq!(
+            store.submitted(),
+            1,
+            "the covered answer took no copy of its own"
+        );
+        let on_disk = state_store::read_state(&path).unwrap().unwrap();
+        assert!(on_disk.claims.iter().any(|c| c.target == "198.51.100.140"));
+        std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
     /// ADR-0018: a node that does not share its own claims (observe mode) sends a peer nothing
