@@ -119,6 +119,71 @@ ticks over 0.5 s, RSS 1.86 GB.
 
 Both are open in ROADMAP 0a.
 
+## 3b. Spaced copies (r6, 2026-11-07), and the allocator (r5)
+
+Copies for the writer now start at least `COPY_SPACING` (4) times the last copy's length after it
+started (`StateStore::copy_due_in`). Copies therefore hold the table lock at most a quarter of the
+time, and a tick shorter than that gap either copies or waits behind one copy, not both
+(`copies_are_spaced_by_their_length`). r6 is r3's run on that build, `260fedb` (`build 260fedb5e5d9`).
+
+| | r3 | r4 | r5: r4 with `MALLOC_ARENA_MAX=2` | **r6: spaced** |
+|---|---|---|---|---|
+| `interdict_tick_seconds_max` | 0.881 s | 0.631 s | 0.828 s | **0.392 s** (in the hold) |
+| Tick in the hold, sampled: p50 / p99 | 0.321 / 0.755 s | 0.074 / 0.347 s | 0.141 / 0.634 s | **0.010 / 0.285 s** |
+| Sampled hold ticks over 0.5 s | 82 | 1 | 21 | **0** |
+| Retractions in 600 s; round trip p50 / max | 4 647; 422 / 869 ms | 8 023; 274 / 550 ms | 5 507; 348 / 835 ms | 4 616; 516 / 942 ms |
+| Signal round trip in the hold: p99 | 232 ms | 96 ms | 175 ms | **41 ms** |
+| RSS in the hold, at most | 1 921 MB | 1 499 MB | 916 MB | 1 047 MB |
+
+- **The claim bound is within S7 now.** With the claim table full and changed by retractions, no
+  tick reached 500 ms. The longest was 0.392 s. Retractions are answered more slowly than in r4,
+  since copies wait out their spacing. All answers stay within `DURABLE_WAIT` (2 s): at most
+  0.942 s.
+- **The allocator (r5).** With two malloc arenas instead of one per thread, RSS stayed at 916 MB,
+  within §4's derivation (≈ 966 MB here). That is evidence that r4's 1.5 GB was heap kept per
+  thread. But the tick got slower: 21 ticks over 0.5 s and 0.828 s at most. So it is not a fix.
+  r6's spacing alone took RSS to 1.05 GB.
+- **Every bound is not shown.** `measure_memory_at_all_bounds` now times, at every bound, what
+  the tick does with the table: a copy 0.236 s, `digest` (every 15 s) 0.120 s, `tick()` (expiry,
+  kernel retries) 0.010 s, the gauges under 1 ms (the same run: lock 0.236 s, writer 0.577 s).
+  r6's longest tick, less the digest and one copy at r6's size (≈ 0.085 s), leaves ≈ 0.19 s
+  that is not table work. Adding up: 0.236 + 0.120 + 0.19 ≈ 0.54 s at every bound. That is an
+  estimate past S7, not a measurement. The ≈ 0.19 s has no named cause yet, and finding it is the
+  next step of ROADMAP 0a.
+
+## 3c. The digest off the tick (r7, r8, 2026-11-07)
+
+**r7.** A diagnostic build of `9f52a71` (not committed; `version.txt` says `-dirty`) printed the
+phases of every tick over 0.25 s (`r7/tick-phases.txt`). All 15 such ticks were digest ticks. Each
+was the digest (133–180 ms) plus one copy of the state: either the tick's own (`submit`, 118–145
+ms) or another's the tick waited behind (`active` or `table_tick`, 108–185 ms). §3b's "≈ 0.19 s not
+table work" was that copy, larger in the running node than its in-process share (≈ 0.085 s).
+
+**What changed.** At every bound, collecting the digest's ids takes 24 ms and cloning them 21 ms.
+Sorting them takes 63 ms and hashing 46 ms (one BLAKE3 update per id; measured once with a
+temporary probe in `measure_memory_at_all_bounds`). Now the tick takes the ids under the lock
+(`BlockTable::digest_ids`). It hands sorting, hashing and the broadcast to a task of their own
+(`block_table::digest_from`): an unstable sort, since ids are distinct map keys, and one hash over
+the concatenation, the same bytes in the same order. The digest the mesh compares is unchanged
+(`the_digest_is_the_hash_of_the_ids_in_order`).
+
+**r8** is r6's run on that build, `3c91f2e` (`build 3c91f2e0f087`):
+
+| | r6 | **r8** |
+|---|---|---|
+| `interdict_tick_seconds_max` over the whole run | 0.392 s | **0.172 s** (0.159 s at the end of the fill) |
+| Tick in the hold, sampled: p50 / p99 / max | 0.010 / 0.285 / 0.392 s | **0.010 / 0.153 / 0.172 s** |
+| Sampled hold ticks over 0.25 s | – | **0** |
+| Signal round trip in the hold: p99 / max | 41 / 137 ms | **11 / 20 ms** |
+| Retractions in 600 s; round trip p50 / max | 4 616; 516 / 942 ms | 4 552; 527 / 664 ms |
+| RSS in the hold, at most | 1 047 MB | 1 205 MB |
+
+The longest tick is now one copy plus the ids. At every bound the copy holds the lock 0.236 s
+in process (`measure_memory_at_all_bounds`), and the copies here ran 1.3–1.6 times their in-process
+share. That gives an estimate of 0.36–0.42 s at every bound, within S7, but still an estimate. Every
+table at its bound in a running node needs peers (lease records) and lifted claims (retraction
+records), which this harness does not make.
+
 ## 4. Memory: the state hand-off is not in the RSS ceiling
 
 `measure_memory_at_all_bounds` now prints the heap of the copy taken under the lock. At every
@@ -157,5 +222,5 @@ bound:
 ## Files
 
 - `drive.py`, `run.sh`: the driver and its harness.
-- `r1/`, `r2/`, `r3/`, `r4/`: `samples.csv`, `latency.json`, `replies.json`, `final-tick.txt`,
+- `r1/` … `r8/` (r7 also `tick-phases.txt`): `samples.csv`, `latency.json`, `replies.json`, `final-tick.txt`,
   `state-file.txt` and `version.txt` of each run.

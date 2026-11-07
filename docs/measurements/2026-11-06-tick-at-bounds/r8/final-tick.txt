@@ -1,0 +1,2 @@
+interdict_tick_seconds 0.011005
+interdict_tick_seconds_max 0.172092
