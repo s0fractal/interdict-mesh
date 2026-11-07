@@ -169,9 +169,16 @@ What to plan with:
   (`measure_memory_at_all_bounds`;
   [measurement](measurements/2026-11-06-tick-at-bounds/README.md) §4: a node at its claim bound
   rose to 733 MB). Elsewhere that is about 4.3 times the state file's size. A table that does not
-  change hands nothing over. **Not bounded yet:** a stream of detector retractions or operator
-  commands at the bounds, each of which copies the state for its own answer, took a node to
-  1.92 GB (same measurement, §3; ROADMAP 0a).
+  change hands nothing over.
+- **Measured in a two-node mesh, plan 2.2 GiB.** Two nodes with every table a running node
+  reaches at its bound (claims, own and one peer's whole share; event ids, strikes, support; the
+  kernel map and pending blocks; leases), 16 detector connections each retracting and replacing
+  claims for 30 minutes, reached 1.69–1.75 GB (the measured node) and 2.01–2.11 GB (its peer)
+  ([measurement](measurements/2026-11-07-tick-at-every-bound/README.md)). That is over the sum
+  above: glibc gives each thread that allocates its own arena and keeps what it frees there. With
+  `MALLOC_ARENA_MAX=2` in the unit's environment the same runs stayed at 0.78–0.82 GB, but the
+  longest tick rose from 0.22 to 0.33 s; the unit leaves the allocator at its default, because
+  the tick's margin to S7 is the RC-2 condition.
 - **State file** ≤ **228 MiB** with reasons of plain text (all own claims with 512-byte reasons,
   every record kept), plus 44 B per mesh sender (at most 4 096). A reason the writer must escape
   can make it longer, up to the reader's limit `MAX_STATE_BYTES` (981 MiB).

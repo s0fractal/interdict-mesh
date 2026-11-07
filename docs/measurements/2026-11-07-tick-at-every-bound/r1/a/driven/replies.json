@@ -1,0 +1,7 @@
+{
+ "OK applied": 101235,
+ "OK lifted": 45571,
+ "OK pending": 145460,
+ "OK recorded before its signal": 72459,
+ "OK refused too many known claims": 24866
+}
