@@ -218,8 +218,9 @@ condition is still open (measurement §3a).
 times the last one's length after it. Copies then hold the table lock at most a quarter of the
 time, and a tick either copies or waits behind one. With the claim table at its bound under
 retractions, the longest tick was 0.392 s and none passed S7 (measurement §3b). The condition
-names every bound. There a copy takes 0.218 s, and r6's parts add up to an estimated ≈ 0.52 s, so
-it stays open until the tick's own work under that load is measured lower.
+names every bound. There a copy takes 0.22–0.24 s and the digest 0.12 s, and with the ≈ 0.19 s
+of r6's longest tick that is not table work, an estimated ≈ 0.54 s. So the condition stays open
+until that remainder is named and measured lower.
 The same runs showed that the RSS ceiling of RUNBOOK §4 left out the state writer's copies. The
 runbook now adds them for one hand-off per tick and names the retraction case as unbounded until
 the copies are coalesced.

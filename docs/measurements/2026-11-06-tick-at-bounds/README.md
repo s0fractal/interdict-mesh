@@ -143,11 +143,13 @@ time, and a tick shorter than that gap either copies or waits behind one copy, n
   within §4's derivation (≈ 966 MB here). That is evidence that r4's 1.5 GB was heap kept per
   thread. But the tick got slower: 21 ticks over 0.5 s and 0.828 s at most. So it is not a fix.
   r6's spacing alone took RSS to 1.05 GB.
-- **Every bound is not shown.** At every bound a copy holds the lock 0.218 s, not about 0.085 s
-  (`measure_memory_at_all_bounds`). Adding the difference to r6's longest tick estimates
-  ≈ 0.52 s, past S7 by about 20 ms. This is an estimate, not a measurement. What is left is the
-  tick's own work under load (≈ 0.3 s: expiry, kernel retries, the digest). It is the next lever
-  of ROADMAP 0a.
+- **Every bound is not shown.** `measure_memory_at_all_bounds` now times, at every bound, what
+  the tick does with the table: a copy 0.236 s, `digest` (every 15 s) 0.120 s, `tick()` (expiry,
+  kernel retries) 0.010 s, the gauges under 1 ms (the same run: lock 0.236 s, writer 0.577 s).
+  r6's longest tick, less the digest and one copy at r6's size (≈ 0.085 s), leaves ≈ 0.19 s
+  that is not table work. Adding up: 0.236 + 0.120 + 0.19 ≈ 0.54 s at every bound. That is an
+  estimate past S7, not a measurement. The ≈ 0.19 s has no named cause yet, and finding it is the
+  next step of ROADMAP 0a.
 
 ## 4. Memory: the state hand-off is not in the RSS ceiling
 

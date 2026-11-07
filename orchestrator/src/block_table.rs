@@ -3984,6 +3984,29 @@ mod tests {
             }
         });
         let rss_after = rss_kb();
+        // What a maintenance tick does with the table besides the state copy (main.rs), each
+        // under its own lock: expiry and kernel retries, the gauges, and every 15 s the digest.
+        let timed = |f: &mut dyn FnMut()| {
+            let started = std::time::Instant::now();
+            f();
+            started.elapsed()
+        };
+        let tick = timed(&mut || {
+            t.tick(at);
+        });
+        let gauges = timed(&mut || {
+            let _ = (
+                t.active_by_family(),
+                t.pending(),
+                t.oldest_pending(at),
+                t.event_memory(),
+                t.strike_memory(),
+                t.waiting_claims(at),
+            );
+        });
+        let digest = timed(&mut || {
+            let _ = t.digest(at);
+        });
         // submit_state holds the table lock for take_persisted_unsorted only; the writer thread
         // sorts and serializes.
         let copy_before = crate::heap_count::live();
@@ -4006,7 +4029,7 @@ mod tests {
         );
         std::fs::remove_file(&path).unwrap();
         println!(
-            "{share} % of all bounds | heap {heap} bytes | RSS +{} kB | state file {} bytes | copy taken under the lock {copy_heap} heap bytes | take_persisted_unsorted under the lock {:?} | writer (sort, serialize, write, fsync, rename) {:?}",
+            "{share} % of all bounds | heap {heap} bytes | RSS +{} kB | state file {} bytes | copy taken under the lock {copy_heap} heap bytes | take_persisted_unsorted under the lock {:?} | writer (sort, serialize, write, fsync, rename) {:?} | tick {tick:?} | gauges {gauges:?} | digest {digest:?}",
             rss_after.zip(rss_before).map_or(-1, |(a, b)| a - b),
             bytes.len(),
             locked,

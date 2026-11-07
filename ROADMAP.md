@@ -108,8 +108,9 @@ native-NIC і не польовий пілот.
    (measurement §3a). **Spaced copies, 2026-11-07:** a copy starts at least 4 times the last one's
    length after it (`COPY_SPACING`). With the claim table full under retractions, no tick reached
    S7, and the longest was 0.392 s (measurement §3b). Every bound at once is estimated at
-   ≈ 0.52 s, not measured. Left:
-   - the tick's own work under load at the bounds (≈ 0.3 s: expiry, kernel retries, the digest);
+   ≈ 0.54 s, not measured. Of the tick's table work, at every bound the digest is 0.12 s and the
+   rest 0.01 s. Left:
+   - the ≈ 0.19 s of r6's longest tick that is not table work;
    - then the RC-2 campaign (`--profile long`).
 1. **Native NIC** на цільовому залізі — єдине, що лишилося в P4 з технічного боку:
    pps, затримка, CPU і поведінка `auto` на драйвері карти. Потрібна фізична
