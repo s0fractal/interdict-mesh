@@ -88,8 +88,36 @@ others. The allocator keeps that heap resident, so RSS rose by 1.3 GB within a m
 
 What would bound it: take at most one copy per write of the state writer. A caller that finds
 the writer behind waits for it and is then covered by the next copy (a group commit), and the
-tick skips its copy while the writer is behind. That is the remaining work of ROADMAP 0a. It is not
-in this measurement.
+tick skips its copy while the writer is behind. §3a measures that change.
+
+## 3a. One copy per write (r4, 2026-11-07)
+
+`persist_now` and the tick now copy only into a free handoff slot. A caller that finds the writer
+behind waits for it, and a generation handed over after its call began covers its change
+(`answers_waiting_for_the_disk_share_one_copy_per_write`: eight answers, 3 generations instead
+of 9). r4 is r3's run on that build, `c77909f` (`build c77909f4e29f`). A second run of r3's code
+(`build 1cefcdd6504e`, the same node code) reproduced r3: 0.860 s at most, 80 of 596 sampled
+ticks over 0.5 s, RSS 1.86 GB.
+
+| | r3 (a copy per answer) | r4 (one copy per write) |
+|---|---|---|
+| Claims held in the hold | 262 144 in every sample | 262 144 in every sample |
+| Retractions answered in 600 s | 4 647 | **8 023** |
+| Retraction round trip: p50 / p99 / max | 422 / 759 / 869 ms | **274 / 437 / 550 ms** |
+| Signal round trip in the hold: p50 / p99 / max | 93 / 232 / 304 ms | **2 / 96 / 141 ms** |
+| Tick in the hold, sampled: p50 / p90 / p99 / max | 0.321 / 0.547 / 0.755 / 0.881 s | **0.074 / 0.183 / 0.347 / 0.510 s** |
+| Sampled hold ticks over 0.5 s | 82 of 597 | **1 of 596** |
+| `interdict_tick_seconds_max` | 0.881 s | **0.631 s** |
+| RSS in the hold, at most | 1 921 MB | **1 499 MB** |
+
+**Still not within S7.** The longest tick was 0.631 s.
+- Copies are now one per write of the state writer, but each still holds the table lock, about
+  85 ms at this size. The tick takes the lock several times (expiry, kernel retries, the
+  hand-off, the digest), and one of them can come after a copy.
+- RSS stays above the derivation of §4. The copies are taken on whichever tokio worker thread
+  answers, and the allocator keeps each thread's freed heap. This is not measured further here.
+
+Both are open in ROADMAP 0a.
 
 ## 4. Memory: the state hand-off is not in the RSS ceiling
 
@@ -129,5 +157,5 @@ bound:
 ## Files
 
 - `drive.py`, `run.sh`: the driver and its harness.
-- `r1/`, `r2/`, `r3/`: `samples.csv`, `latency.json`, `replies.json`, `final-tick.txt`,
+- `r1/`, `r2/`, `r3/`, `r4/`: `samples.csv`, `latency.json`, `replies.json`, `final-tick.txt`,
   `state-file.txt` and `version.txt` of each run.

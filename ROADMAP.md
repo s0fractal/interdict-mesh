@@ -102,8 +102,13 @@ native-NIC і не польовий пілот.
    amendment). **Second half measured 2026-11-06, not met:** a node held at its claim bound while a detector
    retracted 7.7 times a second ticked up to 0.88 s, past S7, because each retraction's answer copies
    the whole state under the table lock ([measurement](docs/measurements/2026-11-06-tick-at-bounds/README.md)).
-   Left: at most one copy per state write (a group commit for `persist_now`, the tick skipping
-   its copy while the writer is behind), measured again; then the RC-2 campaign (`--profile long`).
+   **One copy per state write, 2026-11-07:** `persist_now` and the tick copy only into a free
+   handoff slot, so callers waiting together share a copy. On the same run, ticks over 0.5 s went
+   from 82 to 1 of about 600 and RSS from 1.92 to 1.50 GB, but the longest tick was still 0.631 s
+   (measurement §3a). Left:
+   - the tick's own waits for the lock behind a copy;
+   - the copies' heap kept per thread;
+   - then the RC-2 campaign (`--profile long`).
 1. **Native NIC** на цільовому залізі — єдине, що лишилося в P4 з технічного боку:
    pps, затримка, CPU і поведінка `auto` на драйвері карти. Потрібна фізична
    Linux-машина з XDP-native картою (ixgbe, i40e, ice, mlx5) і джерело трафіку.

@@ -208,6 +208,11 @@ was driven over its detector IPC to `MAX_KNOWN_CLAIMS` (121 s at 2 000 lines/s) 
 
 The condition stays open. What it needs is at most one copy per write: a caller that finds the
 writer behind waits and is covered by the next copy, and the tick skips its copy meanwhile.
+
+**Amendment 2026-11-07.** That change was made: `persist_now` and the tick copy only into a free
+handoff slot. In the same run (claims at their bound, retractions), ticks over 0.5 s fell from 82
+to 1 of about 600, and 73 % more retractions were answered. The longest tick was 0.631 s, so the
+condition is still open (measurement §3a).
 The same runs showed that the RSS ceiling of RUNBOOK §4 left out the state writer's copies. The
 runbook now adds them for one hand-off per tick and names the retraction case as unbounded until
 the copies are coalesced.
