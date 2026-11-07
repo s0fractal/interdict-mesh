@@ -2245,11 +2245,20 @@ async fn main() -> Result<(), anyhow::Error> {
                 let _ = submit_state(&state_store, &blocks).await;
 
                 // ADR-3 anti-entropy: a peer whose digest differs answers with its state.
+                // The ids are taken under the lock; sorting, hashing and sending run off the
+                // tick (RC-2: at every bound they are 0.1 s of a 0.13 s digest).
                 if last_digest.elapsed() >= mesh_sync::DIGEST_INTERVAL {
                     last_digest = std::time::Instant::now();
-                    let digest = blocks.lock().await.digest(block_table::local_ms());
-                    let cmd = MeshCommand::Digest { issuer: node_id_tick, digest };
-                    let _ = registry_tick.broadcast(&cmd, node_id_tick, &crypto_tick).await;
+                    let ids = blocks
+                        .lock()
+                        .await
+                        .digest_ids(block_table::local_ms());
+                    let (registry, crypto) = (registry_tick.clone(), crypto_tick.clone());
+                    tokio::spawn(async move {
+                        let digest = block_table::digest_from(ids);
+                        let cmd = MeshCommand::Digest { issuer: node_id_tick, digest };
+                        let _ = registry.broadcast(&cmd, node_id_tick, &crypto).await;
+                    });
                 }
 
                 // ADR-0022 (opt-in): the durable head as a statement for an external stamp.

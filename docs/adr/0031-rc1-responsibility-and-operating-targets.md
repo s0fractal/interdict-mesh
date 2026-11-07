@@ -221,6 +221,14 @@ retractions, the longest tick was 0.392 s and none passed S7 (measurement §3b).
 names every bound. There a copy takes 0.22–0.24 s and the digest 0.12 s, and with the ≈ 0.19 s
 of r6's longest tick that is not table work, an estimated ≈ 0.54 s. So the condition stays open
 until that remainder is named and measured lower.
+
+**Amendment 2026-11-07, the digest.** Instrumented, every tick over 0.25 s was the 15-second
+digest (0.13–0.18 s under the lock) plus one copy. The ≈ 0.19 s above was that copy. The tick now
+takes only the digest's ids under the lock and hashes them off the tick, with the digest itself
+unchanged. At the claim bound under retractions the longest tick was 0.172 s. At every bound one
+copy (0.236 s in process, up to 1.6 times that in a running node) and the ids give an estimate of
+0.36–0.42 s. The condition stays open only until every table is at its bound in a running node,
+which needs peers, and that run measures it.
 The same runs showed that the RSS ceiling of RUNBOOK §4 left out the state writer's copies. The
 runbook now adds them for one hand-off per tick and names the retraction case as unbounded until
 the copies are coalesced.

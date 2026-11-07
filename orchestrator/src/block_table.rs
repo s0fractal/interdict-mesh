@@ -344,6 +344,15 @@ pub const OWN_RESERVE: usize = common::BLOCKLIST_CAPACITY as usize;
 #[cfg(test)]
 pub const PEER_MAX_KNOWN_DEFAULT: usize = common::BLOCKLIST_CAPACITY as usize;
 
+/// The digest of claim ids: BLAKE3 over the ids in ascending order, concatenated. Ids are
+/// distinct map keys, so an unstable sort gives the one order; hashing the concatenation in one
+/// call is the same as one update per id.
+pub fn digest_from(mut ids: Vec<ClaimId>) -> String {
+    ids.sort_unstable();
+    let joined: Vec<u8> = ids.iter().flat_map(|id| id.as_bytes()).copied().collect();
+    blake3::hash(&joined).to_hex().to_string()
+}
+
 /// Why `adopt` refuses a claim of a peer that has used its known-claims share (ADR-0025).
 pub const PEER_SHARE_FULL: &str = "peer known-claims share full";
 
@@ -2131,23 +2140,35 @@ impl<B: Blocklist> BlockTable<B> {
     /// sends the digest of its own claims; a peer whose view of them differs asks it for a
     /// snapshot.
     pub fn digest_of(&self, issuer: u64, now_ms: u64) -> String {
-        let mut ids: Vec<&ClaimId> = self
-            .claims
-            .iter()
-            .filter(|(id, h)| h.claim.issuer == issuer && self.shared(id, h, now_ms))
-            .map(|(id, _)| id)
-            .collect();
-        ids.sort();
-        let mut hasher = blake3::Hasher::new();
-        for id in ids {
-            hasher.update(id.as_bytes());
-        }
-        hasher.finalize().to_hex().to_string()
+        digest_from(self.digest_ids_of(issuer, now_ms))
     }
 
-    /// Digest of this node's own shared claims.
+    /// The ids `digest_of` hashes, unsorted: the part that needs the table (RC-2). The tick takes
+    /// these under the lock and leaves sorting and hashing to [`digest_from`] off it.
+    pub fn digest_ids_of(&self, issuer: u64, now_ms: u64) -> Vec<ClaimId> {
+        self.claims
+            .iter()
+            .filter(|(id, h)| h.claim.issuer == issuer && self.shared(id, h, now_ms))
+            .map(|(id, _)| id.clone())
+            .collect()
+    }
+
+    /// Digest of this node's own shared claims. Not `cfg(test)`: pinned witnesses reach it, and
+    /// a test item they reach is part of their pins.
+    #[cfg_attr(
+        not(test),
+        allow(
+            dead_code,
+            reason = "the tick takes digest_ids and hashes off the lock"
+        )
+    )]
     pub fn digest(&self, now_ms: u64) -> String {
-        self.digest_of(self.node_id, now_ms)
+        digest_from(self.digest_ids(now_ms))
+    }
+
+    /// The ids of this node's own shared claims, unsorted ([`digest_from`] hashes them).
+    pub fn digest_ids(&self, now_ms: u64) -> Vec<ClaimId> {
+        self.digest_ids_of(self.node_id, now_ms)
     }
 
     /// Whether the durable part changed since the last [`Self::take_persisted`].
@@ -4060,6 +4081,28 @@ mod tests {
                 .iter()
                 .all(|n| n.digest_of(issuer.node_id, now) == own)
         })
+    }
+
+    /// RC-2: `digest_from` (sort_unstable, one hash over the concatenation) gives the digest the
+    /// mesh has always compared: one BLAKE3 update per id in ascending order. Peers on either
+    /// side of an upgrade must agree, or every digest exchange asks for a snapshot.
+    #[test]
+    fn the_digest_is_the_hash_of_the_ids_in_order() {
+        let ids: Vec<ClaimId> = (0..2000u32)
+            .rev()
+            .map(|i| blake3::hash(&i.to_le_bytes()).to_hex().to_string())
+            .collect();
+        let mut sorted = ids.clone();
+        sorted.sort();
+        let mut hasher = blake3::Hasher::new();
+        for id in &sorted {
+            hasher.update(id.as_bytes());
+        }
+        assert_eq!(digest_from(ids), hasher.finalize().to_hex().to_string());
+        assert_eq!(
+            digest_from(Vec::new()),
+            blake3::Hasher::new().finalize().to_hex().to_string()
+        );
     }
 
     #[test]
