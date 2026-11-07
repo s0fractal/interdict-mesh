@@ -1,0 +1,17 @@
+# r7: a diagnostic build of 9f52a71 (not committed) that printed each phase of every tick over 0.25 s
+# (time from the previous mark; a phase includes its wait for the table lock). All 15 such ticks, longest first.
+TICKPH total=351ms table_tick=7ms outcomes=0ms submit=0ms digest=158ms anchor_audithead=0ms heartbeat=0ms xdp_stats=0ms active=185ms before_tick_secs=0ms
+TICKPH total=315ms table_tick=8ms outcomes=0ms submit=145ms digest=158ms anchor_audithead=0ms heartbeat=0ms xdp_stats=0ms active=1ms before_tick_secs=2ms
+TICKPH total=312ms table_tick=10ms outcomes=0ms submit=0ms digest=180ms anchor_audithead=0ms heartbeat=0ms xdp_stats=0ms active=122ms before_tick_secs=0ms
+TICKPH total=286ms table_tick=21ms outcomes=0ms submit=0ms digest=156ms anchor_audithead=0ms heartbeat=0ms xdp_stats=0ms active=108ms before_tick_secs=0ms
+TICKPH total=283ms table_tick=7ms outcomes=0ms submit=0ms digest=140ms anchor_audithead=0ms heartbeat=0ms xdp_stats=0ms active=135ms before_tick_secs=0ms
+TICKPH total=281ms table_tick=139ms outcomes=0ms submit=0ms digest=140ms anchor_audithead=0ms heartbeat=0ms xdp_stats=0ms active=1ms before_tick_secs=0ms
+TICKPH total=279ms table_tick=138ms outcomes=0ms submit=0ms digest=137ms anchor_audithead=0ms heartbeat=0ms xdp_stats=0ms active=3ms before_tick_secs=0ms
+TICKPH total=278ms table_tick=24ms outcomes=0ms submit=0ms digest=140ms anchor_audithead=0ms heartbeat=0ms xdp_stats=0ms active=114ms before_tick_secs=0ms
+TICKPH total=272ms table_tick=14ms outcomes=0ms submit=0ms digest=148ms anchor_audithead=0ms heartbeat=0ms xdp_stats=0ms active=110ms before_tick_secs=0ms
+TICKPH total=270ms table_tick=18ms outcomes=0ms submit=0ms digest=142ms anchor_audithead=0ms heartbeat=0ms xdp_stats=0ms active=110ms before_tick_secs=0ms
+TICKPH total=264ms table_tick=8ms outcomes=0ms submit=118ms digest=136ms anchor_audithead=0ms heartbeat=0ms xdp_stats=0ms active=0ms before_tick_secs=1ms
+TICKPH total=261ms table_tick=17ms outcomes=0ms submit=0ms digest=136ms anchor_audithead=0ms heartbeat=0ms xdp_stats=0ms active=108ms before_tick_secs=0ms
+TICKPH total=260ms table_tick=14ms outcomes=0ms submit=0ms digest=133ms anchor_audithead=0ms heartbeat=0ms xdp_stats=0ms active=113ms before_tick_secs=0ms
+TICKPH total=260ms table_tick=118ms outcomes=0ms submit=0ms digest=142ms anchor_audithead=0ms heartbeat=0ms xdp_stats=0ms active=0ms before_tick_secs=0ms
+TICKPH total=259ms table_tick=11ms outcomes=0ms submit=0ms digest=140ms anchor_audithead=0ms heartbeat=0ms xdp_stats=0ms active=108ms before_tick_secs=0ms

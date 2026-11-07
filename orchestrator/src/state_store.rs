@@ -24,6 +24,10 @@ use crate::block_table::Persisted;
 pub const DURABLE_WAIT: Duration = Duration::from_secs(2);
 /// A change not durable after this long makes the node DEGRADED.
 pub const STALE_AFTER: Duration = Duration::from_secs(5);
+/// A copy of the state for the writer starts at least this many times its predecessor's
+/// duration after that one started, so copies hold the table lock at most a quarter of the time
+/// and a maintenance tick shorter than the gap waits behind at most one (RC-2, ROADMAP 0a).
+pub const COPY_SPACING: u32 = 4;
 /// Retry timeout while no wake arrives; a buffered wake can cause an earlier retry.
 const RETRY_AFTER: Duration = Duration::from_secs(1);
 
@@ -74,6 +78,8 @@ struct Shared {
     latest: Mutex<Option<Snapshot>>,
     /// Signalled when a snapshot is handed over and when the writer takes it (`wait_handoff`).
     handoff_tx: tokio::sync::watch::Sender<()>,
+    /// When the last copy for the writer started and how long it took (`copy_due_in`).
+    last_copy: Mutex<Option<(std::time::Instant, Duration)>>,
 }
 
 pub struct StateStore {
@@ -102,6 +108,7 @@ impl StateStore {
             durable_tx,
             latest: Mutex::new(None),
             handoff_tx,
+            last_copy: Mutex::new(None),
         });
         let (writer_shared, writer_path) = (shared.clone(), path.clone());
         std::thread::Builder::new()
@@ -146,8 +153,32 @@ impl StateStore {
         self.shared
             .latest
             .lock()
-            .unwrap_or_else(|p| p.into_inner())
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
             .is_some()
+    }
+
+    /// Records a copy taken for the writer: started at `started`, took `took`.
+    pub fn copied(&self, started: std::time::Instant, took: Duration) {
+        *self
+            .shared
+            .last_copy
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner) = Some((started, took));
+    }
+
+    /// How long until the next copy may start (`COPY_SPACING`); zero when it may now.
+    pub fn copy_due_in(&self, now: std::time::Instant) -> Duration {
+        match *self
+            .shared
+            .last_copy
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+        {
+            Some((started, took)) => {
+                (started + took.saturating_mul(COPY_SPACING)).saturating_duration_since(now)
+            }
+            None => Duration::ZERO,
+        }
     }
 
     /// Waits, at most `wait`, until the writer has taken the snapshot handed over.
