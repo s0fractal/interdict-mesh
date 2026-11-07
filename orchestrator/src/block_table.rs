@@ -349,8 +349,7 @@ pub const PEER_MAX_KNOWN_DEFAULT: usize = common::BLOCKLIST_CAPACITY as usize;
 /// call is the same as one update per id.
 pub fn digest_from(mut ids: Vec<ClaimId>) -> String {
     ids.sort_unstable();
-    let joined: Vec<u8> = ids.iter().flat_map(|id| id.as_bytes()).copied().collect();
-    blake3::hash(&joined).to_hex().to_string()
+    blake3::hash(ids.concat().as_bytes()).to_hex().to_string()
 }
 
 /// Why `adopt` refuses a claim of a peer that has used its known-claims share (ADR-0025).
