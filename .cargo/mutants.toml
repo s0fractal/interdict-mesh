@@ -47,6 +47,11 @@ exclude_re = [
     # The FastNetMon hook's process entry only passes its arguments to notify(), whose paths
     # the tests run as a child process (tests::hook).
     "bin/interdict-fastnetmon-notify.rs:\\d+:\\d+: replace main with \\(\\)$",
+    # The settle bound of a held audit lock: `<` and `<=` differ only at an elapsed time of
+    # exactly LOCK_SETTLE, one more try at a lock that has been held 100 ms. The bound itself is
+    # caught both ways (a_lock_released_while_other_threads_spawn_is_taken_again,
+    # a_second_writer_is_refused_while_the_first_holds_the_log).
+    "audit_log\\.rs:\\d+:\\d+: replace < with <= in AuditLog::open_with$",
     # Directory fsync for durability; not observable without crash injection.
     "in sync_dir",
     # An offset while the clock has not stepped: 0 and +-1 ms are indistinguishable from it.
