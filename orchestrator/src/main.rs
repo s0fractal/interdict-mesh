@@ -862,6 +862,13 @@ async fn persist_now<B: block_table::Blocklist>(
         if submitted > seen || !table.dirty() {
             // Covered by a later copy, or by the copy that left the table clean.
             submitted
+        } else if !store.copy_due_in(std::time::Instant::now()).is_zero() {
+            // The spacing outlasts `wait` (Codex finding 273bcf5d on #83): copying now would
+            // break it. Unknown, not durable; the table stays dirty for the next copy.
+            return Err(format!(
+                "not yet durable after {} ms (the next copy is not due yet)",
+                wait.as_millis()
+            ));
         } else if !store.handoff_waiting() {
             let mut state = take_copy(store, &mut table);
             if let Some(registry) = REPLAY_FLOORS.get() {
@@ -3041,6 +3048,55 @@ mod tests {
         });
         let on_disk = state_store::read_state(&path).unwrap().unwrap();
         assert!(on_disk.claims.iter().any(|c| c.target == "198.51.100.150"));
+        std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    /// RC-2: an answer whose wait ends before the next copy is due does not copy early. After a
+    /// copy that took one second, the next may start four seconds after it began; an answer
+    /// waiting two seconds says its outcome is unknown and leaves the change for that copy
+    /// (Codex finding 273bcf5d on #83: it copied at 3.003 s).
+    #[test]
+    fn an_answer_that_cannot_wait_for_the_spacing_does_not_copy_early() {
+        let path = std::path::PathBuf::from(temp_log("spacing-deadline")).with_extension("json");
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        let store = StateStore::new(path.clone());
+        let blocks = Arc::new(tokio::sync::Mutex::new(BlockTable::with_lists(
+            AcceptLists,
+            TtlPolicy {
+                base: Duration::from_secs(60),
+                max: Duration::from_secs(600),
+            },
+            1,
+        )));
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        rt.block_on(async {
+            store.copied(std::time::Instant::now(), Duration::from_secs(1));
+            blocks
+                .lock()
+                .await
+                .add_local(
+                    parse_target("198.51.100.160").unwrap(),
+                    block_table::ClaimKind::Operator,
+                    "deadline",
+                    block_table::local_ms(),
+                )
+                .unwrap();
+            let answer = persist_now(&store, &blocks, Duration::from_millis(500)).await;
+            assert!(
+                answer
+                    .as_ref()
+                    .is_err_and(|e| e.contains("not yet durable")),
+                "{answer:?}"
+            );
+            assert_eq!(store.submitted(), 0, "no copy before the spacing");
+            assert!(
+                blocks.lock().await.dirty(),
+                "the change waits for the next copy"
+            );
+        });
         std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 

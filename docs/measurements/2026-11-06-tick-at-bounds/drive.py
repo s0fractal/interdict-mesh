@@ -175,7 +175,7 @@ def main() -> None:
         "interdict_strikes_remembered",
     ]
     with open(out / "samples.csv", "w", newline="") as fh:
-        w = csv.writer(fh)
+        w = csv.writer(fh, lineterminator="\n")
         w.writerow(["t_s", "sent", "phase", "held", "rss_kb", *keys])
         while True:
             now = time.monotonic()
