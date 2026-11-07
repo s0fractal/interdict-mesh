@@ -516,7 +516,10 @@ does not record, but a missing proof proves nothing.
 
 Records are fsynced at most 100 ms after the last successful sync (or every 64 records), however
 steady the stream of events. One writer per log: a second process opening the same `--db-path`
-is refused (`<db-path>.lock`).
+is refused (`<db-path>.lock`) once the lock has stayed held for 100 ms. A process the node starts
+holds a copy of the lock until it executes, so the node's own reopen after a failed write waits
+that moment out instead of taking its own released lock for another writer's
+(`a_lock_released_while_other_threads_spawn_is_taken_again`).
 
 If the log cannot be written (disk full, I/O error), **enforcement continues**: blocking never
 waits for the audit. The node reports itself degraded instead: `interdict_audit_healthy 0`,
