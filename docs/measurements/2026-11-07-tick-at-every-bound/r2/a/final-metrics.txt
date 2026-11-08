@@ -1,0 +1,242 @@
+# HELP interdict_build_info Always 1; the labels name the running build (version and source commit).
+# TYPE interdict_build_info gauge
+interdict_build_info{version="0.1.0",build="7976f2acf980"} 1
+# HELP interdict_xdp_observed_packets_total Observe mode (--enforce observe): packets XDP would have dropped and passed, by reason.
+# TYPE interdict_xdp_observed_packets_total counter
+interdict_xdp_observed_packets_total{reason="blocklist"} 0
+interdict_xdp_observed_packets_total{reason="malformed_header"} 0
+interdict_xdp_observed_packets_total{reason="fragment_blocked"} 0
+interdict_xdp_observed_packets_total{reason="invalid_tcp_flags"} 0
+interdict_xdp_observed_packets_total{reason="strict_parse"} 0
+# HELP interdict_enforce_mode 1 for how decisions act: drop (enforced) or observe (recorded and counted, nothing dropped).
+# TYPE interdict_enforce_mode gauge
+interdict_enforce_mode{mode="drop"} 1
+# HELP interdict_xdp_mode 1 for the mode the XDP program runs in: native (driver) or generic (slower fallback).
+# TYPE interdict_xdp_mode gauge
+interdict_xdp_mode{mode="native"} 1
+# HELP interdict_xdp_rx_packets_total Packets seen by the XDP program.
+# TYPE interdict_xdp_rx_packets_total counter
+interdict_xdp_rx_packets_total 18
+# HELP interdict_xdp_rx_bytes_total Bytes seen by the XDP program.
+# TYPE interdict_xdp_rx_bytes_total counter
+interdict_xdp_rx_bytes_total 1830
+# HELP interdict_xdp_stats_read_failures_total Reads of the XDP STATS map that failed; the XDP counters keep their last good values.
+# TYPE interdict_xdp_stats_read_failures_total counter
+interdict_xdp_stats_read_failures_total 0
+# HELP interdict_xdp_dropped_packets_total Packets dropped in XDP, by reason.
+# TYPE interdict_xdp_dropped_packets_total counter
+interdict_xdp_dropped_packets_total{reason="blocklist"} 0
+interdict_xdp_dropped_packets_total{reason="malformed_header"} 0
+interdict_xdp_dropped_packets_total{reason="fragment_blocked"} 0
+interdict_xdp_dropped_packets_total{reason="invalid_tcp_flags"} 0
+interdict_xdp_dropped_packets_total{reason="strict_parse"} 0
+# HELP interdict_xdp_events_suppressed_total Kernel events withheld by the per-CPU rate limit.
+# TYPE interdict_xdp_events_suppressed_total counter
+interdict_xdp_events_suppressed_total 0
+# HELP interdict_xdp_events_lost_total Kernel events within the rate limit that found the ring buffer full (the reader was behind).
+# TYPE interdict_xdp_events_lost_total counter
+interdict_xdp_events_lost_total 0
+# HELP interdict_xdp_events_malformed_total Ring-buffer records of the wrong size, refused: the XDP program and this build disagree on the event layout.
+# TYPE interdict_xdp_events_malformed_total counter
+interdict_xdp_events_malformed_total 0
+# HELP interdict_blocks_active Addresses currently blocked (static and dynamic), per blocklist map.
+# TYPE interdict_blocks_active gauge
+interdict_blocks_active{family="ipv4"} 65536
+interdict_blocks_active{family="ipv6"} 0
+# HELP interdict_blocks_capacity Entries each blocklist map can hold.
+# TYPE interdict_blocks_capacity gauge
+interdict_blocks_capacity 65536
+# HELP interdict_blocks_pending Targets whose kernel entry does not match the block decisions yet (retried every second).
+# TYPE interdict_blocks_pending gauge
+interdict_blocks_pending 196572
+# HELP interdict_event_ids_remembered Detector event ids remembered to recognise resends.
+# TYPE interdict_event_ids_remembered gauge
+interdict_event_ids_remembered 65536
+# HELP interdict_event_ids_evicted_total Event ids forgotten early because the memory was full (a resend of one adds a strike).
+# TYPE interdict_event_ids_evicted_total counter
+interdict_event_ids_evicted_total 134037
+# HELP interdict_detector_retractions_total Detector retractions (RETRACT, ADR-0019) by result: lifted, shortened, still_held (another reason holds), not_holding, before_signal, duplicate, refused (state capacity).
+# TYPE interdict_detector_retractions_total counter
+interdict_detector_retractions_total{result="duplicate"} 0
+interdict_detector_retractions_total{result="before_signal"} 0
+interdict_detector_retractions_total{result="not_holding"} 0
+interdict_detector_retractions_total{result="still_held"} 0
+interdict_detector_retractions_total{result="lifted"} 24928
+interdict_detector_retractions_total{result="shortened"} 0
+interdict_detector_retractions_total{result="refused"} 0
+# HELP interdict_detections_total Block decisions by who asked (a detector's name, trap, telemetry; the first 16 names, then other) and result: enforced, pending (map full), refused (protected), duplicate (event already acted on).
+# TYPE interdict_detections_total counter
+interdict_detections_total{source="ids",result="enforced"} 59883
+interdict_detections_total{source="ids",result="pending"} 114762
+interdict_detections_total{source="ids",result="refused"} 13955
+interdict_detections_total{source="ids",result="duplicate"} 0
+interdict_detections_total{source="other",result="enforced"} 0
+interdict_detections_total{source="other",result="pending"} 0
+interdict_detections_total{source="other",result="refused"} 0
+interdict_detections_total{source="other",result="duplicate"} 0
+# HELP interdict_mesh_claims_total Peer claims by issuer (a node id; the first 64, then other) and what this node did: enforced, held (known, not enforced), refused, known (a copy already held).
+# TYPE interdict_mesh_claims_total counter
+interdict_mesh_claims_total{issuer="2",result="enforced"} 32947
+interdict_mesh_claims_total{issuer="2",result="held"} 96072
+interdict_mesh_claims_total{issuer="2",result="refused"} 3361892
+interdict_mesh_claims_total{issuer="2",result="known"} 4045113
+interdict_mesh_claims_total{issuer="other",result="enforced"} 0
+interdict_mesh_claims_total{issuer="other",result="held"} 0
+interdict_mesh_claims_total{issuer="other",result="refused"} 0
+interdict_mesh_claims_total{issuer="other",result="known"} 0
+# HELP interdict_strikes_remembered Targets whose detector strikes are remembered (bounded by MAX_STRIKES).
+# TYPE interdict_strikes_remembered gauge
+interdict_strikes_remembered 65536
+# HELP interdict_strikes_evicted_total Targets whose strikes were forgotten early because the memory was full (they restart at the base TTL).
+# TYPE interdict_strikes_evicted_total counter
+interdict_strikes_evicted_total 109109
+# HELP interdict_claims_waiting Peers' claims known here but waiting for a slot in their issuer's envelope (ADR-0007): not enforced yet.
+# TYPE interdict_claims_waiting gauge
+interdict_claims_waiting 0
+# HELP interdict_p2p_active_peers Authenticated mesh nodes connected (a node with two connections counts once).
+# TYPE interdict_p2p_active_peers gauge
+interdict_p2p_active_peers 1
+# HELP interdict_p2p_expected_peers Peers in the current trust configuration, not a historical high-water mark.
+# TYPE interdict_p2p_expected_peers gauge
+interdict_p2p_expected_peers 1
+# HELP interdict_snapshot_age_seconds Monotonic age of this snapshot, -1 before the first sample.
+# TYPE interdict_snapshot_age_seconds gauge
+interdict_snapshot_age_seconds 0.183599157
+# HELP interdict_worker_state 0 unknown, 1 running, 2 failed, 3 stopped; snapshot age applies.
+# TYPE interdict_worker_state gauge
+interdict_worker_state{worker="mesh_listener"} 1
+interdict_worker_state{worker="kernel_events"} 1
+# HELP interdict_audit_queue_overflow_total Audit records lost because the write queue was full.
+# TYPE interdict_audit_queue_overflow_total counter
+interdict_audit_queue_overflow_total 0
+# HELP interdict_audit_healthy 1 while the audit log is written and fsynced; 0 while the node is DEGRADED (enforcement continues).
+# TYPE interdict_audit_healthy gauge
+interdict_audit_healthy 1
+# HELP interdict_state_healthy 1 while --state-file is written; 0 while this node's decisions are not being persisted.
+# TYPE interdict_state_healthy gauge
+interdict_state_healthy 1
+# HELP interdict_state_pending_seconds How long the oldest change to this node's decisions has waited to reach --state-file.
+# TYPE interdict_state_pending_seconds gauge
+interdict_state_pending_seconds 0.001
+# HELP interdict_state_restore_ok 0 after a state file failed to restore, until ACCEPT_STATE_LOSS on the control socket.
+# TYPE interdict_state_restore_ok gauge
+interdict_state_restore_ok 1
+# HELP interdict_protected_refresh_ok 0 while this host's addresses and gateways cannot be re-read (the last known ones stay protected).
+# TYPE interdict_protected_refresh_ok gauge
+interdict_protected_refresh_ok 1
+# HELP interdict_blocks_pending_oldest_seconds How long the oldest failing kernel map operation has been retried.
+# TYPE interdict_blocks_pending_oldest_seconds gauge
+interdict_blocks_pending_oldest_seconds 672.476000
+# HELP interdict_tick_seconds Time the last maintenance tick took (expiry, state hand-off, digest, heartbeat, stats).
+# TYPE interdict_tick_seconds gauge
+interdict_tick_seconds 0.106464
+# HELP interdict_tick_seconds_max Longest maintenance tick since start.
+# TYPE interdict_tick_seconds_max gauge
+interdict_tick_seconds_max 0.232233
+# HELP interdict_mesh_handshakes_wrong_address_total Handshakes refused: a pinned node connected from an address its peers-file entry does not bind it to.
+# TYPE interdict_mesh_handshakes_wrong_address_total counter
+interdict_mesh_handshakes_wrong_address_total 0
+# HELP interdict_mesh_handshakes_refused_total Connections refused: too many not yet authenticated (in total or from one address).
+# TYPE interdict_mesh_handshakes_refused_total counter
+interdict_mesh_handshakes_refused_total 0
+# HELP interdict_mesh_handshake_timeouts_total Connections closed for not authenticating within the handshake timeout.
+# TYPE interdict_mesh_handshake_timeouts_total counter
+interdict_mesh_handshake_timeouts_total 0
+# HELP interdict_mesh_frames_delayed_total Frames from an authenticated peer read late because it exceeded its rate.
+# TYPE interdict_mesh_frames_delayed_total counter
+interdict_mesh_frames_delayed_total 52435
+# HELP interdict_mesh_sync_requests_throttled_total Snapshot requests not answered because the peer got one less than 5 s ago.
+# TYPE interdict_mesh_sync_requests_throttled_total counter
+interdict_mesh_sync_requests_throttled_total 2
+# HELP interdict_audit_witnesses_recorded_total Peers' audit heads recorded in this node's audit log (ADR-0021).
+# TYPE interdict_audit_witnesses_recorded_total counter
+interdict_audit_witnesses_recorded_total 11
+# HELP interdict_audit_witnesses_refused_total Peers' audit heads not recorded: more than one per peer per 30 s, or malformed.
+# TYPE interdict_audit_witnesses_refused_total counter
+interdict_audit_witnesses_refused_total 0
+# HELP interdict_audit_anchors_written_total Audit head statements written to --anchor-dir for an external stamp (ADR-0022).
+# TYPE interdict_audit_anchors_written_total counter
+interdict_audit_anchors_written_total 0
+# HELP interdict_audit_anchor_failures_total Audit head statements that could not be written to --anchor-dir.
+# TYPE interdict_audit_anchor_failures_total counter
+interdict_audit_anchor_failures_total 0
+# HELP interdict_block_outcomes_total Removed blocks by observed effect: dropped packets, dropped none, counter unreadable.
+# TYPE interdict_block_outcomes_total counter
+interdict_block_outcomes_total{effect="dropped"} 0
+interdict_block_outcomes_total{effect="none"} 30627
+interdict_block_outcomes_total{effect="unknown"} 0
+# HELP interdict_block_outcome_packets_total Packets dropped by blocks, counted when each block is removed.
+# TYPE interdict_block_outcome_packets_total counter
+interdict_block_outcome_packets_total 0
+# HELP interdict_block_outcomes_lost_total Block outcomes lost before they were collected.
+# TYPE interdict_block_outcomes_lost_total counter
+interdict_block_outcomes_lost_total 0
+# HELP interdict_mesh_broadcasts_dropped_total Broadcasts not queued because a peer's queue was full: urgent (block decisions) or bulk (reports).
+# TYPE interdict_mesh_broadcasts_dropped_total counter
+interdict_mesh_broadcasts_dropped_total{class="urgent"} 125349
+interdict_mesh_broadcasts_dropped_total{class="bulk"} 0
+# HELP interdict_mesh_envelopes_rejected_total Mesh envelopes refused, by reason; stale_timestamp means a peer's clock is out of the 30 s window.
+# TYPE interdict_mesh_envelopes_rejected_total counter
+interdict_mesh_envelopes_rejected_total{reason="unknown_sender"} 0
+interdict_mesh_envelopes_rejected_total{reason="bad_signature"} 0
+interdict_mesh_envelopes_rejected_total{reason="stale_timestamp"} 0
+interdict_mesh_envelopes_rejected_total{reason="replay"} 0
+interdict_mesh_envelopes_rejected_total{reason="malformed_payload"} 0
+interdict_mesh_envelopes_rejected_total{reason="before_window"} 0
+# HELP interdict_clock_steps_total Wall-clock steps of 5 s or more against the monotonic clock (ADR-0017); blocks in force keep their length.
+# TYPE interdict_clock_steps_total counter
+interdict_clock_steps_total 0
+# HELP interdict_clock_last_step_seconds Size of the last wall-clock step: positive forward, negative back.
+# TYPE interdict_clock_last_step_seconds gauge
+interdict_clock_last_step_seconds 0.000
+# HELP interdict_ipc_lines_delayed_total Detector lines handled late because a connection or the IPC socket exceeded its rate.
+# TYPE interdict_ipc_lines_delayed_total counter
+interdict_ipc_lines_delayed_total 111957
+# HELP interdict_audit_write_errors_total Failed audit writes and fsyncs.
+# TYPE interdict_audit_write_errors_total counter
+interdict_audit_write_errors_total 0
+# HELP interdict_audit_lost_total Audit records not written due to an unavailable log or oversized payload (queue overflow is counted separately).
+# TYPE interdict_audit_lost_total counter
+interdict_audit_lost_total 0
+# HELP interdict_audit_last_sync_age_seconds Time since the audit log was last fsynced successfully.
+# TYPE interdict_audit_last_sync_age_seconds gauge
+interdict_audit_last_sync_age_seconds 0.098
+# HELP interdict_defense_strict 1 while a distributed storm has XDP in strict mode (--storm-mode strict).
+# TYPE interdict_defense_strict gauge
+interdict_defense_strict 0
+# HELP interdict_flowspec_announced Owned source-prefix rules in the last successful local GoBGP RIB read; not router enforcement.
+# TYPE interdict_flowspec_announced gauge
+interdict_flowspec_announced 0
+# HELP interdict_flowspec_discard_rules Owned full source-prefix paths with one verified zero traffic-rate action in the last successful local RIB read; not upstream enforcement.
+# TYPE interdict_flowspec_discard_rules gauge
+interdict_flowspec_discard_rules 0
+# HELP interdict_flowspec_enabled 1 when the local FlowSpec worker is enabled; 0 when disabled or in observe mode.
+# TYPE interdict_flowspec_enabled gauge
+interdict_flowspec_enabled 0
+# HELP interdict_flowspec_readback_ok 1 after a successful full round; 0 before any success, during a round or after failure. Not convergence or router enforcement.
+# TYPE interdict_flowspec_readback_ok gauge
+interdict_flowspec_readback_ok 0
+# HELP interdict_flowspec_round_converged 1 if the latest completed round observed owned and canonical-discard prefix sets equal to its sampled wanted set; 0 if not or unverified. Not latest-intent equality or upstream enforcement; check age.
+# TYPE interdict_flowspec_round_converged gauge
+interdict_flowspec_round_converged 0
+# HELP interdict_flowspec_round_progress 1 if initial/final reads observed a strict reduction of sampled-target identity/action obligations without new ones; 0 if not; -1 if unverified. Not attributed to this round's commands, convergence, latest intent or upstream enforcement; check age.
+# TYPE interdict_flowspec_round_progress gauge
+interdict_flowspec_round_progress -1
+# HELP interdict_flowspec_readback_age_seconds Monotonic age since the start of the last successful two-family RIB read, computed at scrape; -1 if none.
+# TYPE interdict_flowspec_readback_age_seconds gauge
+interdict_flowspec_readback_age_seconds -1.000
+# HELP interdict_external_attacks_active Attack reports from flow detectors (FastNetMon) currently in force for this node.
+# TYPE interdict_external_attacks_active gauge
+interdict_external_attacks_active 0
+# HELP interdict_cluster_status Cluster status: 0 unknown, 1 stable, 2 local incident, 3 distributed storm.
+# TYPE interdict_cluster_status gauge
+interdict_cluster_status 1
+# HELP interdict_cluster_nodes Nodes (this one included) that reported telemetry recently.
+# TYPE interdict_cluster_nodes gauge
+interdict_cluster_nodes 2
+# HELP interdict_cluster_nodes_under_attack Nodes reporting drops above their --attack-drops-per-sec.
+# TYPE interdict_cluster_nodes_under_attack gauge
+interdict_cluster_nodes_under_attack 0
+# HELP interdict_cluster_storm_engaged 1 while the distributed-storm latch is engaged.
+# TYPE interdict_cluster_storm_engaged gauge
+interdict_cluster_storm_engaged 0

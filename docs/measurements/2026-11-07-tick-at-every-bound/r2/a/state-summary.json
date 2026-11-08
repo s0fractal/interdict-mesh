@@ -1,0 +1,11 @@
+{
+ "claims": 149717,
+ "events": 65536,
+ "mesh_floors": 1,
+ "operator_lifts": 0,
+ "peer_ends": 128697,
+ "retracted": 24928,
+ "saved_ms": 1794090210673,
+ "schema": 1,
+ "support": 51596
+}
