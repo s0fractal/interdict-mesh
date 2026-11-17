@@ -9,7 +9,8 @@ the load on (each further line is refused at the bound) for --hold seconds. Ever
 samples the node's metrics (tick, tick max, kernel blocks) and its RSS.
 
     sudo python3 drive.py --socket IPC_SOCKET --metrics URL --pid NODE_PID --out DIR \
-        [--count 262144] [--conns 4] [--hold 600] [--ttl SECONDS] [--churn retract]
+        [--count 262144] [--conns 4] [--hold 600] [--ttl SECONDS] [--churn retract|retract-oldest]
+        [--first 11.0.0.0]
 
 Writes DIR/samples.csv (one row a second), DIR/replies.json (answers by class) and
 DIR/latency.json (ACK round trip, percentiles per phase). Measurement only: nothing here is run
@@ -76,11 +77,13 @@ def connection(k: int, conns: int, count: int, ttl: int, churn: str, path: str, 
     while not sh.stop.is_set():
         with sh.lock:
             full = sh.full_at is not None
-        if full and churn == "retract" and mine:
+        if full and churn in ("retract", "retract-oldest") and mine:
             # Take one of this connection's own claims back (its event id is still remembered:
             # the newest), then signal a new address into the slot it freed. The claims stay
             # at their bound, less the retractions in flight, and the table changes every tick.
-            j = mine.pop()
+            # retract-oldest takes the oldest instead: past the support bound only the first
+            # claims have the support a retraction removes, so only they are lifted.
+            j = mine.pop(0) if churn == "retract-oldest" else mine.pop()
             reply = ask(f"RETRACT#b{j}:{SOURCE}|{address(j)}\n", "retract")
             if not reply:
                 break
@@ -137,7 +140,7 @@ HOLD = 600.0
 
 
 def main() -> None:
-    global HOLD
+    global HOLD, FIRST
     ap = argparse.ArgumentParser()
     ap.add_argument("--socket", required=True)
     ap.add_argument("--metrics", required=True)
@@ -152,9 +155,12 @@ def main() -> None:
     ap.add_argument("--ttl", type=int, default=0)
     # retract: once full, each connection takes one of its own claims back before each new
     # signal, so the claims stay at their bound while the table changes.
-    ap.add_argument("--churn", choices=["none", "retract"], default="none")
+    ap.add_argument("--churn", choices=["none", "retract", "retract-oldest"], default="none")
+    # Where this driver's addresses start: two drivers of two meshed nodes use their own.
+    ap.add_argument("--first", default="11.0.0.0")
     a = ap.parse_args()
     HOLD = a.hold
+    FIRST = int(ipaddress.IPv4Address(a.first))
     out = pathlib.Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     sh = Shared()

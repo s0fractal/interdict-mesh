@@ -2137,13 +2137,20 @@ impl<B: Blocklist> BlockTable<B> {
 
     /// Digest of `issuer`'s live, unretracted detector claims as this node knows them. A node
     /// sends the digest of its own claims; a peer whose view of them differs asks it for a
-    /// snapshot.
+    /// snapshot. The node itself takes [`Self::digest_ids_of`] under the lock and hashes after.
+    #[cfg_attr(
+        not(test),
+        allow(
+            dead_code,
+            reason = "the node hashes the ids off the table lock (RC-2)"
+        )
+    )]
     pub fn digest_of(&self, issuer: u64, now_ms: u64) -> String {
         digest_from(self.digest_ids_of(issuer, now_ms))
     }
 
-    /// The ids `digest_of` hashes, unsorted: the part that needs the table (RC-2). The tick takes
-    /// these under the lock and leaves sorting and hashing to [`digest_from`] off it.
+    /// The ids `digest_of` hashes, unsorted: the part that needs the table (RC-2). The tick and
+    /// a peer's digest take these under the lock and leave sorting and hashing to [`digest_from`].
     pub fn digest_ids_of(&self, issuer: u64, now_ms: u64) -> Vec<ClaimId> {
         self.claims
             .iter()

@@ -225,12 +225,15 @@ impl<B: Blocklist + Send + 'static, M: ConfigMap + 'static> MeshDispatch<B, M> {
                 }
             }
             MeshCommand::Digest { issuer, digest } => {
-                // Our view of the sender's own claims differs: ask the sender for them.
-                let ours = self
+                // Our view of the sender's own claims differs: ask the sender for them. Only
+                // the ids are taken under the table lock; they are sorted and hashed after it
+                // (RC-2: at every bound that is 0.1 s the tick would otherwise wait behind).
+                let ids = self
                     .blocks
                     .lock()
                     .await
-                    .digest_of(issuer, block_table::local_ms());
+                    .digest_ids_of(issuer, block_table::local_ms());
+                let ours = block_table::digest_from(ids);
                 if ours != digest {
                     if let Some(addr) = self.registry.addr_of(issuer).await {
                         log::info!(

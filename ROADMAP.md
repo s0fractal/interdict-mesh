@@ -111,9 +111,18 @@ native-NIC і не польовий пілот.
    ≈ 0.54 s, not measured. **The digest off the tick, 2026-11-07:** every tick over 0.25 s was the
    digest plus one state copy. Now only the ids are taken under the lock, and the sorting, hashing
    and sending run off the tick. The longest tick at the claim bound fell to 0.172 s (measurement
-   §3c). At every bound it is estimated at 0.36–0.42 s, within S7. Left:
-   - every table at its bound in a running node: that needs peers and lifted claims, which the
-     harness does not make;
+   §3c). At every bound it is estimated at 0.36–0.42 s, within S7. **With a peer and lifted claims,
+   2026-11-07:** two meshed nodes, the measured one with its known claims full (its own and one
+   peer's whole share), its event ids, strikes, support and kernel map at their bounds and up to
+   128 697 lease records, while 16 detector connections a node lifted and replaced claims for 30
+   minutes: the longest tick over four runs was 0.328 s, none reached S7
+   ([measurement](docs/measurements/2026-11-07-tick-at-every-bound/README.md)). The node's RSS went
+   to 2.11 GB, over the RUNBOOK's 1.5 GiB (per-thread allocator arenas; RUNBOOK §4 now plans 2.2
+   GiB). Left:
+   - retraction and lease records at their own bounds are measured only in process (lifts stop
+     once the oldest claims' event ids are evicted);
+   - a peer that refuses part of another's claims makes it resend its whole table on every digest
+     (measurement §4, open);
    - then the RC-2 campaign (`--profile long`).
 1. **Native NIC** на цільовому залізі — єдине, що лишилося в P4 з технічного боку:
    pps, затримка, CPU і поведінка `auto` на драйвері карти. Потрібна фізична
